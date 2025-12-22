@@ -6,7 +6,7 @@ directory: /Users/guille/repos/ytad/data/library
 library: /Users/guille/repos/ytad/data/beets.db
 
 # Plugins
-plugins: embedart fetchart fromfilename spotify
+plugins: embedart fetchart fromfilename spotify zero
 
 # General settings
 threaded: yes
@@ -74,3 +74,8 @@ spotify:
   search_limit: 10
   client_id: fde699cf3cef46a796cdf80b0c714701
   client_secret: a07797d4a0894aab939a26545f38dc56
+
+# Zero plugin - keep only useful tags, strip everything else
+zero:
+  auto: yes
+  keep_fields: title artist album albumartist track tracktotal disc disctotal year month day label images
