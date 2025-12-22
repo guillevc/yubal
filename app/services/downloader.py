@@ -261,7 +261,6 @@ class Downloader:
                         (MetadataParserPP.Actions.INTERPRET, "playlist_index", "%(meta_track)s"),
                         (MetadataParserPP.Actions.INTERPRET, "release_date", "%(meta_date)s"),
                         (MetadataParserPP.Actions.INTERPRET, "artist", "%(meta_album_artist)s"),
-                        (MetadataParserPP.Actions.INTERPRET, "", "%(meta_genre)s"),  # Clear useless "Music" genre
                     ],
                 },
                 {
@@ -270,6 +269,11 @@ class Downloader:
                 },
                 {
                     "key": "EmbedThumbnail",
+                },
+                # Remove unwanted YouTube metadata tags (runs after EmbedThumbnail)
+                {
+                    "key": "Exec",
+                    "exec_cmd": 'ffmpeg -y -i %(filepath)q -c copy -metadata genre= -metadata comment= -metadata purl= -metadata description= -metadata synopsis= -f mp3 %(filepath)q.tmp && mv %(filepath)q.tmp %(filepath)q',
                 },
             ],
             "writethumbnail": True,
