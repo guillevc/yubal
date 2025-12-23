@@ -4,6 +4,19 @@ from pathlib import Path
 
 import typer
 
+from app.config import DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
+
+__all__ = [
+    "DEFAULT_BEETS_CONFIG",
+    "DEFAULT_LIBRARY_DIR",
+    "create_tagger",
+    "echo_error",
+    "echo_info",
+    "echo_success",
+    "validate_beets_config",
+    "validate_path_exists",
+]
+
 
 def echo_error(message: str) -> None:
     """Print error message and exit."""
