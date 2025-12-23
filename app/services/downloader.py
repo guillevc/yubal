@@ -1,9 +1,12 @@
 """YouTube Music downloader using yt-dlp Python API."""
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional
+
 import yt_dlp
 from yt_dlp.postprocessor.metadataparser import MetadataParserPP
+
+from app.constants import AUDIO_EXTENSIONS
 
 
 @dataclass
@@ -70,54 +73,11 @@ class Downloader:
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
-
             if not info:
                 raise ValueError("Could not extract info from URL")
+            return self._parse_album_info(info, url)
 
-            # Handle playlist vs single video
-            if "entries" in info:
-                entries = list(info.get("entries", []))
-                tracks = []
-                for i, entry in enumerate(entries, 1):
-                    if entry:
-                        tracks.append(
-                            TrackInfo(
-                                title=entry.get("title", f"Track {i}"),
-                                artist=entry.get("artist", entry.get("uploader", "Unknown")),
-                                track_number=i,
-                                duration=entry.get("duration", 0),
-                            )
-                        )
-
-                return AlbumInfo(
-                    title=info.get("title", "Unknown Album"),
-                    artist=info.get("uploader", info.get("channel", "Unknown Artist")),
-                    year=self._extract_year(info),
-                    track_count=len(tracks),
-                    tracks=tracks,
-                    playlist_id=info.get("id", ""),
-                    url=url,
-                )
-            else:
-                # Single track
-                return AlbumInfo(
-                    title=info.get("album", info.get("title", "Unknown")),
-                    artist=info.get("artist", info.get("uploader", "Unknown")),
-                    year=self._extract_year(info),
-                    track_count=1,
-                    tracks=[
-                        TrackInfo(
-                            title=info.get("title", "Unknown"),
-                            artist=info.get("artist", "Unknown"),
-                            track_number=1,
-                            duration=info.get("duration", 0),
-                        )
-                    ],
-                    playlist_id=info.get("id", ""),
-                    url=url,
-                )
-
-    def _extract_year(self, info: dict) -> Optional[int]:
+    def _extract_year(self, info: dict[str, Any]) -> Optional[int]:
         """Extract year from upload_date or release_year."""
         if info.get("release_year"):
             return info["release_year"]
@@ -128,6 +88,22 @@ class Downloader:
             except ValueError:
                 pass
         return None
+
+    def _create_progress_hook(self, downloaded_files: list[Path]) -> Callable[[dict[str, Any]], None]:
+        """Create a progress hook that tracks downloaded files."""
+        def hook(d: dict[str, Any]) -> None:
+            if d["status"] == "downloading":
+                percent = d.get("_percent_str", "").strip()
+                speed = d.get("_speed_str", "").strip()
+                if percent:
+                    print(f"\r  Downloading: {percent} at {speed}", end="", flush=True)
+            elif d["status"] == "finished":
+                print()  # New line after progress
+                filename = d.get("info_dict", {}).get("filepath") or d.get("filename")
+                if filename:
+                    downloaded_files.append(Path(filename))
+                    print(f"  Completed: {Path(filename).name}")
+        return hook
 
     def download_album(self, url: str, output_dir: Path) -> DownloadResult:
         """
@@ -145,21 +121,7 @@ class Downloader:
         downloaded_files: list[Path] = []
         album_info: Optional[AlbumInfo] = None
 
-        def progress_hook(d):
-            if d["status"] == "downloading":
-                # Print download progress
-                percent = d.get("_percent_str", "").strip()
-                speed = d.get("_speed_str", "").strip()
-                if percent:
-                    print(f"\r  Downloading: {percent} at {speed}", end="", flush=True)
-            elif d["status"] == "finished":
-                print()  # New line after progress
-                filename = d.get("info_dict", {}).get("filepath") or d.get("filename")
-                if filename:
-                    downloaded_files.append(Path(filename))
-                    print(f"  Completed: {Path(filename).name}")
-
-        ydl_opts = self._get_ydl_opts(output_dir, progress_hook)
+        ydl_opts = self._get_ydl_opts(output_dir, self._create_progress_hook(downloaded_files))
 
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -167,10 +129,9 @@ class Downloader:
                 album_info = self._parse_album_info(info, url)
 
             # Find all audio files in output directory
-            audio_extensions = {".mp3", ".m4a", ".opus", ".ogg", ".flac", ".wav"}
             all_files = [
                 f for f in output_dir.iterdir()
-                if f.is_file() and f.suffix.lower() in audio_extensions
+                if f.is_file() and f.suffix.lower() in AUDIO_EXTENSIONS
             ]
 
             return DownloadResult(
@@ -197,7 +158,7 @@ class Downloader:
                 error=f"Unexpected error: {str(e)}",
             )
 
-    def _parse_album_info(self, info: dict, url: str) -> AlbumInfo:
+    def _parse_album_info(self, info: dict[str, Any], url: str) -> AlbumInfo:
         """Parse album info from yt-dlp extraction result."""
         if not info:
             return AlbumInfo(
@@ -232,16 +193,25 @@ class Downloader:
                 url=url,
             )
 
+        # Single track
         return AlbumInfo(
             title=info.get("album", info.get("title", "Unknown")),
             artist=info.get("artist", info.get("uploader", "Unknown")),
             year=self._extract_year(info),
             track_count=1,
+            tracks=[
+                TrackInfo(
+                    title=info.get("title", "Unknown"),
+                    artist=info.get("artist", "Unknown"),
+                    track_number=1,
+                    duration=info.get("duration", 0),
+                )
+            ],
             playlist_id=info.get("id", ""),
             url=url,
         )
 
-    def _get_ydl_opts(self, output_dir: Path, progress_hook) -> dict:
+    def _get_ydl_opts(self, output_dir: Path, progress_hook: Callable[[dict[str, Any]], None]) -> dict[str, Any]:
         """Build yt-dlp options dictionary."""
         return {
             "format": "bestaudio/best",

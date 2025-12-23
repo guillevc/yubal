@@ -3,8 +3,16 @@ from pathlib import Path
 
 import typer
 
-from app.cli.utils import echo_error, echo_info, echo_success, DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
-from app.services.tagger import Tagger
+from app.cli.utils import (
+    DEFAULT_BEETS_CONFIG,
+    DEFAULT_LIBRARY_DIR,
+    create_tagger,
+    echo_error,
+    echo_info,
+    echo_success,
+    validate_beets_config,
+    validate_path_exists,
+)
 
 
 def tag(
@@ -31,22 +39,15 @@ def tag(
     Imports audio files, fetches metadata from Spotify/MusicBrainz,
     and organizes into the library structure.
     """
-    if not input_dir.exists():
-        echo_error(f"Input directory does not exist: {input_dir}")
-
-    if not beets_config.exists():
-        echo_error(f"Beets config not found: {beets_config}")
+    validate_path_exists(input_dir, "Input directory")
+    validate_beets_config(beets_config)
 
     echo_info(f"Source: {input_dir}")
     echo_info(f"Library: {library_dir}")
     if copy:
         echo_info("Mode: copy (original files will be preserved)")
 
-    tagger = Tagger(
-        beets_config=beets_config,
-        library_dir=library_dir,
-        beets_db=beets_config.parent / "beets.db",
-    )
+    tagger = create_tagger(library_dir, beets_config)
 
     result = tagger.tag_album(input_dir, copy=copy)
 

@@ -1,10 +1,13 @@
 """Music tagging and organization using beets CLI."""
+import json
+import os
+import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
-import subprocess
-import sys
-import os
+
+from app.constants import AUDIO_EXTENSIONS
 
 
 @dataclass
@@ -112,7 +115,7 @@ class Tagger:
                 error=f"Unexpected error during tagging: {str(e)}",
             )
 
-    def _run_beets_import(self, source_dir: Path, copy: bool = False) -> subprocess.CompletedProcess:
+    def _run_beets_import(self, source_dir: Path, copy: bool = False) -> subprocess.CompletedProcess[str]:
         """
         Execute beets import command.
 
@@ -166,16 +169,14 @@ class Tagger:
 
     def _find_audio_files(self, directory: Path) -> list[Path]:
         """Find all audio files in a directory."""
-        audio_extensions = {".mp3", ".m4a", ".opus", ".ogg", ".flac", ".wav", ".aac"}
         return [
             f for f in directory.iterdir()
-            if f.is_file() and f.suffix.lower() in audio_extensions
+            if f.is_file() and f.suffix.lower() in AUDIO_EXTENSIONS
         ]
 
     def _get_album_metadata(self, audio_file: Path) -> tuple[Optional[str], Optional[str]]:
         """Extract album and artist from an audio file using ffprobe."""
         try:
-            import json
             result = subprocess.run(
                 ["ffprobe", "-v", "quiet", "-print_format", "json", "-show_format", str(audio_file)],
                 capture_output=True,
@@ -185,7 +186,8 @@ class Tagger:
             data = json.loads(result.stdout)
             tags = data.get("format", {}).get("tags", {})
             return tags.get("album"), tags.get("artist")
-        except Exception:
+        except Exception as e:
+            print(f"  [warning] Failed to read metadata from {audio_file.name}: {e}")
             return None, None
 
     def _album_exists_in_library(self, album: str, artist: str) -> Optional[Path]:
@@ -209,8 +211,8 @@ class Tagger:
                 paths = result.stdout.strip().split("\n")
                 if paths and paths[0]:
                     return Path(paths[0])
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"  [warning] Failed to check if album exists: {e}")
 
         return None
 
@@ -241,6 +243,18 @@ class Tagger:
 
         return newest_dir
 
+    def _count_library_albums(self) -> int:
+        """Count albums in the library folder (Artist/Album structure)."""
+        if not self.library_dir.exists():
+            return 0
+        count = 0
+        for artist_dir in self.library_dir.iterdir():
+            if artist_dir.is_dir():
+                for album_dir in artist_dir.iterdir():
+                    if album_dir.is_dir() and self._find_audio_files(album_dir):
+                        count += 1
+        return count
+
     def check_library_health(self) -> LibraryHealth:
         """
         Check if the beets database is in sync with the library folder.
@@ -248,18 +262,7 @@ class Tagger:
         Returns:
             LibraryHealth with sync status and counts
         """
-        # Count albums in library folder (Artist/Album structure)
-        library_album_count = 0
-        if self.library_dir.exists():
-            for artist_dir in self.library_dir.iterdir():
-                if artist_dir.is_dir():
-                    for album_dir in artist_dir.iterdir():
-                        if album_dir.is_dir():
-                            # Check if it actually contains audio files
-                            if self._find_audio_files(album_dir):
-                                library_album_count += 1
-
-        # Count albums in beets database
+        library_album_count = self._count_library_albums()
         database_album_count = self._count_database_albums()
 
         # Determine health status
@@ -320,7 +323,8 @@ class Tagger:
             if result.returncode == 0 and result.stdout.strip():
                 return len(result.stdout.strip().split("\n"))
             return 0
-        except Exception:
+        except Exception as e:
+            print(f"  [warning] Failed to count database albums: {e}")
             return 0
 
     def rebuild_database(self) -> tuple[bool, str]:
@@ -336,14 +340,7 @@ class Tagger:
         if not self.library_dir.exists():
             return False, "Library directory does not exist"
 
-        # Check if there are albums to import
-        album_count = 0
-        for artist_dir in self.library_dir.iterdir():
-            if artist_dir.is_dir():
-                for album_dir in artist_dir.iterdir():
-                    if album_dir.is_dir() and self._find_audio_files(album_dir):
-                        album_count += 1
-
+        album_count = self._count_library_albums()
         if album_count == 0:
             return False, "No albums found in library to rebuild from"
 

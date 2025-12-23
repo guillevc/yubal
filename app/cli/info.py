@@ -6,6 +6,7 @@ from pathlib import Path
 import typer
 
 from app.cli.utils import echo_error, echo_info
+from app.constants import PRIORITY_TAGS, SKIP_TAGS
 
 
 def _get_audio_tags(file_path: Path) -> dict[str, str]:
@@ -30,16 +31,13 @@ def _truncate_value(value: str, max_length: int = 45) -> str:
 
 def _print_metadata_table(tags: dict[str, str]) -> None:
     """Print metadata tags in a formatted table."""
-    priority_tags = ["title", "artist", "album", "album_artist", "track", "date", "genre"]
-    skip_tags = {"encoder"}
-
     rows: list[tuple[str, str]] = []
-    for key in priority_tags:
+    for key in PRIORITY_TAGS:
         if key in tags:
             rows.append((key, _truncate_value(tags[key])))
 
     for key in sorted(tags.keys()):
-        if key not in priority_tags and key not in skip_tags:
+        if key not in PRIORITY_TAGS and key not in SKIP_TAGS:
             rows.append((key, _truncate_value(tags[key])))
 
     tag_width = max((len(r[0]) for r in rows), default=3)

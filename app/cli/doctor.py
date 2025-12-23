@@ -3,8 +3,14 @@ from pathlib import Path
 
 import typer
 
-from app.cli.utils import echo_error, echo_info, echo_success, DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
-from app.services.tagger import Tagger
+from app.cli.utils import (
+    DEFAULT_BEETS_CONFIG,
+    DEFAULT_LIBRARY_DIR,
+    create_tagger,
+    echo_error,
+    echo_info,
+    echo_success,
+)
 
 
 def doctor(
@@ -30,11 +36,7 @@ def doctor(
     Verifies the beets database is in sync with the library folder.
     Use --rebuild to re-register existing albums if the database is missing or corrupt.
     """
-    tagger = Tagger(
-        beets_config=beets_config,
-        library_dir=library_dir,
-        beets_db=beets_config.parent / "beets.db",
-    )
+    tagger = create_tagger(library_dir, beets_config)
 
     echo_info("Checking library health...")
     health = tagger.check_library_health()

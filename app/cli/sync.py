@@ -5,9 +5,16 @@ from pathlib import Path
 
 import typer
 
-from app.cli.utils import echo_error, echo_info, echo_success, DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
+from app.cli.utils import (
+    DEFAULT_BEETS_CONFIG,
+    DEFAULT_LIBRARY_DIR,
+    create_tagger,
+    echo_error,
+    echo_info,
+    echo_success,
+    validate_beets_config,
+)
 from app.services.downloader import Downloader
-from app.services.tagger import Tagger
 
 
 def sync(
@@ -34,8 +41,7 @@ def sync(
     Combines download + tag commands: downloads from YouTube,
     then imports and organizes using beets.
     """
-    if not beets_config.exists():
-        echo_error(f"Beets config not found: {beets_config}")
+    validate_beets_config(beets_config)
 
     temp_dir = Path(tempfile.mkdtemp(prefix="ytad_"))
     echo_info(f"Temp directory: {temp_dir}")
@@ -61,12 +67,7 @@ def sync(
         # Step 2: Tag
         echo_info("\n--- Step 2: Tag ---")
 
-        tagger = Tagger(
-            beets_config=beets_config,
-            library_dir=library_dir,
-            beets_db=beets_config.parent / "beets.db",
-        )
-
+        tagger = create_tagger(library_dir, beets_config)
         tag_result = tagger.tag_album(temp_dir)
 
         if not tag_result.success:
