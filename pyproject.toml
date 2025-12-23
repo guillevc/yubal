@@ -1,5 +1,5 @@
 [project]
-name = "ytad"
+name = "ytadl"
 version = "0.1.0"
 description = "YouTube Album Downloader with auto-tagging via beets"
 readme = "README.md"
@@ -13,7 +13,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ytad = "app.cli:main"  # app/cli/__init__.py
+ytadl = "app.cli:main"  # app/cli/__init__.py
 
 [project.optional-dependencies]
 dev = [

@@ -12,13 +12,13 @@ def _help_all_callback(ctx: typer.Context, value: bool) -> None:
     click_app = ctx.command
     for name in sorted(click_app.commands.keys()):
         cmd = click_app.commands[name]
-        with click.Context(cmd, info_name=f"ytad {name}") as cmd_ctx:
+        with click.Context(cmd, info_name=f"ytadl {name}") as cmd_ctx:
             typer.echo(cmd.get_help(cmd_ctx))
     raise typer.Exit()
 
 
 app = typer.Typer(
-    name="ytad",
+    name="ytadl",
     help="YouTube Album Downloader - Download and organize music from YouTube",
     no_args_is_help=True,
 )

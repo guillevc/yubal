@@ -1,6 +1,6 @@
 ---
-directory: /Users/guille/repos/ytad/data
-library: /Users/guille/repos/ytad/config/beets.db
+directory: /Users/guille/repos/ytadl/data
+library: /Users/guille/repos/ytadl/config/beets.db
 
 plugins: fetchart embedart fromfilename spotify zero lastgenre lyrics
 
@@ -21,7 +21,7 @@ import:
   quiet: yes
   quiet_fallback: asis
   duplicate_action: skip
-  log: /Users/guille/repos/ytad/config/beets_import.log
+  log: /Users/guille/repos/ytadl/config/beets_import.log
 
 # Relaxed matching for YouTube rips
 match:

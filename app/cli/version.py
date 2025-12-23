@@ -4,4 +4,4 @@ import typer
 
 def version() -> None:
     """Show version information."""
-    typer.echo("ytad version 0.1.0")
+    typer.echo("ytadl version 0.1.0")

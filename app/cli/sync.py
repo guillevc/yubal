@@ -43,7 +43,7 @@ def sync(
     """
     validate_beets_config(beets_config)
 
-    temp_dir = Path(tempfile.mkdtemp(prefix="ytad_"))
+    temp_dir = Path(tempfile.mkdtemp(prefix="ytadl_"))
     echo_info(f"Temp directory: {temp_dir}")
 
     try:
