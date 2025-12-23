@@ -130,6 +130,7 @@ class Tagger:
             "--config",
             str(self.beets_config),
             "import",
+            "-q",  # Quiet mode - non-interactive
         ]
 
         # --copy: copy files to library instead of moving (originals stay in place, tagged)
@@ -143,6 +144,7 @@ class Tagger:
         # Use Popen to stream output in real-time
         process = subprocess.Popen(
             cmd,
+            stdin=subprocess.DEVNULL,  # Prevent hanging on prompts
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,  # Combine stderr into stdout
             text=True,
@@ -348,6 +350,7 @@ class Tagger:
         cmd = self._get_beet_command() + [
             "--config", str(self.beets_config),
             "import",
+            "-q",           # Quiet mode - non-interactive
             "--noautotag",  # Don't fetch metadata, trust existing tags
             "--nowrite",    # Don't modify files
             str(self.library_dir),
@@ -358,10 +361,12 @@ class Tagger:
         try:
             process = subprocess.Popen(
                 cmd,
+                stdin=subprocess.DEVNULL,  # Prevent hanging on prompts
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
                 env=self._get_beets_env(),
+                cwd=str(self.beets_config.parent.parent),
             )
 
             for line in process.stdout:
