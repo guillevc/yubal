@@ -1,4 +1,4 @@
-# ytadl - YouTube Album Downloader
+# yubal - YouTube Album Downloader
 
 Download albums from YouTube Music and auto-tag with beets.
 
@@ -12,8 +12,8 @@ Download albums from YouTube Music and auto-tag with beets.
 ### From Source (Development)
 
 ```bash
-git clone https://github.com/youruser/ytadl.git
-cd ytadl
+git clone https://github.com/youruser/yubal.git
+cd yubal
 uv sync
 ```
 
@@ -24,13 +24,13 @@ uv sync
 uv build
 
 # Install on target machine
-pip install ytadl-0.1.0-py3-none-any.whl
+pip install yubal-0.1.0-py3-none-any.whl
 ```
 
 ### From Git URL
 
 ```bash
-pip install git+https://github.com/youruser/ytadl.git
+pip install git+https://github.com/youruser/yubal.git
 ```
 
 ## Prerequisites
@@ -50,25 +50,25 @@ sudo apt install ffmpeg
 ### Download and tag an album
 
 ```bash
-ytadl sync "https://music.youtube.com/playlist?list=..."
+yubal sync "https://music.youtube.com/playlist?list=..."
 ```
 
 ### Tag existing files
 
 ```bash
-ytadl tag /path/to/downloaded/album
+yubal tag /path/to/downloaded/album
 ```
 
 ### Check library health
 
 ```bash
-ytadl doctor
+yubal doctor
 ```
 
 ### View file metadata
 
 ```bash
-ytadl info /path/to/file.mp3
+yubal info /path/to/file.mp3
 ```
 
 ## Commands

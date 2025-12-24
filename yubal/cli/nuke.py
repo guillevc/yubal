@@ -5,7 +5,7 @@ from pathlib import Path
 
 import typer
 
-from ytadl.cli.utils import (
+from yubal.cli.utils import (
     DEFAULT_BEETS_CONFIG,
     DEFAULT_LIBRARY_DIR,
     echo_info,

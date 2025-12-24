@@ -15,7 +15,7 @@ export function Header() {
             <path d="M45 40 L60 50 L45 60 Z" fill="white" />
           </svg>
           <div className="flex flex-col">
-            <span className="text-xl font-bold">ytadl</span>
+            <span className="text-xl font-bold">yubal</span>
             <span className="text-tiny text-default-500">
               YouTube Album Downloader
             </span>

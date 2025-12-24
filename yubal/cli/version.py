@@ -5,4 +5,4 @@ import typer
 
 def version() -> None:
     """Show version information."""
-    typer.echo("ytadl version 0.1.0")
+    typer.echo("yubal version 0.1.0")

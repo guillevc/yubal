@@ -4,9 +4,9 @@ import shutil
 import tempfile
 from pathlib import Path
 
-from ytadl.core import ProgressCallback, ProgressEvent, ProgressStep, SyncResult
-from ytadl.services.downloader import Downloader
-from ytadl.services.tagger import Tagger
+from yubal.core import ProgressCallback, ProgressEvent, ProgressStep, SyncResult
+from yubal.services.downloader import Downloader
+from yubal.services.tagger import Tagger
 
 
 class SyncService:
@@ -46,7 +46,7 @@ class SyncService:
             SyncResult with success status and details
         """
         # Create temp directory for download
-        temp_dir = Path(tempfile.mkdtemp(prefix="ytadl_"))
+        temp_dir = Path(tempfile.mkdtemp(prefix="yubal_"))
 
         if progress_callback:
             progress_callback(

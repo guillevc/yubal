@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-# PACKAGE_ROOT: ytadl package directory
+# PACKAGE_ROOT: yubal package directory
 PACKAGE_ROOT = Path(__file__).parent.parent
 
 # APP_ROOT: project root (where pyproject.toml is)

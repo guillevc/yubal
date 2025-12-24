@@ -2,7 +2,7 @@
 
 from pydantic import BaseModel
 
-from ytadl.core import AlbumInfo
+from yubal.core import AlbumInfo
 
 
 class SyncRequest(BaseModel):

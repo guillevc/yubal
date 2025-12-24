@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="ytadl API",
+    title="yubal API",
     description="YouTube Album Downloader API",
     version="0.1.0",
     lifespan=lifespan,
@@ -40,7 +40,7 @@ app.add_middleware(
 )
 
 # Import and include routers
-from ytadl.api.routes import sync  # noqa: E402
+from yubal.api.routes import sync  # noqa: E402
 
 app.include_router(sync.router, prefix="/api/v1", tags=["sync"])
 

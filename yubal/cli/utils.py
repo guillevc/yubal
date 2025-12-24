@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from ytadl.core.config import DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
+from yubal.core.config import DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
 
 __all__ = [
     "DEFAULT_BEETS_CONFIG",
@@ -48,7 +48,7 @@ def validate_beets_config(beets_config: Path) -> None:
 
 def create_tagger(library_dir: Path, beets_config: Path):
     """Create a Tagger instance with standard configuration."""
-    from ytadl.services.tagger import Tagger
+    from yubal.services.tagger import Tagger
 
     return Tagger(
         beets_config=beets_config,

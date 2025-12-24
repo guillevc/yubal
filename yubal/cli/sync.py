@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from ytadl.cli.utils import (
+from yubal.cli.utils import (
     DEFAULT_BEETS_CONFIG,
     DEFAULT_LIBRARY_DIR,
     echo_error,
@@ -12,8 +12,8 @@ from ytadl.cli.utils import (
     echo_success,
     validate_beets_config,
 )
-from ytadl.core.progress import ProgressEvent, ProgressStep
-from ytadl.services.sync import SyncService
+from yubal.core.progress import ProgressEvent, ProgressStep
+from yubal.services.sync import SyncService
 
 
 def _cli_progress_callback(event: ProgressEvent) -> None:

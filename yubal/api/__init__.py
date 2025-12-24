@@ -1,6 +1,6 @@
 """FastAPI application module."""
 
-from ytadl.api.app import app
+from yubal.api.app import app
 
 __all__ = ["app"]
 

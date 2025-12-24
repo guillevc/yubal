@@ -4,8 +4,8 @@ from pathlib import Path
 
 import typer
 
-from ytadl.cli.utils import echo_error, echo_info, echo_success
-from ytadl.services.downloader import Downloader
+from yubal.cli.utils import echo_error, echo_info, echo_success
+from yubal.services.downloader import Downloader
 
 
 def download(

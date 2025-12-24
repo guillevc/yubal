@@ -6,8 +6,8 @@ from pathlib import Path
 
 import typer
 
-from ytadl.cli.utils import echo_error, echo_info
-from ytadl.core.constants import PRIORITY_TAGS, SKIP_TAGS
+from yubal.cli.utils import echo_error, echo_info
+from yubal.core.constants import PRIORITY_TAGS, SKIP_TAGS
 
 
 def _get_audio_tags(file_path: Path) -> dict[str, str]:

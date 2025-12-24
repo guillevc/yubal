@@ -6,8 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from ytadl.core.constants import AUDIO_EXTENSIONS
-from ytadl.core import (
+from yubal.core.constants import AUDIO_EXTENSIONS
+from yubal.core import (
     LibraryHealth,
     ProgressCallback,
     ProgressEvent,

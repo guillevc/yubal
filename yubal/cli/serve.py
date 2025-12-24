@@ -19,7 +19,7 @@ def serve(
     """Start the API server."""
     import uvicorn
 
-    from ytadl.core import config
+    from yubal.core import config
 
     # Override config if CLI options provided
     if data_dir:
@@ -30,4 +30,4 @@ def serve(
         config.DEFAULT_BEETS_CONFIG = config.CONFIG_DIR / "config.yaml"
         config.DEFAULT_BEETS_DB = config.CONFIG_DIR / "beets.db"
 
-    uvicorn.run("ytadl.api.app:app", host=host, port=port, reload=reload)
+    uvicorn.run("yubal.api.app:app", host=host, port=port, reload=reload)

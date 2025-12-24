@@ -4,7 +4,7 @@ from pathlib import Path
 
 import typer
 
-from ytadl.cli.utils import (
+from yubal.cli.utils import (
     DEFAULT_BEETS_CONFIG,
     DEFAULT_LIBRARY_DIR,
     create_tagger,
@@ -55,9 +55,9 @@ def import_music(
     Use --noautotag to skip auto-tagging and trust existing file metadata.
 
     Examples:
-        ytadl import ~/Downloads/music
-        ytadl import ~/old-library --copy
-        ytadl import ~/Music --noautotag
+        yubal import ~/Downloads/music
+        yubal import ~/old-library --copy
+        yubal import ~/Music --noautotag
     """
     validate_path_exists(source, "Source path")
     validate_beets_config(beets_config)
@@ -79,6 +79,6 @@ def import_music(
         echo_success(message)
         if imported_count > 0:
             echo_info("")
-            echo_info("Run 'ytadl doctor' to verify library health")
+            echo_info("Run 'yubal doctor' to verify library health")
     else:
         echo_error(message)

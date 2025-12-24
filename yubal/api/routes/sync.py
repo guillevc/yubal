@@ -6,11 +6,11 @@ from collections.abc import AsyncGenerator
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
-from ytadl.core.config import DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
-from ytadl.core.progress import ProgressEvent
-from ytadl.schemas.progress import ProgressEventSchema
-from ytadl.schemas.sync import SyncRequest, SyncResponse
-from ytadl.services.sync import SyncService
+from yubal.core.config import DEFAULT_BEETS_CONFIG, DEFAULT_LIBRARY_DIR
+from yubal.core.progress import ProgressEvent
+from yubal.schemas.progress import ProgressEventSchema
+from yubal.schemas.sync import SyncRequest, SyncResponse
+from yubal.services.sync import SyncService
 
 router = APIRouter()
 
