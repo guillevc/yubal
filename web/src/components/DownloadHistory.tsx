@@ -83,7 +83,6 @@ export function DownloadHistory({ history, onRemove }: DownloadHistoryProps) {
                 isIconOnly
                 variant="light"
                 size="sm"
-                className="opacity-0 transition-opacity group-hover:opacity-100"
                 onPress={() => onRemove(album.id)}
               >
                 <Trash2 className="text-default-400 h-3.5 w-3.5" />

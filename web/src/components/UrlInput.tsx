@@ -21,10 +21,6 @@ export function UrlInput({ value, onChange, disabled }: UrlInputProps) {
       isInvalid={!isValid}
       errorMessage={!isValid ? "Enter a valid YouTube Music URL" : undefined}
       startContent={<Link className="text-default-400 h-4 w-4" />}
-      classNames={{
-        input: "font-mono text-sm",
-        inputWrapper: "h-10 bg-default-100",
-      }}
     />
   );
 }

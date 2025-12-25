@@ -36,7 +36,6 @@ function getTimestamp(): string {
 
 export function ConsoleOutput({ logs, status }: ConsoleOutputProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const showStatus = status !== "idle";
   const isActive =
     status !== "idle" && status !== "complete" && status !== "error";
   const [currentTime, setCurrentTime] = useState(getTimestamp());
@@ -60,16 +59,9 @@ export function ConsoleOutput({ logs, status }: ConsoleOutputProps) {
   return (
     <div className="overflow-hidden rounded-lg border border-white/10 bg-[#0d0d0d]">
       {/* Terminal Header */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-white/5 px-3 py-2">
-        <div className="flex items-center gap-2">
-          <Terminal className="h-3.5 w-3.5 text-gray-500" />
-          <span className="font-mono text-xs text-gray-500">console</span>
-        </div>
-        {showStatus && (
-          <span className={`font-mono text-xs ${stepColors[status]}`}>
-            {status.toUpperCase()}
-          </span>
-        )}
+      <div className="flex items-center gap-2 border-b border-white/10 bg-white/5 px-3 py-2">
+        <Terminal className="h-3.5 w-3.5 text-gray-500" />
+        <span className="font-mono text-xs text-gray-500">console</span>
       </div>
 
       {/* Console Content */}

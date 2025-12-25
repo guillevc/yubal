@@ -1,21 +1,3 @@
 @import "tailwindcss";
 @plugin "./hero.ts";
 @source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
-
-/* Terminal scrollbar styling */
-.console-output::-webkit-scrollbar {
-  width: 8px;
-}
-
-.console-output::-webkit-scrollbar-track {
-  background: #0d0d0d;
-}
-
-.console-output::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
-}
-
-.console-output::-webkit-scrollbar-thumb:hover {
-  background: #444;
-}

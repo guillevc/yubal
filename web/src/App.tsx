@@ -101,17 +101,11 @@ export default function App() {
             onPress={handleSync}
             isLoading={isSyncing}
             isDisabled={!canSync}
-            className="h-10 w-10"
           >
             {!isSyncing && <Download className="h-4 w-4" />}
           </Button>
           {isSyncing && (
-            <Button
-              color="danger"
-              isIconOnly
-              onPress={cancelSync}
-              className="h-10 w-10"
-            >
+            <Button color="danger" isIconOnly onPress={cancelSync}>
               <X className="h-4 w-4" />
             </Button>
           )}
@@ -138,7 +132,7 @@ export default function App() {
               color="default"
               variant="flat"
               onPress={handleClear}
-              className="w-full"
+              fullWidth
             >
               Clear
             </Button>
