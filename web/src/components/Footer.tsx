@@ -5,7 +5,16 @@ export function Footer() {
         For educational purposes only
       </p>
       <p className="text-default-500/50 font-mono text-xs">
-        Powered by{" "}
+        Made by{" "}
+        <a
+          href="https://github.com/guillevc"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary/70 hover:text-primary hover:underline"
+        >
+          guillevc
+        </a>
+        {" · Powered by "}
         <a
           href="https://github.com/yt-dlp/yt-dlp"
           target="_blank"
