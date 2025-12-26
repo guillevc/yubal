@@ -10,9 +10,9 @@ interface ConsolePanelProps {
 }
 
 const stepColors: Record<ProgressStep, string> = {
-  idle: "text-default-400",
-  pending: "text-default-500",
-  fetching_info: "text-default-500",
+  idle: "text-foreground-400",
+  pending: "text-foreground-500",
+  fetching_info: "text-foreground-500",
   downloading: "text-primary",
   importing: "text-secondary",
   complete: "text-success",
@@ -65,7 +65,7 @@ export function ConsolePanel({ logs, status }: ConsolePanelProps) {
   return (
     <Panel>
       <PanelHeader>
-        <PanelTitle icon={<Terminal />}>Console</PanelTitle>
+        <PanelTitle icon={<Terminal />}>console</PanelTitle>
       </PanelHeader>
       <PanelContent
         ref={containerRef}
@@ -73,7 +73,9 @@ export function ConsolePanel({ logs, status }: ConsolePanelProps) {
       >
         {logs.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <span className="text-default-400/50">Awaiting YouTube URL...</span>
+            <span className="text-foreground-400/50">
+              Awaiting YouTube URL...
+            </span>
           </div>
         ) : (
           <AnimatePresence initial={false}>
@@ -84,7 +86,7 @@ export function ConsolePanel({ logs, status }: ConsolePanelProps) {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex gap-2"
               >
-                <span className="text-default-400/50 shrink-0">
+                <span className="text-foreground-400/50 shrink-0">
                   [{formatTime(log.timestamp)}]
                 </span>
                 <span className={stepColors[log.step]}>{log.message}</span>
@@ -95,8 +97,8 @@ export function ConsolePanel({ logs, status }: ConsolePanelProps) {
         {/* Blinking cursor when active */}
         {isActive && (
           <div className="flex gap-2">
-            <span className="text-default-400/50">[{currentTime}]</span>
-            <span className="text-default-500 animate-pulse">&#9608;</span>
+            <span className="text-foreground-400/50">[{currentTime}]</span>
+            <span className="text-foreground-500 animate-pulse">&#9608;</span>
           </div>
         )}
       </PanelContent>

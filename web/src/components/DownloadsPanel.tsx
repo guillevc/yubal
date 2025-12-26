@@ -32,7 +32,7 @@ export function DownloadsPanel({
           icon={<Download />}
           badge={
             jobs.length > 0 ? (
-              <span className="text-default-400 font-mono text-xs">
+              <span className="text-foreground-400 font-mono text-xs">
                 {jobs.length}
               </span>
             ) : undefined
@@ -44,7 +44,7 @@ export function DownloadsPanel({
       <PanelContent className="space-y-2">
         {jobs.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-default-400/50 font-mono text-xs">
+            <p className="text-foreground-400/50 font-mono text-xs">
               No downloads yet
             </p>
           </div>

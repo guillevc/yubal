@@ -1,8 +1,6 @@
 # CLAUDE.md
 
-## Development guidelines
-
-### API
+## API guidelines
 
 - Run `just gen-api` (from project root) if there have been API changes.
 - Jobs
@@ -10,7 +8,7 @@
   - We always want to run one job at a time, sequentially. Avoid multiple youtube downloads and beet imports at the same time.
   - Executing a job should download from yt-dlp and then process with beets.
 
-### Web
+## Web app guidelines
 
 - Use components from @heroui/react.
 - HeroUI v2 docs: https://www.heroui.com/docs
@@ -20,7 +18,69 @@
 - Prefer defining single-file components.
 - Use openapi-fetch with the generated schemas from FastAPI.
 
-### General
+### HeroUI Semantic colors and variables
+#### Text
+```
+text-foreground        # Primary text
+text-foreground-500    # Muted text
+text-foreground-400    # Faint text (hints, timestamps)
+text-primary           # Links, interactive
+text-success           # Success messages
+text-warning           # Warnings
+text-danger            # Errors
+```
+
+#### Backgrounds
+```
+bg-background          # Page background
+bg-content1            # Cards, modals
+bg-content2            # Nested sections
+bg-content3            # Deeper nesting (code blocks)
+bg-content4            # Deepest nesting
+bg-default-100         # Input backgrounds
+bg-default-50          # Subtle hover states
+```
+
+#### Borders
+```
+border-default-200     # Default borders (inputs, cards)
+border-default-300     # Stronger borders
+border-divider         # Dividers
+border-primary         # Active/focus states
+```
+
+#### Semantic Colors
+| Color     | Use                        |
+|-----------|----------------------------|
+| primary   | Links, buttons, focus      |
+| secondary | Alternative accents        |
+| success   | Success states, checkmarks |
+| warning   | Warnings, caution          |
+| danger    | Errors, destructive        |
+
+#### Common Patterns
+```tsx
+// Card with muted subtitle
+<p className="text-foreground">Title</p>
+<p className="text-foreground-500">Subtitle</p>
+
+// Input-matching custom element
+<div className="bg-default-100 border-default-200 rounded-medium">
+
+// Status indicators
+<Chip color="success">Complete</Chip>
+<Chip color="danger">Failed</Chip>
+
+// Console/code block
+<div className="bg-content2 rounded-medium font-mono text-sm">
+```
+
+#### Rules
+- Use `foreground` scale for text, `default` scale for UI elements
+- Match HeroUI components: `rounded-medium`, `border-medium`, `bg-default-100`
+- Don't use arbitrary colors — stick to semantic tokens
+
+## General
 
 - Lint and format after finishing modifying source code.
   - Use the justfile commands.

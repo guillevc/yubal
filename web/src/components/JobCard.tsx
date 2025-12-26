@@ -11,9 +11,11 @@ interface JobCardProps {
 function getStatusIcon(status: JobStatus) {
   switch (status) {
     case "pending":
-      return <Clock className="text-default-400 h-3.5 w-3.5" />;
+      return <Clock className="text-foreground-400 h-3.5 w-3.5" />;
     case "fetching_info":
-      return <Loader2 className="text-default-500 h-3.5 w-3.5 animate-spin" />;
+      return (
+        <Loader2 className="text-foreground-500 h-3.5 w-3.5 animate-spin" />
+      );
     case "downloading":
       return <Loader2 className="text-primary h-3.5 w-3.5 animate-spin" />;
     case "importing":
@@ -70,10 +72,10 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
 
   return (
     <div
-      className={`bg-background rounded-lg border px-3 py-2.5 transition-colors ${
+      className={`bg-content2 rounded-lg border px-3 py-2.5 transition-colors ${
         job.status === "cancelled"
-          ? "border-default-200 opacity-50"
-          : "border-default-200"
+          ? "border-divider opacity-50"
+          : "border-divider"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -85,12 +87,12 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
               className="h-10 w-10 rounded object-cover"
             />
           ) : (
-            <div className="bg-default-100 flex h-10 w-10 items-center justify-center rounded">
+            <div className="bg-content3 flex h-10 w-10 items-center justify-center rounded">
               {getStatusIcon(job.status)}
             </div>
           )}
           {thumbnailUrl && (
-            <div className="bg-background/80 absolute -right-1 -bottom-1 rounded-full p-0.5">
+            <div className="bg-content2/80 absolute -right-1 -bottom-1 rounded-full p-0.5">
               {getStatusIcon(job.status)}
             </div>
           )}
@@ -102,14 +104,14 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
                 {title}
               </p>
               <div className="flex items-center gap-2">
-                <p className="text-default-500 truncate font-mono text-xs">
+                <p className="text-foreground-500 truncate font-mono text-xs">
                   {artist}
                   {year && ` · ${year}`}
                 </p>
                 {isFinished && trackCount && (
                   <>
-                    <span className="text-default-400/30 text-xs">·</span>
-                    <span className="text-default-500/70 font-mono text-xs">
+                    <span className="text-foreground-400/30 text-xs">·</span>
+                    <span className="text-foreground-500/70 font-mono text-xs">
                       {trackCount} tracks
                     </span>
                   </>
@@ -117,7 +119,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
               </div>
             </>
           ) : (
-            <p className="text-default-500 truncate font-mono text-xs">
+            <p className="text-foreground-500 truncate font-mono text-xs">
               {job.url}
             </p>
           )}
@@ -127,7 +129,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
             variant="light"
             size="sm"
             isIconOnly
-            className="text-default-500 hover:text-danger h-7 w-7 shrink-0"
+            className="text-foreground-500 hover:text-danger h-7 w-7 shrink-0"
             onPress={() => onCancel(job.id)}
           >
             <X className="h-3.5 w-3.5" />
@@ -138,7 +140,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
             variant="light"
             size="sm"
             isIconOnly
-            className="text-default-500 hover:text-danger h-7 w-7 shrink-0"
+            className="text-foreground-500 hover:text-danger h-7 w-7 shrink-0"
             onPress={() => onDelete(job.id)}
           >
             <Trash2 className="h-3.5 w-3.5" />
@@ -157,7 +159,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
             }}
             aria-label="Job progress"
           />
-          <span className="text-default-500 w-8 text-right font-mono text-xs">
+          <span className="text-foreground-500 w-8 text-right font-mono text-xs">
             {Math.round(job.progress)}%
           </span>
         </div>

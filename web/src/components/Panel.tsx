@@ -10,7 +10,7 @@ export const Panel = forwardRef<HTMLElement, PanelProps>(
     return (
       <section
         ref={ref}
-        className={`border-default-200 rounded-large border-medium flex flex-col overflow-hidden ${className}`}
+        className={`border-divider bg-content1 rounded-large border-small flex flex-col overflow-hidden ${className}`}
         {...props}
       >
         {children}
@@ -29,7 +29,7 @@ export const PanelHeader = forwardRef<HTMLElement, PanelHeaderProps>(
     return (
       <header
         ref={ref}
-        className={`border-default-200 border-b-medium shrink-0 px-4 py-3 ${className}`}
+        className={`border-divider border-b-small shrink-0 px-4 py-3 ${className}`}
         {...props}
       >
         {children}
@@ -54,11 +54,11 @@ export const PanelTitle = forwardRef<HTMLDivElement, PanelTitleProps>(
         {...props}
       >
         {icon && (
-          <span className="text-default-500 [&>svg]:h-4 [&>svg]:w-4">
+          <span className="text-foreground-400 [&>svg]:h-4 [&>svg]:w-4">
             {icon}
           </span>
         )}
-        <span className="text-default-500 font-mono text-xs tracking-wider uppercase">
+        <span className="text-foreground-400 font-mono text-xs tracking-wider uppercase">
           {children}
         </span>
         {badge}

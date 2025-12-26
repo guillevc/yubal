@@ -1,10 +1,10 @@
 export function Footer() {
   return (
     <footer className="mt-6 space-y-1 text-center">
-      <p className="text-default-500/50 font-mono text-xs">
+      <p className="text-foreground-500/50 font-mono text-xs">
         For educational purposes only
       </p>
-      <p className="text-default-500/50 font-mono text-xs">
+      <p className="text-foreground-500/50 font-mono text-xs">
         Made by{" "}
         <a
           href="https://github.com/guillevc"

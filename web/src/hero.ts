@@ -2,116 +2,135 @@ import { heroui } from "@heroui/react";
 
 export default heroui({
   themes: {
-    "custom-heroui-theme": {
+    flexoki: {
+      extend: "dark",
       colors: {
+        // Backgrounds
+        background: "#100F0F", // black
+
+        // Content layers (surfaces)
+        content1: "#1C1B1A", // base-950
+        content2: "#282726", // base-900
+        content3: "#343331", // base-850
+        content4: "#403E3C", // base-800
+
+        // Foreground (text)
+        foreground: {
+          DEFAULT: "#CECDC3", // base-200 (tx)
+          50: "#100F0F",
+          100: "#1C1B1A",
+          200: "#282726",
+          300: "#343331",
+          400: "#575653", // base-700 (tx-3, faint)
+          500: "#878580", // base-500 (tx-2, muted)
+          600: "#B7B5AC", // base-300
+          700: "#CECDC3", // base-200
+          800: "#DAD8CE", // base-150
+          900: "#FFFCF0", // paper (brightest)
+        },
+
+        // Default (neutral/gray scale)
         default: {
-          "50": "#0d0c0c",
-          "100": "#1a1918",
-          "200": "#262524",
-          "300": "#333230",
-          "400": "#403e3c",
-          "500": "#666563",
-          "600": "#8c8b8a",
-          "700": "#b3b2b1",
-          "800": "#d9d8d8",
-          "900": "#ffffff",
-          foreground: "#CECDC3",
-          DEFAULT: "#403e3c",
-        },
-        primary: {
-          "50": "#113330",
-          "100": "#1c504c",
-          "200": "#266e67",
-          "300": "#308b83",
-          "400": "#3aa99f",
-          "500": "#5cb8b0",
-          "600": "#7fc7c1",
-          "700": "#a1d6d1",
-          "800": "#c4e5e2",
-          "900": "#e6f4f3",
-          foreground: "#100F0F",
-          DEFAULT: "#3aa99f",
-        },
-        secondary: {
-          "50": "#2a263c",
-          "100": "#423c5f",
-          "200": "#5a5282",
-          "300": "#7368a5",
-          "400": "#8b7ec8",
-          "500": "#9f95d2",
-          "600": "#b4abdb",
-          "700": "#c8c2e5",
-          "800": "#dcd8ef",
-          "900": "#f1eff8",
-          foreground: "#100F0F",
-          DEFAULT: "#8b7ec8",
-        },
-        success: {
-          "50": "#292e11",
-          "100": "#40491b",
-          "200": "#586425",
-          "300": "#6f7f2f",
-          "400": "#879a39",
-          "500": "#9cac5c",
-          "600": "#b1bd7e",
-          "700": "#c6cfa1",
-          "800": "#dbe1c4",
-          "900": "#f0f2e6",
-          foreground: "#100F0F",
-          DEFAULT: "#879a39",
-        },
-        warning: {
-          "50": "#41220d",
-          "100": "#683515",
-          "200": "#8e491d",
-          "300": "#b45c24",
-          "400": "#da702c",
-          "500": "#e08951",
-          "600": "#e7a276",
-          "700": "#edbb9b",
-          "800": "#f4d4c0",
-          "900": "#faede5",
-          foreground: "#100F0F",
-          DEFAULT: "#da702c",
-        },
-        danger: {
-          "50": "#3f1714",
-          "100": "#63251f",
-          "200": "#88322a",
-          "300": "#ac4036",
-          "400": "#d14d41",
-          "500": "#d96c62",
-          "600": "#e18b84",
-          "700": "#e9aaa5",
-          "800": "#f1cac6",
-          "900": "#f9e9e7",
-          foreground: "#100F0F",
-          DEFAULT: "#d14d41",
-        },
-        background: "#100F0F",
-        foreground: "#CECDC3",
-        content1: {
-          DEFAULT: "#1C1B1A",
-          foreground: "#CECDC3",
-        },
-        content2: {
-          DEFAULT: "#282726",
-          foreground: "#CECDC3",
-        },
-        content3: {
+          50: "#1C1B1A", // base-950
+          100: "#282726", // base-900
+          200: "#343331", // base-850
+          300: "#403E3C", // base-800
+          400: "#575653", // base-700
+          500: "#6F6E69", // base-600
+          600: "#878580", // base-500
+          700: "#B7B5AC", // base-300
+          800: "#CECDC3", // base-200
+          900: "#E6E4D9", // base-100
           DEFAULT: "#343331",
           foreground: "#CECDC3",
         },
-        content4: {
-          DEFAULT: "#403E3C",
-          foreground: "#CECDC3",
+
+        // Primary (cyan - links, active states)
+        primary: {
+          50: "#122F2C",
+          100: "#143F3C",
+          200: "#164F4A",
+          300: "#1C6C66",
+          400: "#24837B",
+          500: "#2F968D",
+          600: "#3AA99F", // cyan-400 (main)
+          700: "#5ABDAC",
+          800: "#87D3C3",
+          900: "#DDF1E4",
+          DEFAULT: "#3AA99F",
+          foreground: "#100F0F",
         },
-        focus: "#3AA99F",
-        overlay: "#100F0F",
+
+        // Secondary (purple)
+        secondary: {
+          50: "#1A1623",
+          100: "#261C39",
+          200: "#31234E",
+          300: "#3C2A62",
+          400: "#4F3685",
+          500: "#5E409D",
+          600: "#735EB5",
+          700: "#8B7EC8", // purple-400 (main)
+          800: "#A699D0",
+          900: "#F0EAEC",
+          DEFAULT: "#8B7EC8",
+          foreground: "#100F0F",
+        },
+
+        // Success (green)
+        success: {
+          50: "#1A1E0C",
+          100: "#252D09",
+          200: "#313D07",
+          300: "#3D4C07",
+          400: "#536907",
+          500: "#66800B",
+          600: "#768D21",
+          700: "#879A39", // green-400 (main)
+          800: "#A0AF54",
+          900: "#EDEECF",
+          DEFAULT: "#879A39",
+          foreground: "#100F0F",
+        },
+
+        // Warning (yellow/orange)
+        warning: {
+          50: "#27180E",
+          100: "#40200D",
+          200: "#59290D",
+          300: "#71320D",
+          400: "#9D4310",
+          500: "#BC5215",
+          600: "#CB6120",
+          700: "#DA702C", // orange-400 (main)
+          800: "#EC8B49",
+          900: "#FFE7CE",
+          DEFAULT: "#DA702C",
+          foreground: "#100F0F",
+        },
+
+        // Danger (red)
+        danger: {
+          50: "#261312",
+          100: "#3E1715",
+          200: "#551B18",
+          300: "#6C201C",
+          400: "#942822",
+          500: "#AF3029",
+          600: "#C03E35",
+          700: "#D14D41", // red-400 (main)
+          800: "#E8705F",
+          900: "#FFE1D5",
+          DEFAULT: "#D14D41",
+          foreground: "#FFFCF0",
+        },
+
+        // Divider
+        divider: "#343331", // base-850
+
+        // Focus ring
+        focus: "#3AA99F", // cyan-400
       },
     },
-  },
-  layout: {
-    disabledOpacity: "0.6",
   },
 });

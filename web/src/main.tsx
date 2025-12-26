@@ -7,7 +7,7 @@ import "./index.css";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <HeroUIProvider>
-      <main className="custom-heroui-theme">
+      <main className="flexoki">
         <App />
       </main>
     </HeroUIProvider>
