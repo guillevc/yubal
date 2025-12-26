@@ -15,7 +15,7 @@ export default heroui({
           "700": "#b3b2b1",
           "800": "#d9d8d8",
           "900": "#ffffff",
-          foreground: "#fff",
+          foreground: "#CECDC3",
           DEFAULT: "#403e3c",
         },
         primary: {
@@ -29,7 +29,7 @@ export default heroui({
           "700": "#a1d6d1",
           "800": "#c4e5e2",
           "900": "#e6f4f3",
-          foreground: "#000",
+          foreground: "#100F0F",
           DEFAULT: "#3aa99f",
         },
         secondary: {
@@ -43,7 +43,7 @@ export default heroui({
           "700": "#c8c2e5",
           "800": "#dcd8ef",
           "900": "#f1eff8",
-          foreground: "#000",
+          foreground: "#100F0F",
           DEFAULT: "#8b7ec8",
         },
         success: {
@@ -57,7 +57,7 @@ export default heroui({
           "700": "#c6cfa1",
           "800": "#dbe1c4",
           "900": "#f0f2e6",
-          foreground: "#000",
+          foreground: "#100F0F",
           DEFAULT: "#879a39",
         },
         warning: {
@@ -71,7 +71,7 @@ export default heroui({
           "700": "#edbb9b",
           "800": "#f4d4c0",
           "900": "#faede5",
-          foreground: "#000",
+          foreground: "#100F0F",
           DEFAULT: "#da702c",
         },
         danger: {
@@ -85,26 +85,26 @@ export default heroui({
           "700": "#e9aaa5",
           "800": "#f1cac6",
           "900": "#f9e9e7",
-          foreground: "#000",
+          foreground: "#100F0F",
           DEFAULT: "#d14d41",
         },
         background: "#100F0F",
         foreground: "#CECDC3",
         content1: {
           DEFAULT: "#1C1B1A",
-          foreground: "#fff",
+          foreground: "#CECDC3",
         },
         content2: {
           DEFAULT: "#282726",
-          foreground: "#fff",
+          foreground: "#CECDC3",
         },
         content3: {
           DEFAULT: "#343331",
-          foreground: "#fff",
+          foreground: "#CECDC3",
         },
         content4: {
           DEFAULT: "#403E3C",
-          foreground: "#fff",
+          foreground: "#CECDC3",
         },
         focus: "#3AA99F",
         overlay: "#100F0F",

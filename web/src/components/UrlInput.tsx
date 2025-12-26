@@ -13,6 +13,11 @@ export function UrlInput({ value, onChange, disabled }: UrlInputProps) {
 
   return (
     <Input
+      variant="bordered"
+      size="lg"
+      classNames={{
+        input: "text-foreground",
+      }}
       type="url"
       placeholder="Paste album URL..."
       value={value}

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LogEntry, ProgressStep } from "../hooks/useJobs";
-import { Card, CardBody, CardHeader } from "@heroui/react";
+import { Panel, PanelHeader, PanelTitle, PanelContent } from "./Panel";
 
 interface ConsoleOutputProps {
   logs: LogEntry[];
@@ -63,18 +63,13 @@ export function ConsoleOutput({ logs, status }: ConsoleOutputProps) {
   }, [isActive]);
 
   return (
-    <Card className="border-default-200 flex flex-col overflow-hidden border">
-      <CardHeader className="border-default-200 shrink-0 border-b px-4 py-3">
-        <div className="flex items-center gap-2">
-          <Terminal className="text-default-500 h-4 w-4" />
-          <span className="text-default-500 font-mono text-xs tracking-wider uppercase">
-            Console
-          </span>
-        </div>
-      </CardHeader>
-      <CardBody
+    <Panel>
+      <PanelHeader>
+        <PanelTitle icon={<Terminal />}>Console</PanelTitle>
+      </PanelHeader>
+      <PanelContent
         ref={containerRef}
-        className="h-72 space-y-1 overflow-y-auto p-4 font-mono text-xs"
+        className="space-y-1 p-4 font-mono text-xs"
       >
         {logs.length === 0 ? (
           <div className="flex h-full items-center justify-center">
@@ -104,7 +99,7 @@ export function ConsoleOutput({ logs, status }: ConsoleOutputProps) {
             <span className="text-default-500 animate-pulse">&#9608;</span>
           </div>
         )}
-      </CardBody>
-    </Card>
+      </PanelContent>
+    </Panel>
   );
 }

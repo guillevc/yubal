@@ -42,7 +42,7 @@ export default function App() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col justify-center px-4 py-6">
-      <main className="mx-auto w-full max-w-6xl">
+      <main className="mx-auto w-full max-w-4xl">
         <Header />
 
         {/* URL Input Section */}
@@ -52,10 +52,10 @@ export default function App() {
           </div>
           <Button
             color="primary"
+            size="lg"
             isIconOnly
             onPress={handleSync}
             isDisabled={!canSync}
-            className="h-11"
           >
             <Download className="h-4 w-4" />
           </Button>
