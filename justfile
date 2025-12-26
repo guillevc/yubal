@@ -16,7 +16,7 @@ dev:
 
 # Run FastAPI backend with reload
 dev-api:
-    uv run yubal serve #--reload
+    uv run python -m yubal
 
 # Run Vite frontend
 dev-web:

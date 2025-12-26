@@ -5,7 +5,6 @@ description = "YouTube Album Downloader with auto-tagging via beets"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "typer>=0.15.0",
     "yt-dlp>=2025.1.0",
     "beets[lastgenre,lyrics]>=2.5.0",
     "requests>=2.32.0",
@@ -13,9 +12,6 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn[standard]>=0.34.0",
 ]
-
-[project.scripts]
-yubal = "yubal.cli:main"
 
 [project.optional-dependencies]
 dev = [
@@ -54,13 +50,9 @@ select = [
     "RUF", # ruff-specific
 ]
 ignore = [
-    "B008",  # typer uses function calls in defaults by design
     "S603",  # subprocess calls are internal tools, not untrusted
     "S607",  # partial paths are fine for ffprobe/beets
 ]
-
-[tool.ruff.lint.per-file-ignores]
-"yubal/cli/*.py" = ["B008"]  # typer CLI pattern
 
 [tool.ruff.format]
 quote-style = "double"
