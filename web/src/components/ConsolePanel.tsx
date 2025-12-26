@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { LogEntry, ProgressStep } from "../hooks/useJobs";
-import { Panel, PanelHeader, PanelTitle, PanelContent } from "./Panel";
+import { Panel, PanelHeader, PanelTitle, PanelContent } from "./ui/Panel";
 
 interface ConsolePanelProps {
   logs: LogEntry[];
