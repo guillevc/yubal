@@ -163,13 +163,9 @@ async def _update_job_from_event(
     if job_store.is_cancelled(job_id):
         return
 
-    # Don't update to complete/failed from callback - final result handles that
-    if new_status in (JobStatus.COMPLETED, JobStatus.FAILED):
-        new_status = (
-            JobStatus.IMPORTING
-            if event.step.value == "importing"
-            else JobStatus.DOWNLOADING
-        )
+    # Skip completed/failed from callback - final result handles those
+    if event.step.value in ("completed", "failed"):
+        return
 
     # Extract track info and album_info from event details
     details = event.details or {}
