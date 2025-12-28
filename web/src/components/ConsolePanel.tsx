@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Terminal } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Job, JobLog } from "../hooks/useJobs";
-import { Panel, PanelHeader, PanelTitle, PanelContent } from "./ui/Panel";
+import { Panel, PanelHeader, PanelContent } from "./ui/Panel";
 import { isActive } from "../utils/job-status";
 
 interface ConsolePanelProps {
@@ -12,7 +12,7 @@ interface ConsolePanelProps {
 
 const statusColors: Record<string, string> = {
   pending: "text-foreground-500",
-  fetching_info: "text-foreground-500",
+  fetching_info: "text-foreground",
   downloading: "text-primary",
   importing: "text-secondary",
   completed: "text-success",
@@ -63,23 +63,22 @@ export function ConsolePanel({ logs, jobs }: ConsolePanelProps) {
     <PanelHeader
       className="hover:bg-content2 cursor-pointer select-none"
       onClick={() => setIsExpanded(!isExpanded)}
+      leadingIcon={<Terminal size={18} />}
+      badge={<Terminal />}
+      trailingIcon={
+        <motion.div
+          animate={{ rotate: isExpanded ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="flex items-center justify-center"
+        >
+          <ChevronDown size={18} />
+        </motion.div>
+      }
     >
-      <PanelTitle
-        icon={<Terminal />}
-        trailingIcon={
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
-            className="flex items-center justify-center"
-          >
-            <ChevronDown />
-          </motion.div>
-        }
-      >
-        console
-      </PanelTitle>
+      console
     </PanelHeader>
   );
+
   const panelContent = (
     <PanelContent
       ref={containerRef}
@@ -87,7 +86,7 @@ export function ConsolePanel({ logs, jobs }: ConsolePanelProps) {
     >
       {logs.length === 0 ? (
         <div className="flex h-full items-center justify-center">
-          <span className="text-foreground-400/50">
+          <span className="text-foreground-400">
             Awaiting YouTube URL...
           </span>
         </div>
@@ -100,7 +99,7 @@ export function ConsolePanel({ logs, jobs }: ConsolePanelProps) {
               animate={{ opacity: 1, y: 0 }}
               className="flex gap-2"
             >
-              <span className="text-foreground-400/50 shrink-0">
+              <span className="text-foreground-400 shrink-0">
                 [{formatTime(log.timestamp)}]
               </span>
               <span className={statusColors[log.status] ?? "text-foreground"}>
@@ -113,7 +112,7 @@ export function ConsolePanel({ logs, jobs }: ConsolePanelProps) {
       {/* Blinking cursor when active */}
       {hasActiveJobs && (
         <div className="flex gap-2">
-          <span className="text-foreground-400/50">[{currentTime}]</span>
+          <span className="text-foreground-400">[{currentTime}]</span>
           <span className="text-foreground-500 animate-pulse">&#9608;</span>
         </div>
       )}

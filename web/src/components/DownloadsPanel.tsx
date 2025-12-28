@@ -2,7 +2,7 @@ import { Download } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { Job } from "../api/jobs";
 import { JobCard } from "./JobCard";
-import { Panel, PanelHeader, PanelTitle, PanelContent } from "./ui/Panel";
+import { Panel, PanelHeader, PanelContent } from "./ui/Panel";
 
 interface DownloadsPanelProps {
   jobs: Job[];
@@ -20,24 +20,21 @@ export function DownloadsPanel({
 
   return (
     <Panel>
-      <PanelHeader>
-        <PanelTitle
-          icon={<Download />}
-          badge={
-            jobs.length > 0 ? (
-              <span className="text-foreground-400 font-mono text-xs">
-                {jobs.length}
-              </span>
-            ) : undefined
-          }
-        >
-          Downloads
-        </PanelTitle>
+      <PanelHeader
+        leadingIcon={<Download size={18} />}
+        badge={
+          jobs.length > 0 && (
+            <span className="text-foreground-400 font-mono text-xs">
+              {jobs.length}
+            </span>
+          )
+        }>
+        Downloads
       </PanelHeader>
       <PanelContent className="space-y-2">
         {jobs.length === 0 ? (
           <div className="flex h-full items-center justify-center">
-            <p className="text-foreground-400/50 font-mono text-xs">
+            <p className="text-foreground-400 font-mono text-xs">
               No downloads yet
             </p>
           </div>
