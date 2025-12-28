@@ -1,0 +1,4 @@
+{
+  "ty.diagnosticMode": "workspace",
+  "typescript.tsserver.experimental.enableProjectDiagnostics": true
+}
