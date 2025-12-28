@@ -28,7 +28,7 @@ export default function App() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col justify-center px-4 py-6">
-      <main className="mx-auto w-full max-w-4xl">
+      <main className="mx-auto w-full max-w-2xl">
         <Header />
 
         {/* URL Input Section */}
@@ -47,8 +47,8 @@ export default function App() {
           </Button>
         </section>
 
-        {/* Two Column Grid */}
-        <section className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Stacked Panels */}
+        <section className="mb-6 flex flex-col gap-4">
           <DownloadsPanel
             jobs={jobs}
             onCancel={cancelJob}
