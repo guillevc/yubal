@@ -3,6 +3,8 @@
     "astral-sh.ty",
     "dbaeumer.vscode-eslint",
     "prettier.prettier-vscode",
-    "charliermarsh.ruff"
+    "charliermarsh.ruff",
+    "bradlc.vscode-tailwindcss",
+    "EditorConfig.EditorConfig"
   ]
 }
