@@ -1,7 +1,7 @@
 import asyncio
-import uuid
 from collections import OrderedDict
-from datetime import UTC, datetime
+from collections.abc import Callable
+from datetime import datetime
 
 from yubal.core.enums import JobStatus
 from yubal.core.models import AlbumInfo, Job, LogEntry
@@ -15,7 +15,13 @@ class JobStore:
     MAX_TOTAL_LOGS = 500
     TIMEOUT_SECONDS = 30 * 60  # 30 minutes
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        clock: Callable[[], datetime],
+        id_generator: Callable[[], str],
+    ) -> None:
+        self._clock = clock
+        self._id_generator = id_generator
         self._jobs: OrderedDict[str, Job] = OrderedDict()
         self._logs: dict[str, list[LogEntry]] = {}  # job_id -> logs
         self._lock = asyncio.Lock()
@@ -46,7 +52,7 @@ class JobStore:
 
             # Create new job
             job = Job(
-                id=str(uuid.uuid4()),
+                id=self._id_generator(),
                 url=url,
                 audio_format=audio_format,
             )
@@ -105,7 +111,7 @@ class JobStore:
             # Mark as cancelled
             self._cancellation_requested.add(job_id)
             job.status = JobStatus.CANCELLED
-            job.completed_at = datetime.now(UTC)
+            job.completed_at = self._clock()
 
             # Clear active job if it matches
             if self._active_job_id == job_id:
@@ -149,7 +155,7 @@ class JobStore:
 
             # Clear active job if finished
             if job.status.is_finished:
-                job.completed_at = job.completed_at or datetime.now(UTC)
+                job.completed_at = job.completed_at or self._clock()
                 if self._active_job_id == job_id:
                     self._active_job_id = None
 
@@ -172,7 +178,7 @@ class JobStore:
                 return
 
             entry = LogEntry(
-                timestamp=datetime.now(UTC),
+                timestamp=self._clock(),
                 status=status,
                 message=message,
             )
@@ -238,10 +244,10 @@ class JobStore:
         Returns True if job was timed out.
         """
         if job.started_at and not job.status.is_finished:
-            elapsed = datetime.now(UTC) - job.started_at
+            elapsed = self._clock() - job.started_at
             if elapsed.total_seconds() > self.TIMEOUT_SECONDS:
                 job.status = JobStatus.FAILED
-                job.completed_at = datetime.now(UTC)
+                job.completed_at = self._clock()
                 if self._active_job_id == job.id:
                     self._active_job_id = None
                 return True

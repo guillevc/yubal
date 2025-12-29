@@ -1,3 +1,5 @@
+import uuid
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import Depends
@@ -9,7 +11,10 @@ from yubal.services.tagger import Tagger
 from yubal.settings import Settings, get_settings
 
 # Global singleton instance
-job_store = JobStore()
+job_store = JobStore(
+    clock=lambda: datetime.now(UTC),
+    id_generator=lambda: str(uuid.uuid4()),
+)
 
 
 def get_job_store() -> JobStore:
