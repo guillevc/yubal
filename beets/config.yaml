@@ -24,7 +24,7 @@ import:
   move: yes
   quiet: yes
   quiet_fallback: asis
-  duplicate_action: skip
+  duplicate_action: remove
   log: ./beets_import.log
 
 # Relaxed matching for YouTube rips
