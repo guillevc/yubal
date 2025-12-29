@@ -89,5 +89,11 @@ install-api:
 install-web:
     cd web && bun install --frozen-lockfile
 
+# Docker
+docker-build:
+    docker build -t yubal .
+    docker images yubal | awk 'NR==2 {print "📦 Image size: " $7}'
+    @echo '✅ Docker build successful!'
+
 clean:
     rm -rf dist/ .pytest_cache/ .ruff_cache/ web/dist/ web/node_modules/.vite/

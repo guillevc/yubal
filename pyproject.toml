@@ -2,7 +2,6 @@
 name = "yubal"
 version = "0.1.0"
 description = "YouTube Album Downloader with auto-tagging via beets"
-readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
   "beets[lastgenre,lyrics]>=2.5.1",
