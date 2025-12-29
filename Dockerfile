@@ -1,3 +1,7 @@
+# Build args for version info
+ARG COMMIT_SHA=dev
+ENV COMMIT_SHA=$COMMIT_SHA
+
 # Build frontend
 FROM oven/bun:1-alpine AS web
 WORKDIR /app/web
