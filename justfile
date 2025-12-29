@@ -68,13 +68,19 @@ format-check-api:
 format-check-web:
     cd web && bun run format:check
 
+# Tests
+test:
+    uv run pytest
+test-cov:
+    uv run pytest --cov
+
 # Utils
 gen-api:
     cd web && bun run generate-api
 dead-exclusions:
     uv run dead --exclude '^yubal/(api|schemas)/.*'
 
-check: lint format-check typecheck
+check: lint format-check typecheck test
 
 install: install-api install-web
 install-api:

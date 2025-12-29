@@ -19,6 +19,7 @@ dependencies = [
 dev = [
   "dead>=2.1.0",
   "pytest>=9.0.2",
+  "pytest-asyncio>=1.3.0",
   "pytest-cov>=7.0.0",
   "ruff>=0.14.10",
   "ty>=0.0.7",
@@ -51,6 +52,12 @@ ignore = [
   "S607", # partial paths are fine for ffprobe/beets
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+  "S101", # assert is expected in tests
+  "S108", # /tmp paths in tests are fixtures, not real usage
+]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
@@ -58,3 +65,9 @@ indent-style = "space"
 [tool.ruff.lint.isort]
 force-single-line = false
 known-first-party = ["yubal"]
+
+[tool.coverage.run]
+source = ["yubal"]
+
+[tool.coverage.report]
+omit = ["tests/*"]
