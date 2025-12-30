@@ -2,7 +2,9 @@
 
 # yubal
 
-**YouTube album downloader with Spotify metadata auto-tagging.**
+**YouTube Music album downloader with Spotify metadata auto-tagging.**
+<br/>
+No accounts required.
 <br/>
 _Powered by yt-dlp and beets._
 
@@ -118,6 +120,7 @@ yubal is configured via Environment Variables.
 - [ ] Batch import (multiple URLs at once)
 - [ ] Post-import webhook (trigger library scan on Gonic/Navidrome/Jellyfin)
 - [ ] PWA support for mobile
+- [ ] (maybe) Browse YouTube Music albums in the web app.
 - [ ] (maybe) Playlist support (download full playlists)
 
 Have a feature request? [Open an issue](https://github.com/guillevc/yubal/issues)!
