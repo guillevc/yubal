@@ -95,5 +95,15 @@ docker-build:
     docker images yubal:just-docker-build | awk 'NR==2 {print "📦 Image size: " $7}'
     @echo '✅ Docker build successful!'
 
+# Version
+version VERSION:
+    # Update pyproject.toml
+    sed -i '' 's/^version = ".*"/version = "{{VERSION}}"/' pyproject.toml
+    # Update package.json
+    cd web && npm pkg set version={{VERSION}}
+    git add pyproject.toml web/package.json
+    git commit -m "chore: bump version to {{VERSION}}"
+    git tag v{{VERSION}}
+
 clean:
     rm -rf dist/ .pytest_cache/ .ruff_cache/ web/dist/ web/node_modules/.vite/
