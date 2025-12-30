@@ -61,9 +61,9 @@ services:
     image: ghcr.io/guillevc/yubal:latest
     container_name: yubal
     ports:
-      - "8000:8000"
+      - 8000:8000
     environment:
-      - YUBAL_TZ=UTC
+      YUBAL_TZ: UTC
       # Check the Configuration section for more variables
     volumes:
       - ./data:/app/data # Where your music will be saved
