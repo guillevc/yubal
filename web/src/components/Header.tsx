@@ -5,6 +5,7 @@ import {
   DropdownItem,
   DropdownMenu,
   DropdownTrigger,
+  Tooltip,
 } from "@heroui/react";
 import { Cookie, Disc3, Moon, Sun, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -147,15 +148,20 @@ export function Header() {
           </DropdownMenu>
         </Dropdown>
       ) : (
-        <Button
-          isIconOnly
-          variant="light"
-          aria-label="Upload cookies"
-          isLoading={isUploading}
-          onPress={() => fileInputRef.current?.click()}
+        <Tooltip
+          content="Upload cookies.txt for YouTube authentication"
+          closeDelay={0}
         >
-          <Cookie className="h-5 w-5" />
-        </Button>
+          <Button
+            isIconOnly
+            variant="light"
+            aria-label="Upload cookies"
+            isLoading={isUploading}
+            onPress={() => fileInputRef.current?.click()}
+          >
+            <Cookie className="h-5 w-5" />
+          </Button>
+        </Tooltip>
       )}
       <Button
         isIconOnly

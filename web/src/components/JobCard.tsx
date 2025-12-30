@@ -31,7 +31,7 @@ function getStatusIcon(status: JobStatus) {
 }
 
 function getProgressColor(
-  status: JobStatus
+  status: JobStatus,
 ): "default" | "primary" | "secondary" | "success" | "warning" | "danger" {
   switch (status) {
     case "downloading":
@@ -64,10 +64,11 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
 
   return (
     <div
-      className={`bg-content2 rounded-lg border px-3 py-2.5 transition-colors ${job.status === "cancelled"
-        ? "border-divider opacity-50"
-        : "border-divider"
-        }`}
+      className={`bg-content2 rounded-lg border px-3 py-2.5 transition-colors ${
+        job.status === "cancelled"
+          ? "border-divider opacity-50"
+          : "border-divider"
+      }`}
     >
       <div className="flex items-center gap-3">
         <div className="relative shrink-0">
@@ -89,17 +90,17 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
           )}
         </div>
 
-        <div className="min-w-0 flex-1 font-mono space-y-0.5">
+        <div className="min-w-0 flex-1 space-y-0.5 font-mono">
           {title ? (
             <>
-              <div className="flex items-center gap-1.5 text-sm min-w-0">
-                <p className="text-foreground truncate min-w-0">{title}</p>
+              <div className="flex min-w-0 items-center gap-1.5 text-sm">
+                <p className="text-foreground min-w-0 truncate">{title}</p>
                 {year && (
                   <span className="text-foreground-500 shrink-0">({year})</span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-xs min-w-0">
-                <p className="text-foreground-500 truncate min-w-0">{artist}</p>
+              <div className="flex min-w-0 items-center gap-1.5 text-xs">
+                <p className="text-foreground-500 min-w-0 truncate">{artist}</p>
                 {trackCount && (
                   <span className="text-foreground-500 shrink-0">
                     · {trackCount} tracks
