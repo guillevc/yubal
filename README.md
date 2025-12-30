@@ -2,9 +2,9 @@
 
 # yubal
 
-**YouTube albums, downloaded and tagged automatically.**
+**YouTube album downloader with Spotify metadata auto-tagging.**
 <br/>
-*Powered by yt-dlp and beets. Metadata from Spotify*
+*Powered by yt-dlp and beets.*
 
 [![CI Status](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
 [![GitHub Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
@@ -38,7 +38,7 @@ YouTube Music ─────►│                  │        ├─01 - Track
 ```
 
 - **[yt-dlp](https://github.com/yt-dlp/yt-dlp)** downloads audio from YouTube
-- **[beets](https://beets.io)** auto-tags using Spotify metadata and gets album arts.
+- **[beets](https://beets.io)** auto-tags using Spotify metadata and fetches album art.
 
 ## ✨ Features
 
@@ -85,6 +85,7 @@ Open your browser to `http://localhost:8000` and paste a YouTube Music album URL
 
 > [!TIP]
 > **Premium Quality & Age Restrictions**
+>
 > 
 > To download age-restricted content or access higher bitrate audio (Premium users), you must provide your cookies:
 > 1. Export your cookies from YouTube using a browser extension. [See yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp)
@@ -98,29 +99,32 @@ Open your browser to `http://localhost:8000` and paste a YouTube Music album URL
 
 *yubal* is configured entirely via Environment Variables.
 
-| Variable | Description | Default (Docker) | Default (Local) |
-| --- | --- | --- | --- |
-| `YUBAL_HOST` | Server bind address | `0.0.0.0` | `127.0.0.1` |
-| `YUBAL_PORT` | Server listening port | `8000` | `8000` |
-| `YUBAL_DATA_DIR` | Destination for tagged music | `/app/data` | `./data` |
-| `YUBAL_BEETS_DIR` | Location of Beets DB/Config | `/app/beets` | `./beets` |
-| `YUBAL_YTDLP_DIR` | Location of cookies.txt | `/app/ytdlp` | `./ytdlp` |
-| `YUBAL_AUDIO_FORMAT` | Output audio codec | `opus` | `opus` |
-| `YUBAL_AUDIO_QUALITY` | Transcoding quality (VBR scale 0-9) | `0` (Best) | `0` (Best) |
-| `YUBAL_TZ` | Timezone (IANA format) | `UTC` | `UTC` |
+| Variable              | Description                     | Default (Docker) |
+| --------------------- | ------------------------------- | ---------------- |
+| `YUBAL_HOST`          | Server bind address             | `0.0.0.0`        |
+| `YUBAL_PORT`          | Server listening port           | `8000`           |
+| `YUBAL_DATA_DIR`      | Destination for tagged music    | `/app/data`      |
+| `YUBAL_BEETS_DIR`     | Location of Beets DB/Config     | `/app/beets`     |
+| `YUBAL_YTDLP_DIR`     | Location of cookies.txt         | `/app/ytdlp`     |
+| `YUBAL_AUDIO_FORMAT`  | Output audio codec              | `opus`           |
+| `YUBAL_AUDIO_QUALITY` | Transcoding quality (VBR scale) | `0` (Best)       |
+| `YUBAL_TZ`            | Timezone (IANA format)          | `UTC`            |
 
 > [!NOTE]
 > **Audio Transcoding**
-> By default, *yubal* keeps the original `opus` stream from YouTube for maximum quality and speed. Transcoding (e.g., to MP3) only occurs if you explicitly change `YUBAL_AUDIO_FORMAT`.
+>
+> 
+> By default, *yubal* keeps the original `opus` stream from YouTube for maximum quality and speed.
+> Transcoding (e.g., to MP3) only occurs if you explicitly change `YUBAL_AUDIO_FORMAT`, or if the source from YouTUbe is not `opus`, which is rare.
 
 ## 🤝 Acknowledgments
 
 * **Color Scheme:** [Flexoki](https://stephango.com/flexoki) by Steph Ango.
-* **Core Tools:** Powered by the incredible open-source communities of [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [beets](https://github.com/beetbox/beets).
+* **Core Tools:** Powered by the incredible open-source projects: [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [beets](https://github.com/beetbox/beets).
 
 ## 📄 License
 
-This project is licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
+[MIT](LICENSE)
 
 ## ⚠️ Disclaimer
 
