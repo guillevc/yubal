@@ -1,5 +1,30 @@
 # AGENTS.md
 
+## MCP Tools
+
+### context7
+
+Use context7 MCP to look up documentation for frameworks and libraries before implementing.
+
+**When to use:**
+
+- Unfamiliar with a framework's API
+- Need to check current best practices
+- Unsure about configuration options
+- Implementing features with libraries not frequently used
+
+**Examples:**
+
+- Before creating WXT extension: look up WXT docs
+- Before using a new HeroUI component: look up component props and variants
+- Before configuring beets plugins: look up beets documentation
+
+**Don't use when:**
+
+- Already confident about the API
+- Simple/common patterns (basic React, standard Python)
+- Information is already in this file or project docs
+
 ## Decision Making
 
 - Be specific about the solution you are proposing. Show code examples and internal behavior.
@@ -40,7 +65,9 @@
 - Use openapi-fetch with the generated schemas from FastAPI.
 
 ### HeroUI Semantic colors and variables
+
 #### Text
+
 ```
 text-foreground        # Primary text
 text-foreground-500    # Muted text
@@ -52,6 +79,7 @@ text-danger            # Errors
 ```
 
 #### Backgrounds
+
 ```
 bg-background          # Page background
 bg-content1            # Cards, modals
@@ -63,6 +91,7 @@ bg-default-50          # Subtle hover states
 ```
 
 #### Borders
+
 ```
 border-default-200     # Default borders (inputs, cards)
 border-default-300     # Stronger borders
@@ -71,8 +100,9 @@ border-primary         # Active/focus states
 ```
 
 #### Semantic Colors
+
 | Color     | Use                        |
-|-----------|----------------------------|
+| --------- | -------------------------- |
 | primary   | Links, buttons, focus      |
 | secondary | Alternative accents        |
 | success   | Success states, checkmarks |
@@ -80,6 +110,7 @@ border-primary         # Active/focus states
 | danger    | Errors, destructive        |
 
 #### Common Patterns
+
 ```tsx
 // Card with muted subtitle
 <p className="text-foreground">Title</p>
@@ -97,6 +128,7 @@ border-primary         # Active/focus states
 ```
 
 #### Rules
+
 - Use `foreground` scale for text, `default` scale for UI elements
 - Match HeroUI components: `rounded-medium`, `border-medium`, `bg-default-100`
 - Don't use arbitrary colors — stick to semantic tokens
