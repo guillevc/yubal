@@ -117,6 +117,7 @@ yubal is configured via Environment Variables.
 - [x] Cookies upload via Web UI
 - [x] Docker multi-arch support (amd64/arm64)
 - [x] Configurable audio format and quality
+- [ ] Browser extension
 - [ ] Batch import (multiple URLs at once)
 - [ ] Post-import webhook (trigger library scan on Gonic/Navidrome/Jellyfin)
 - [ ] PWA support for mobile
