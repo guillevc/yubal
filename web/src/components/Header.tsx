@@ -7,7 +7,7 @@ import {
   DropdownTrigger,
   Tooltip,
 } from "@heroui/react";
-import { Cookie, Disc3, Trash2, Upload } from "lucide-react";
+import { Cookie, Disc3, Star, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { deleteCookies, getCookiesStatus, uploadCookies } from "../api/cookies";
 import { AnimatedThemeToggler } from "./ui/AnimatedThemeToggler";
@@ -116,6 +116,23 @@ export function Header() {
           </a>
         </p>
       </div>
+      <Button
+        as="a"
+        href="https://github.com/guillevc/yubal"
+        target="_blank"
+        rel="noopener noreferrer"
+        radius="full"
+        size="sm"
+        variant="ghost"
+        startContent={
+          <Star
+            className="h-4 w-4 fill-amber-400 text-amber-400 dark:fill-amber-300 dark:text-amber-300"
+            strokeWidth={1}
+          />
+        }
+      >
+        Star on GitHub
+      </Button>
       <input
         ref={fileInputRef}
         type="file"

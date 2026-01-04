@@ -2,6 +2,9 @@
 @plugin "./hero.ts";
 @source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}";
 
+/* Configure dark mode to use flexoki-dark class */
+@variant dark (&:where(.flexoki-dark, .flexoki-dark *));
+
 /* View Transitions API - Theme Toggle Animation */
 ::view-transition-old(root),
 ::view-transition-new(root) {
