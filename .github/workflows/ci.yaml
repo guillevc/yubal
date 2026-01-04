@@ -1,6 +1,8 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
 ---
 name: ci
+permissions:
+  contents: read
 
 on:
   push:
