@@ -8,6 +8,7 @@ dependencies = [
   "fastapi>=0.127.1",
   "loguru>=0.7.3",
   "mutagen>=1.47.0",            # Audio metadata (also via beets)
+  "numpy<2.0",                  # Pin to 1.x for older CPU compatibility (X86_V2 requirement in 2.x)
   "pydantic-settings>=2.12.0",
   "uvicorn[standard]>=0.40.0",
   "yt-dlp[default]>=2025.12.8",
