@@ -83,7 +83,7 @@ docker compose up -d
 
 Open your browser to `http://localhost:8000` and paste a YouTube Music album URL.
 
-### Cookies (Optional)
+## 🍪 Cookies (Optional)
 
 To download age-restricted content or access higher bitrate audio (Premium accounts):
 
