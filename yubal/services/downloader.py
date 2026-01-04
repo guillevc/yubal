@@ -74,6 +74,10 @@ class Downloader:
             "no_warnings": True,
             "extract_flat": False,  # Full extraction to get year/album/codec
             "playlist_items": "1",  # Only extract first item (still get playlist_count)
+            # Explicitly disable cookies for info extraction to avoid bot detection.
+            # Cookies can trigger YouTube's anti-bot measures during metadata fetch.
+            "cookiefile": None,
+            "cookiesfrombrowser": None,
         }
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
