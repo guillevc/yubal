@@ -1,4 +1,8 @@
----
+# yubal metadata to handle beets config updates
+__yubal:
+  version: 0.1.1
+
+# actual beets config.yaml content
 directory: ../data
 library: ./beets.db
 
@@ -46,11 +50,6 @@ fetchart:
 
 embedart:
   auto: yes
-
-# Spotify as primary metadata source
-spotify:
-  data_source_mismatch_penalty: 0.0
-  search_limit: 10
 
 lastgenre:
   auto: yes

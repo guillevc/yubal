@@ -36,6 +36,7 @@ COPY --from=builder /app/.venv /app/.venv
 COPY --from=web /app/web/dist ./web/dist
 COPY yubal/ ./yubal/
 COPY beets/config.yaml /app/beets-default/config.yaml
+COPY scripts/sync-beets-config.py /app/scripts/sync-beets-config.py
 COPY docker-entrypoint.sh /app/docker-entrypoint.sh
 RUN chmod +x /app/docker-entrypoint.sh
 
