@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { Job, JobLog } from "../hooks/useJobs";
 import { useLocalStorage } from "../hooks/useLocalStorage";
-import { isActive } from "../utils/job-status";
+import { isActive } from "../lib/job-status";
 import { Panel, PanelContent, PanelHeader } from "./common/Panel";
 
 interface ConsolePanelProps {

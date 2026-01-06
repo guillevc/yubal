@@ -3,7 +3,7 @@ import { CheckCircle, Clock, Loader2, Trash2, X, XCircle } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
 import type { Job, JobStatus } from "../../api/jobs";
-import { isActive, isFinished } from "../../utils/job-status";
+import { isActive, isFinished } from "../../lib/job-status";
 
 interface JobCardProps {
   job: Job;

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { isActive, isFinished, FINISHED_STATUSES } from "./job-status";
 import type { JobStatus } from "../api/jobs";
+import { FINISHED_STATUSES, isActive, isFinished } from "./job-status";
 
 const ALL_STATUSES: JobStatus[] = [
   "pending",

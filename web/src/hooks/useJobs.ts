@@ -1,13 +1,13 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  createJob,
-  listJobs,
   cancelJob as cancelJobApi,
+  createJob,
   deleteJob as deleteJobApi,
+  listJobs,
   type Job,
   type JobLog,
 } from "../api/jobs";
-import { isActive } from "../utils/job-status";
+import { isActive } from "../lib/job-status";
 
 export type { Job, JobLog } from "../api/jobs";
 

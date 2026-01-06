@@ -1,8 +1,8 @@
+import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import App from "./App";
-import { ThemeProvider } from "./hooks/useTheme";
+import { ThemeProvider } from "./hooks/ThemeProvider";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
@@ -10,7 +10,9 @@ createRoot(document.getElementById("root")!).render(
     <HeroUIProvider>
       <ToastProvider />
       <ThemeProvider>
-        <App />
+        <main className="text-foreground bg-background">
+          <App />
+        </main>
       </ThemeProvider>
     </HeroUIProvider>
   </StrictMode>,

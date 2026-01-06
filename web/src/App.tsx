@@ -8,7 +8,7 @@ import { Footer } from "./components/layout/Footer";
 import { Header } from "./components/layout/Header";
 import { UrlInput } from "./components/UrlInput";
 import { useJobs } from "./hooks/useJobs";
-import { isValidUrl } from "./utils/url";
+import { isValidUrl } from "./lib/url";
 
 // Shared spring transition for appearance animations
 const appearTransition = {
@@ -36,7 +36,7 @@ export default function App() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col justify-center px-4 py-6">
-      <main className="mx-auto w-full max-w-2xl">
+      <div className="mx-auto w-full max-w-2xl">
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -88,7 +88,7 @@ export default function App() {
         >
           <Footer />
         </motion.div>
-      </main>
+      </div>
     </div>
   );
 }
