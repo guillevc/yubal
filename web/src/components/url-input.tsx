@@ -13,6 +13,7 @@ export function UrlInput({ value, onChange, disabled }: UrlInputProps) {
 
   return (
     <Input
+      isClearable
       classNames={{
         input: "text-foreground",
       }}
