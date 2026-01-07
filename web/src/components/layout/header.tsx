@@ -103,21 +103,18 @@ export function Header() {
   return (
     <header className="mb-6 flex items-center gap-3">
       <Disc3 className="text-primary h-8 w-8" />
-      <div className="flex-1">
-        <h1 className="text-foreground font-mono text-lg font-semibold">
+      <div className="min-w-0 flex-1">
+        <h1 className="text-foreground truncate font-mono text-lg font-semibold">
           yubal
         </h1>
-        <p className="font-mono text-xs tracking-wide">
-          <a
-            href={`https://github.com/guillevc/yubal/${__IS_RELEASE__ ? `releases/tag/${__VERSION__}` : `commit/${__COMMIT_SHA__}`}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline-offset-2 transition-colors hover:underline"
-          >
-            <span className="hidden sm:inline">{__VERSION__}</span>
-            <span className="sm:hidden">{__VERSION__.split("-")[0]}</span>
-          </a>
-        </p>
+        <a
+          href={`https://github.com/guillevc/yubal/${__IS_RELEASE__ ? `releases/tag/${__VERSION__}` : `commit/${__COMMIT_SHA__}`}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary block truncate font-mono text-xs tracking-wide underline-offset-2 transition-colors hover:underline"
+        >
+          {__VERSION__}
+        </a>
       </div>
       <Button
         as="a"
@@ -134,7 +131,8 @@ export function Header() {
           />
         }
       >
-        Star on GitHub
+        <span className="hidden sm:block">Star on GitHub</span>
+        <span className="sm:hidden">GitHub</span>
       </Button>
       <input
         ref={fileInputRef}
