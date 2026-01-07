@@ -1,11 +1,9 @@
 > [!IMPORTANT]
-> The beets Spotify plugin is broken due to API auth changes.
-> Remove `spotify` from your `beets/config.yaml` or imports will fail.
-> Replace with `deezer` if you want an additional metadata source.
+> **Spotify plugin temporarily disabled.** Spotify has blocked new developer app creation, breaking the beets Spotify plugin. Hopefully temporary until resolved upstream.
 >
-> The default config in new releases will not include Spotify until the issue is solved.
+> **Existing users:** Update to [v0.1.2](https://github.com/guillevc/yubal/releases/tag/v0.1.2) — your config will be replaced automatically.
 >
-> More info in https://github.com/beetbox/beets/issues/6270
+> More info: [beetbox/beets#6270](https://github.com/beetbox/beets/issues/6270)
 <div align="center">
 
 # yubal
