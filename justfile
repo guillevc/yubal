@@ -37,10 +37,6 @@ build: build-web
 build-web:
     cd web && bun run build
 
-# Docker
-build-docker:
-    docker build -t yubal .
-
 # Lint
 lint: lint-api lint-web
 lint-api:
@@ -93,9 +89,14 @@ install-web:
     cd web && bun install --frozen-lockfile
 
 # Docker
+
 docker-build:
-    docker build --build-arg VERSION=$(git describe --tags --always) --no-cache -t yubal:local .
-    docker images yubal:local | awk 'NR==2 {print "📦 Image size: " $7}'
+    docker build --no-cache -t yubal:local .
+
+docker-check-size:
+    docker build --no-cache -t yubal:check-size .
+    docker images yubal:check-size | awk 'NR==2 {print "📦 Image size: " $7}'
+    docker rmi yubal:check-size
     @echo '✅ Docker build successful!'
 
 # Version

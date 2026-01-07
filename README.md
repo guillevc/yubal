@@ -1,3 +1,9 @@
+> [!IMPORTANT]
+> **Spotify plugin temporarily disabled.** Spotify has blocked new developer app creation, breaking the beets Spotify plugin. Hopefully temporary until resolved upstream.
+>
+> **Existing users:** Update to [v0.1.2](https://github.com/guillevc/yubal/releases/tag/v0.1.2) — your config will be replaced automatically.
+>
+> More info: [beetbox/beets#6270](https://github.com/beetbox/beets/issues/6270)
 <div align="center">
 
 # yubal
