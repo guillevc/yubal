@@ -13,7 +13,6 @@ export function UrlInput({ value, onChange, disabled }: UrlInputProps) {
 
   return (
     <Input
-      size="md"
       classNames={{
         input: "text-foreground",
       }}
@@ -23,6 +22,7 @@ export function UrlInput({ value, onChange, disabled }: UrlInputProps) {
       onValueChange={onChange}
       isDisabled={disabled}
       isInvalid={!isValid}
+      radius="full"
       errorMessage={!isValid ? "Enter a valid YouTube Music URL" : undefined}
       startContent={<Link className="text-foreground-400 h-4 w-4" />}
     />

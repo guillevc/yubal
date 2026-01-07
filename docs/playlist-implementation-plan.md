@@ -46,7 +46,7 @@ This document consolidates the POC findings and implementation decisions for You
 - **Enriched metadata** - ytmusicapi provides clean album/artist/title
 - **Beets enrichment** - additional metadata (genres, MusicBrainz IDs)
 - **M3U generation** - playlist file for easy playback
-- **One-time confirmation dialog** - warns about experimental status on first playlist import
+- **Visual URL type detection** - button changes based on album vs playlist URL with "beta" badge
 
 ### Future Scope (Not V1)
 
@@ -95,10 +95,9 @@ def classify_url(url: str) -> ImportType:
 │                                                                 │
 │  CLIENT (Frontend)                                              │
 │  ├─ Validates URL format (any YouTube Music playlist URL)      │
-│  ├─ Detects if playlist (not OLAK5uy_*)                        │
-│  ├─ If playlist + first time → show confirmation dialog        │
-│  ├─ Store acknowledgment in localStorage                       │
-│  └─ Sends URL to server                                        │
+│  ├─ Detects URL type via getUrlType()                          │
+│  ├─ Updates button UI (icon, text, badge) based on type        │
+│  └─ Sends URL to server on submit                              │
 │                              │                                  │
 │                              ▼                                  │
 │  SERVER (Backend) - Source of Truth                             │
@@ -110,15 +109,22 @@ def classify_url(url: str) -> ImportType:
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Regex Patterns
+### URL Type Detection
 
 **Client (TypeScript):**
 ```typescript
-// Album-only (toggle OFF)
-const ALBUM_ONLY = /playlist\?list=OLAK5uy_/;
+export enum UrlType {
+  ALBUM = "album",
+  PLAYLIST = "playlist",
+}
 
-// Any playlist (toggle ON)
-const ANY_PLAYLIST = /playlist\?list=.+/;
+export function getUrlType(url: string): UrlType | null {
+  const match = url.match(/list=([^&]+)/);
+  const playlistId = match?.[1];
+  if (!playlistId) return null;
+
+  return playlistId.startsWith("OLAK5uy_") ? UrlType.ALBUM : UrlType.PLAYLIST;
+}
 ```
 
 **Server (Python):**
@@ -341,25 +347,9 @@ artwork:     [individual album art]     ← Per-track album artwork
 
 ## Configuration
 
-### One-Time Confirmation Dialog
+### Always Enabled
 
-Playlist support is **always enabled** - both album and playlist URLs are accepted. When a user first submits a playlist URL (not an album), a confirmation dialog appears:
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  ⚠️ Experimental Feature                                    │
-│                                                             │
-│  Playlist support is new and may have issues with          │
-│  metadata accuracy.                                         │
-│                                                             │
-│  Files will be saved to:                                    │
-│  Playlists/{playlist_name}/                                 │
-│                                                             │
-│                        [Cancel]  [Continue]                 │
-└─────────────────────────────────────────────────────────────┘
-```
-
-After acknowledging, the preference is stored in `localStorage` (`yubal:playlist-warning-acknowledged`) and the dialog won't appear again.
+Playlist support is **always enabled** - both album and playlist URLs are accepted without any toggles or confirmation dialogs. The UI provides visual feedback to indicate URL type.
 
 > **Note:** V1 only supports playlist folder mode. The `YUBAL_PLAYLIST_MODE` env var is reserved for future use when album folder mode is implemented.
 
@@ -902,86 +892,69 @@ async def create_job(request: CreateJobRequest):
     return job
 ```
 
-The backend accepts both album and playlist URLs. The frontend shows a one-time confirmation for playlists.
+The backend accepts both album and playlist URLs. The frontend detects URL type and provides visual feedback.
 
 ---
 
 ## Frontend Changes
 
-### One-Time Confirmation Dialog
+### Visual URL Type Detection
 
-The frontend accepts any valid YouTube Music playlist URL. When a playlist (non-album) URL is detected and the user hasn't acknowledged the warning before, show a confirmation dialog.
+The frontend detects URL type and provides visual feedback via the download button. No toggles or dialogs.
 
-**File:** `web/src/components/AddJobForm.tsx`
+**File:** `web/src/lib/url.ts`
 
-```tsx
-// URL validation - accepts any playlist URL
-const urlPattern = /youtube\.com\/playlist\?list=.+/;
+```typescript
+export enum UrlType {
+  ALBUM = "album",
+  PLAYLIST = "playlist",
+}
 
-// Check if URL is a playlist (not album)
-const isPlaylistUrl = (url: string) => {
+export function getUrlType(url: string): UrlType | null {
   const match = url.match(/list=([^&]+)/);
-  if (!match) return false;
-  return !match[1].startsWith("OLAK5uy_");
-};
+  const playlistId = match?.[1];
+  if (!playlistId) return null;
 
-// localStorage key for acknowledgment
-const PLAYLIST_WARNING_KEY = "yubal:playlist-warning-acknowledged";
-
-// In the submit handler:
-const handleSubmit = async () => {
-  const isPlaylist = isPlaylistUrl(url);
-  const hasAcknowledged = localStorage.getItem(PLAYLIST_WARNING_KEY) === "true";
-
-  if (isPlaylist && !hasAcknowledged) {
-    // Show confirmation dialog
-    onOpenConfirmDialog();
-    return;
-  }
-
-  // Proceed with job creation
-  await createJob(url);
-};
-
-// Confirmation dialog handler
-const handleConfirmPlaylist = () => {
-  localStorage.setItem(PLAYLIST_WARNING_KEY, "true");
-  onCloseConfirmDialog();
-  createJob(url);
-};
+  return playlistId.startsWith("OLAK5uy_") ? UrlType.ALBUM : UrlType.PLAYLIST;
+}
 ```
 
-**Confirmation Dialog Component:**
+**File:** `web/src/App.tsx`
 
 ```tsx
-<Modal isOpen={isConfirmOpen} onClose={onCloseConfirmDialog}>
-  <ModalContent>
-    <ModalHeader className="flex gap-2 items-center">
-      <WarningIcon className="text-warning" />
-      Experimental Feature
-    </ModalHeader>
-    <ModalBody>
-      <p>Playlist support is new and may have issues with metadata accuracy.</p>
-      <p className="text-foreground-500 text-sm mt-2">
-        Files will be saved to: <code>Playlists/{"{playlist_name}"}/ </code>
-      </p>
-    </ModalBody>
-    <ModalFooter>
-      <Button variant="light" onPress={onCloseConfirmDialog}>
-        Cancel
-      </Button>
-      <Button color="primary" onPress={handleConfirmPlaylist}>
-        Continue
-      </Button>
-    </ModalFooter>
-  </ModalContent>
-</Modal>
+import { match } from "ts-pattern";
+import { getUrlType, UrlType } from "./lib/url";
+
+// Detect URL type
+const urlType = canSync ? getUrlType(url) : null;
+
+// Dynamic icon based on type
+const startContent = match(urlType)
+  .with(UrlType.ALBUM, () => <Disc3 className="h-4 w-4" />)
+  .with(UrlType.PLAYLIST, () => <ListMusic className="h-4 w-4" />)
+  .otherwise(() => <Download className="h-4 w-4" />);
+
+// Dynamic button text
+const children = match(urlType)
+  .with(UrlType.ALBUM, () => "Download album")
+  .with(UrlType.PLAYLIST, () => "Download playlist")
+  .otherwise(() => "Download");
+
+// Button with beta badge for playlists
+<Badge color="danger" content="beta" size="sm" isInvisible={urlType !== UrlType.PLAYLIST}>
+  <Button color="primary" radius="full" onPress={handleSync} isDisabled={!canSync} startContent={startContent}>
+    {children}
+  </Button>
+</Badge>
 ```
 
 **Behavior:**
-- Albums (`OLAK5uy_*`): Submit directly, no dialog
-- Playlists (first time): Show confirmation dialog
-- Playlists (after acknowledgment): Submit directly
+
+| URL Type | Icon | Button Text | Badge |
+|----------|------|-------------|-------|
+| Album (`OLAK5uy_*`) | Disc3 | "Download album" | None |
+| Playlist (other) | ListMusic | "Download playlist" | "beta" |
+| Invalid/empty | Download | "Download" (disabled) | None |
 
 ---
 
@@ -1019,7 +992,8 @@ uv sync
 | `yubal/schemas/jobs.py` | Edit | Add `import_type` field |
 | `yubal/api/routes/jobs.py` | Edit | Handle playlist import type |
 | `beets/playlist-config.yaml` | Create | Beets config for playlists |
-| `web/src/components/AddJobForm.tsx` | Edit | Add playlist confirmation dialog |
+| `web/src/lib/url.ts` | Edit | Add `UrlType` enum and `getUrlType()` function |
+| `web/src/App.tsx` | Edit | Add visual URL type detection (icon, text, badge) |
 | `tests/test_metadata_enricher.py` | Create | Unit tests |
 
 ---
@@ -1109,13 +1083,13 @@ playlist_with_meta = "https://music.youtube.com/playlist?list=PLbE6wFkAlDUeDUu98
 
 ## Rollout Plan
 
-1. **Implement core services** (metadata_enricher, metadata_patcher, m3u_generator)
-2. **Add sync_playlist()** to sync service
-3. **Create playlist-config.yaml** for beets
-4. **Add API changes** (import_type field)
-5. **Add frontend confirmation dialog** for first-time playlist imports
+1. **Add frontend URL type detection** - `UrlType` enum, `getUrlType()`, visual button changes ✅
+2. **Implement core services** (metadata_enricher, metadata_patcher, m3u_generator)
+3. **Add sync_playlist()** to sync service
+4. **Create playlist-config.yaml** for beets
+5. **Add API changes** (import_type field)
 6. **Test with known playlists**
-7. **Deploy** - playlists work immediately, one-time warning shown
+7. **Deploy** - playlists work immediately with "beta" badge indicator
 
 ---
 

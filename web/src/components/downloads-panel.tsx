@@ -32,7 +32,7 @@ export function DownloadsPanel({
       >
         Downloads
       </PanelHeader>
-      <PanelContent height="h-[500px]" className="space-y-2">
+      <PanelContent height="h-[400px]" className="space-y-2">
         {jobs.length === 0 ? (
           <div className="flex h-full items-center justify-center">
             <p className="text-foreground-400 font-mono text-xs">

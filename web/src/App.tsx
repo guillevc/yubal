@@ -1,14 +1,15 @@
-import { Button } from "@heroui/react";
-import { Download } from "lucide-react";
+import { Badge, Button } from "@heroui/react";
+import { Disc3, Download, ListMusic } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
+import { match } from "ts-pattern";
 import { ConsolePanel } from "./components/console-panel";
 import { DownloadsPanel } from "./components/downloads-panel";
 import { Footer } from "./components/layout/footer";
 import { Header } from "./components/layout/header";
 import { UrlInput } from "./components/url-input";
 import { useJobs } from "./hooks/use-jobs";
-import { isValidUrl } from "./lib/url";
+import { getUrlType, isValidUrl, UrlType } from "./lib/url";
 
 // Shared spring transition for appearance animations
 const appearTransition = {
@@ -22,6 +23,7 @@ export default function App() {
   const { jobs, logs, startJob, cancelJob, deleteJob } = useJobs();
 
   const canSync = isValidUrl(url);
+  const urlType = canSync ? getUrlType(url) : null;
 
   const handleSync = async () => {
     if (canSync) {
@@ -33,6 +35,16 @@ export default function App() {
   const handleDelete = async (jobId: string) => {
     await deleteJob(jobId);
   };
+
+  const startContent = match(urlType)
+    .with(UrlType.ALBUM, () => <Disc3 className="h-4 w-4" />)
+    .with(UrlType.PLAYLIST, () => <ListMusic className="h-4 w-4" />)
+    .otherwise(() => <Download className="h-4 w-4" />)
+
+  const children = match(urlType)
+    .with(UrlType.ALBUM, () => "Download album")
+    .with(UrlType.PLAYLIST, () => "Download playlist")
+    .otherwise(() => "Download")
 
   return (
     <div className="bg-background flex min-h-screen flex-col justify-center px-4 py-6">
@@ -55,15 +67,17 @@ export default function App() {
           <div className="flex-1">
             <UrlInput value={url} onChange={setUrl} />
           </div>
-          <Button
-            color="primary"
-            size="md"
-            onPress={handleSync}
-            isDisabled={!canSync}
-            startContent={<Download className="h-4 w-4" />}
-          >
-            Download
-          </Button>
+          <Badge color="secondary" content="beta" size="sm" isInvisible={urlType != UrlType.PLAYLIST}>
+            <Button
+              color="primary"
+              radius="full"
+              onPress={handleSync}
+              isDisabled={!canSync}
+              startContent={startContent}
+            >
+              {children}
+            </Button>
+          </Badge>
         </motion.section>
 
         {/* Stacked Panels */}
