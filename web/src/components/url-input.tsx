@@ -18,7 +18,7 @@ export function UrlInput({ value, onChange, disabled }: UrlInputProps) {
         input: "text-foreground",
       }}
       type="url"
-      placeholder="Paste album URL..."
+      placeholder="Album or playlist URL"
       value={value}
       onValueChange={onChange}
       isDisabled={disabled}

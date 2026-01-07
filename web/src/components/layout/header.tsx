@@ -150,6 +150,7 @@ export function Header() {
             <Button
               isIconOnly
               variant="light"
+              size="sm"
               aria-label="Cookie options"
               isLoading={isDeleting}
             >
