@@ -6,12 +6,46 @@ from typing import Any
 
 import yt_dlp
 from loguru import logger
+from yt_dlp.postprocessor.common import PostProcessor
 from yt_dlp.postprocessor.metadataparser import MetadataParserPP
 from yt_dlp.utils import DownloadCancelled
 
 from yubal.core.callbacks import CancelCheck, ProgressCallback, ProgressEvent
 from yubal.core.enums import ProgressStep
 from yubal.core.models import AlbumInfo, DownloadResult
+from yubal.core.types import AUDIO_EXTENSIONS
+
+
+class FileCollectorPP(PostProcessor):
+    """Custom PostProcessor that captures final audio file paths.
+
+    This PP runs at the end of the postprocessor chain to capture the
+    final filepath after all conversions (FFmpegExtractAudio, etc.).
+
+    The postprocessor hook approach doesn't work reliably because hooks
+    are called after EACH postprocessor, and the filepath in info_dict
+    may still point to intermediate files (e.g., .webm before extraction).
+    """
+
+    def __init__(
+        self,
+        downloader: yt_dlp.YoutubeDL | None = None,
+        collected_files: set[Path] | None = None,
+    ):
+        super().__init__(downloader)
+        self.collected_files = collected_files if collected_files is not None else set()
+
+    def run(self, info: dict[str, Any]) -> tuple[list[str], dict[str, Any]]:
+        """Capture the final filepath after all postprocessing."""
+        filepath = info.get("filepath")
+        if filepath:
+            path = Path(filepath)
+            if path.suffix.lower() in AUDIO_EXTENSIONS:
+                self.collected_files.add(path)
+                logger.debug("Collected final audio file: {}", path.name)
+            else:
+                logger.debug("Ignoring non-audio file in collector: {}", path.name)
+        return [], info
 
 
 class YtdlpLogger:
@@ -171,22 +205,6 @@ class Downloader:
 
         return hook
 
-    def _create_postprocessor_hook(
-        self,
-        downloaded_files: set[Path],
-    ) -> Callable[[dict[str, Any]], None]:
-        """Capture filepaths from postprocessors, dedupe with set."""
-
-        def hook(d: dict[str, Any]) -> None:
-            if d["status"] != "finished":
-                return
-
-            filepath = d.get("info_dict", {}).get("filepath")
-            if filepath:
-                downloaded_files.add(Path(filepath))
-
-        return hook
-
     def download_album(
         self,
         url: str,
@@ -217,12 +235,14 @@ class Downloader:
         )
 
         try:
+            # Create file collector PP to capture final audio paths
+            # This runs at the end of all postprocessors, after FFmpegExtractAudio
+            # has converted the file to the target format (.mp3, etc.)
+            file_collector = FileCollectorPP(collected_files=downloaded_files)
+
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                # Bug workaround: must call add_postprocessor_hook() explicitly
-                # See: https://github.com/yt-dlp/yt-dlp/issues/1650
-                ydl.add_postprocessor_hook(
-                    self._create_postprocessor_hook(downloaded_files)
-                )
+                # Add our collector at the end of the post_process chain
+                ydl.add_post_processor(file_collector, when="post_process")
                 info = ydl.extract_info(url, download=True)
                 album_info = self._parse_album_info(info, url)
 
@@ -407,7 +427,6 @@ class Downloader:
             "format": "bestaudio/best",
             "outtmpl": str(output_dir / "%(playlist_index|0)02d - %(title)s.%(ext)s"),
             "postprocessors": postprocessors,
-            "writethumbnail": True,
             "progress_hooks": [progress_hook],
             "ignoreerrors": True,  # Continue on individual track errors
             "logger": YtdlpLogger(),

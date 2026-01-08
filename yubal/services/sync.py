@@ -580,14 +580,16 @@ class SyncService:
         playlist_dir.mkdir(parents=True, exist_ok=True)
 
         if len(downloaded_files) != len(playlist_meta.tracks):
-            raise ValueError(
-                f"Downloaded file count ({len(downloaded_files)}) doesn't match "
-                f"track metadata count ({len(playlist_meta.tracks)})"
+            logger.warning(
+                "Downloaded {} files but expected {} from metadata. "
+                "Processing available files.",
+                len(downloaded_files),
+                len(playlist_meta.tracks),
             )
 
         final_files: list[Path] = []
         for downloaded_file, track in zip(
-            downloaded_files, playlist_meta.tracks, strict=True
+            downloaded_files, playlist_meta.tracks, strict=False
         ):
             safe_artist = sanitize_filename(track.artist)
             safe_title = sanitize_filename(track.title)

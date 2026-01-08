@@ -64,12 +64,15 @@ def generate_m3u(
     ]
 
     if len(track_files) != len(track_metadata):
-        raise ValueError(
-            f"File count ({len(track_files)}) doesn't match "
-            f"metadata count ({len(track_metadata)})"
+        logger.warning(
+            "File count ({}) doesn't match metadata count ({}). "
+            "Generating M3U with {} tracks.",
+            len(track_files),
+            len(track_metadata),
+            min(len(track_files), len(track_metadata)),
         )
 
-    for track_file, metadata in zip(track_files, track_metadata, strict=True):
+    for track_file, metadata in zip(track_files, track_metadata, strict=False):
         # EXTINF format: #EXTINF:duration,artist - title
         # Duration -1 means unknown
         lines.append(f"#EXTINF:-1,{metadata.artist} - {metadata.title}")
