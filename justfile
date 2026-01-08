@@ -107,7 +107,7 @@ docker-build:
 
 docker-check-size:
     docker build --no-cache -t yubal:check-size .
-    docker images yubal:check-size | awk 'NR==2 {print "📦 Image size: " $7}'
+    @echo "📦 Image size: $(docker images yubal:check-size --format '{{{{.Size}}')"
     docker rmi yubal:check-size
     @echo '✅ Docker build successful!'
 
