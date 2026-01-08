@@ -5,8 +5,6 @@ from fastapi.responses import JSONResponse
 class YubalError(Exception):
     """Base exception for Yubal application."""
 
-    pass
-
 
 class JobConflictError(YubalError):
     """Raised when a job operation conflicts with existing state."""
@@ -28,13 +26,9 @@ class JobNotFoundError(YubalError):
 class DownloadError(YubalError):
     """Raised when a download operation fails."""
 
-    pass
-
 
 class BeetsImportError(YubalError):
     """Raised when a beets import operation fails."""
-
-    pass
 
 
 def register_exception_handlers(app: FastAPI) -> None:

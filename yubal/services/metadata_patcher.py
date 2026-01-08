@@ -61,7 +61,7 @@ class MetadataPatcher:
         if not url:
             return url
         if "googleusercontent.com" in url or "ytimg.com" in url:
-            return f"{url.split('=')[0]}=s544-rj"
+            return f"{url.split('=', maxsplit=1)[0]}=s544-rj"
         return url
 
     def _get_jpeg_dimensions(self, data: bytes) -> tuple[int, int]:

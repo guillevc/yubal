@@ -34,7 +34,6 @@ def _get_job_or_404(job_store: JobStore, job_id: str) -> Job:
 
 @router.post(
     "/jobs",
-    response_model=JobCreatedResponse,
     status_code=status.HTTP_201_CREATED,
     responses={
         409: {"model": JobConflictErrorResponse, "description": "Queue is full"}
@@ -66,7 +65,7 @@ async def create_job(
     return JobCreatedResponse(id=job.id)
 
 
-@router.get("/jobs", response_model=JobListResponse)
+@router.get("/jobs")
 async def list_jobs(job_store: JobStoreDep) -> JobListResponse:
     """List all jobs (oldest first, FIFO order).
 
@@ -78,7 +77,7 @@ async def list_jobs(job_store: JobStoreDep) -> JobListResponse:
     return JobListResponse(jobs=jobs, logs=logs)
 
 
-@router.post("/jobs/{job_id}/cancel", response_model=CancelJobResponse)
+@router.post("/jobs/{job_id}/cancel")
 async def cancel_job(
     job_id: str,
     job_store: JobStoreDep,
@@ -109,7 +108,7 @@ async def cancel_job(
     return CancelJobResponse()
 
 
-@router.delete("/jobs", response_model=ClearJobsResponse)
+@router.delete("/jobs")
 async def clear_jobs(job_store: JobStoreDep) -> ClearJobsResponse:
     """Clear all completed/failed jobs.
 

@@ -5,6 +5,6 @@ from yubal.schemas.health import HealthResponse
 router = APIRouter()
 
 
-@router.get("/health", response_model=HealthResponse, tags=["health"])
+@router.get("/health", tags=["health"])
 async def health_check() -> HealthResponse:
     return HealthResponse(status="healthy")

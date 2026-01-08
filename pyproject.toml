@@ -6,6 +6,7 @@ requires-python = ">=3.12"
 dependencies = [
   "beets[lastgenre]>=2.5.1",
   "fastapi>=0.127.1",
+  "httpx>=0.28.0",              # HTTP client for metadata fetching
   "loguru>=0.7.3",
   "mutagen>=1.47.0",            # Audio metadata (also via beets)
   "numpy<2.0",                  # Pin to 1.x for older CPU compatibility (X86_V2 requirement in 2.x)
@@ -37,29 +38,63 @@ target-version = "py312"
 line-length = 88
 exclude = [".venv", "__pycache__", ".git", "build", "dist", "web"]
 preview = true
+show-fixes = true
 
 [tool.ruff.lint]
 select = [
+  # Core
   "E",      # pycodestyle errors
+  "W",      # pycodestyle warnings
   "F",      # pyflakes
   "I",      # isort
   "B",      # bugbear
   "UP",     # pyupgrade
   "S",      # bandit security
   "RUF",    # ruff-specific
-  "PLC2701",  # import-private-name
+
+  # Code quality
+  "C4",     # flake8-comprehensions
+  "SIM",    # flake8-simplify
+  "PIE",    # flake8-pie
+  "RET",    # flake8-return
+  "PERF",   # perflint
+  "FURB",   # refurb
+  "PTH",    # pathlib
+
+  # Async & FastAPI
+  "ASYNC",  # flake8-async
+  "FA",     # flake8-future-annotations
+  "TCH",    # flake8-type-checking
+  "FAST",   # FastAPI-specific
+
+  # Testing
+  "PT",     # flake8-pytest-style
+
+  # Logging
+  "LOG",    # flake8-logging
+  "T20",    # print statements
+
+  # Pylint (selective)
+  "PLC",    # pylint conventions
+  "PLE",    # pylint errors
 ]
 ignore = [
-  "S404", # subprocess module is used for internal tools
-  "S603", # subprocess calls are internal tools, not untrusted
-  "S607", # partial paths are fine for ffprobe/beets
-  "RUF029", # FastAPI requires async signatures even without await
+  "S404",   # subprocess module is used for internal tools
+  "S603",   # subprocess calls are internal tools
+  "S607",   # partial paths are fine for ffprobe/beets
+  "RUF029", # FastAPI requires async signatures
+  "PLC0415",  # lazy imports inside functions are intentional
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-  "S101", # assert is expected in tests
-  "S108", # /tmp paths in tests are fixtures, not real usage
+  "S101",   # assert is expected in tests
+  "S108",   # /tmp paths in tests are fixtures
+  "PLC1901",  # explicit empty string comparison is intentional in tests
+]
+"scripts/**/*.py" = [
+  "T201",   # print is expected in CLI scripts
+  "PTH123", # open() is fine in scripts
 ]
 
 [tool.ruff.format]
@@ -70,8 +105,41 @@ indent-style = "space"
 force-single-line = false
 known-first-party = ["yubal"]
 
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+  "pydantic.BaseModel",
+  "pydantic_settings.BaseSettings",
+]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+  "fastapi.Depends",
+  "fastapi.Query",
+  "fastapi.Path",
+  "fastapi.Body",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+addopts = ["-ra", "--strict-markers", "--strict-config"]
+filterwarnings = ["error", "ignore::DeprecationWarning:beets.*"]
+
 [tool.coverage.run]
 source = ["yubal"]
+branch = true
 
 [tool.coverage.report]
 omit = ["tests/*"]
+exclude_lines = [
+  "pragma: no cover",
+  "if TYPE_CHECKING:",
+  "raise NotImplementedError",
+  "@abstractmethod",
+]
+show_missing = true

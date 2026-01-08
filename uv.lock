@@ -1220,6 +1220,7 @@ source = { editable = "." }
 dependencies = [
     { name = "beets", extra = ["lastgenre"] },
     { name = "fastapi" },
+    { name = "httpx" },
     { name = "loguru" },
     { name = "mutagen" },
     { name = "numpy" },
@@ -1243,6 +1244,7 @@ dev = [
 requires-dist = [
     { name = "beets", extras = ["lastgenre"], specifier = ">=2.5.1" },
     { name = "fastapi", specifier = ">=0.127.1" },
+    { name = "httpx", specifier = ">=0.28.0" },
     { name = "loguru", specifier = ">=0.7.3" },
     { name = "mutagen", specifier = ">=1.47.0" },
     { name = "numpy", specifier = "<2.0" },

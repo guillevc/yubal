@@ -1,5 +1,6 @@
 """YouTube Music downloader using yt-dlp Python API."""
 
+import contextlib
 import re
 from collections.abc import Callable, Sequence
 from pathlib import Path
@@ -190,10 +191,8 @@ class Downloader:
                 speed = d.get("_speed_str", "").strip()
                 percent_value: float | None = None
                 if percent_str:
-                    try:
+                    with contextlib.suppress(ValueError):
                         percent_value = float(percent_str.rstrip("%"))
-                    except ValueError:
-                        pass
 
                 if progress_callback and percent_value is not None:
                     progress_callback(
@@ -378,7 +377,7 @@ class Downloader:
                         [f.name for f in track_files],
                     )
                     # Sort to get deterministic ordering if multiple files
-                    downloaded_files.append(sorted(track_files)[0])
+                    downloaded_files.append(min(track_files))
                 else:
                     downloaded_files.append(next(iter(track_files)))
 
@@ -419,20 +418,16 @@ class Downloader:
         postprocessors: list[dict[str, Any]] = []
 
         if self.audio_format != "best":
-            postprocessors.append(
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": self.audio_format,
-                    "preferredquality": self.audio_quality,
-                }
-            )
+            postprocessors.append({
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": self.audio_format,
+                "preferredquality": self.audio_quality,
+            })
 
-        postprocessors.extend(
-            [
-                {"key": "FFmpegMetadata", "add_metadata": True},
-                {"key": "EmbedThumbnail"},
-            ]
-        )
+        postprocessors.extend([
+            {"key": "FFmpegMetadata", "add_metadata": True},
+            {"key": "EmbedThumbnail"},
+        ])
 
         ydl_opts: dict[str, Any] = {
             "format": "bestaudio/best",
@@ -547,48 +542,44 @@ class Downloader:
         # When source matches target (e.g. opus→opus), FFmpeg uses -acodec copy (fast)
         # When "best", keep original format without any processing
         if self.audio_format != "best":
-            postprocessors.append(
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": self.audio_format,
-                    "preferredquality": self.audio_quality,
-                }
-            )
+            postprocessors.append({
+                "key": "FFmpegExtractAudio",
+                "preferredcodec": self.audio_format,
+                "preferredquality": self.audio_quality,
+            })
 
         # Add metadata and thumbnail postprocessors
-        postprocessors.extend(
-            [
-                # Set track number from playlist index, use release_date
-                {
-                    "key": "MetadataParser",
-                    "when": "pre_process",
-                    "actions": [
-                        (
-                            MetadataParserPP.Actions.INTERPRET,
-                            "playlist_index",
-                            "%(meta_track)s",
-                        ),
-                        (
-                            MetadataParserPP.Actions.INTERPRET,
-                            "release_date",
-                            "%(meta_date)s",
-                        ),
-                        (
-                            MetadataParserPP.Actions.INTERPRET,
-                            "%(artists.0)s",
-                            "%(meta_artist)s",
-                        ),
-                    ],
-                },
-                {
-                    "key": "FFmpegMetadata",
-                    "add_metadata": True,
-                },
-                {
-                    "key": "EmbedThumbnail",
-                },
-            ]
-        )
+        postprocessors.extend([
+            # Set track number from playlist index, use release_date
+            {
+                "key": "MetadataParser",
+                "when": "pre_process",
+                "actions": [
+                    (
+                        MetadataParserPP.Actions.INTERPRET,
+                        "playlist_index",
+                        "%(meta_track)s",
+                    ),
+                    (
+                        MetadataParserPP.Actions.INTERPRET,
+                        "release_date",
+                        "%(meta_date)s",
+                    ),
+                    (
+                        MetadataParserPP.Actions.INTERPRET,
+                        "%(artists.0)s",
+                        "%(meta_artist)s",
+                    ),
+                ],
+            },
+            {
+                "key": "FFmpegMetadata",
+                "add_metadata": True,
+            },
+            {
+                "key": "EmbedThumbnail",
+            },
+        ])
 
         ydl_opts: dict[str, Any] = {
             "format": "bestaudio/best",

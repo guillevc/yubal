@@ -14,14 +14,14 @@ from yubal.schemas.cookies import (
 router = APIRouter(prefix="/cookies", tags=["cookies"])
 
 
-@router.get("/status", response_model=CookiesStatusResponse)
+@router.get("/status")
 async def cookies_status(cookies_file: CookiesFileDep) -> CookiesStatusResponse:
     """Check if cookies file is configured."""
     exists = await asyncio.to_thread(cookies_file.exists)
     return CookiesStatusResponse(configured=exists)
 
 
-@router.post("", response_model=CookiesUploadResponse)
+@router.post("")
 async def upload_cookies(
     body: CookiesUploadRequest,
     cookies_file: CookiesFileDep,
@@ -43,7 +43,7 @@ async def upload_cookies(
     return CookiesUploadResponse(status="ok")
 
 
-@router.delete("", response_model=CookiesUploadResponse)
+@router.delete("")
 async def delete_cookies(cookies_file: CookiesFileDep) -> CookiesUploadResponse:
     """Delete cookies file."""
     if await asyncio.to_thread(cookies_file.exists):

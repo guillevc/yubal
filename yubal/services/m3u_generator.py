@@ -35,7 +35,7 @@ def sanitize_filename(name: str) -> str:
     result = name.strip()[:100]
 
     # Fallback for empty result
-    return result if result else "untitled"
+    return result or "untitled"
 
 
 def generate_m3u(
@@ -73,11 +73,11 @@ def generate_m3u(
         )
 
     for track_file, metadata in zip(track_files, track_metadata, strict=False):
-        # EXTINF format: #EXTINF:duration,artist - title
-        # Duration -1 means unknown
-        lines.append(f"#EXTINF:-1,{metadata.artist} - {metadata.title}")
-        # Use relative path (just filename since M3U is in same dir)
-        lines.append(track_file.name)
+        # EXTINF format: #EXTINF:duration,artist - title (duration -1 = unknown)
+        lines.extend((
+            f"#EXTINF:-1,{metadata.artist} - {metadata.title}",
+            track_file.name,
+        ))
 
     m3u_content = "\n".join(lines) + "\n"
     m3u_path.write_text(m3u_content, encoding="utf-8")
