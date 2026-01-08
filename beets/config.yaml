@@ -21,7 +21,6 @@ paths:
 
 import:
   write: yes
-  move: yes
   quiet: yes
   quiet_fallback: asis
   duplicate_action: remove

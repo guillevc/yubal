@@ -200,9 +200,9 @@ class Tagger:
         progress_callback: ProgressCallback | None = None,
     ) -> subprocess.CompletedProcess[str]:
         """
-        Execute beets import command.
+        Execute beets import command for albums.
 
-        Import settings (quiet, move, incremental) are configured in beets config.yaml.
+        Uses explicit flags for move behavior.
         """
         cmd = [
             *self._get_beet_command(),
@@ -211,6 +211,7 @@ class Tagger:
             "--directory",
             str(self.library_dir),
             "import",
+            "-m",  # Move files into library directory
             str(source_dir),
         ]
 
@@ -321,6 +322,8 @@ class Tagger:
             *self._get_beet_command(),
             "--config",
             str(self.beets_config),
+            "--directory",
+            str(self.library_dir),
             "import",
             "-C",  # Don't copy files (keep in place)
             str(source_dir),
