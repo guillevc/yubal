@@ -25,10 +25,6 @@ from ytmeta.models.ytmusic import (
 )
 
 __all__ = [
-    # Public
-    "TrackMetadata",
-    "VideoType",
-    # Internal (but exported for type hints)
     "Album",
     "AlbumRef",
     "AlbumTrack",
@@ -37,4 +33,6 @@ __all__ = [
     "PlaylistTrack",
     "SearchResult",
     "Thumbnail",
+    "TrackMetadata",
+    "VideoType",
 ]

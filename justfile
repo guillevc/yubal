@@ -29,5 +29,9 @@ lint-fix:
 typecheck:
     uv run ty check ytmeta
 
+# Run tests
+test *args:
+    uv run pytest {{ args }}
+
 # Run all checks
-check: format-check lint typecheck
+check: format-check lint typecheck test

@@ -219,4 +219,4 @@ class TestYTMusicModels:
         """Models should be immutable."""
         artist = Artist(name="Test", id="123")
         with pytest.raises(ValidationError):
-            artist.name = "Changed"  # type: ignore
+            artist.name = "Changed"

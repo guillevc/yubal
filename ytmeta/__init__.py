@@ -59,24 +59,18 @@ def create_extractor(config: APIConfig | None = None) -> MetadataExtractorServic
 
 
 __all__ = [
-    # Factory function (recommended entry point)
-    "create_extractor",
-    # Client
-    "YTMusicClient",
-    "YTMusicProtocol",
-    # Services
+    "APIConfig",
+    "APIError",
+    "AlbumNotFoundError",
     "MetadataExtractorService",
-    # Models
+    "PlaylistNotFoundError",
+    "PlaylistParseError",
+    "TrackExtractionError",
     "TrackMetadata",
     "VideoType",
-    # Config
-    "APIConfig",
-    "default_config",
-    # Exceptions
     "YTMetaError",
-    "PlaylistParseError",
-    "PlaylistNotFoundError",
-    "AlbumNotFoundError",
-    "APIError",
-    "TrackExtractionError",
+    "YTMusicClient",
+    "YTMusicProtocol",
+    "create_extractor",
+    "default_config",
 ]

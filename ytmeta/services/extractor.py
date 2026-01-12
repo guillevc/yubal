@@ -3,12 +3,11 @@
 import asyncio
 import logging
 from collections.abc import Callable
-from concurrent.futures import ThreadPoolExecutor
 
 from ytmeta.client import YTMusicProtocol
 from ytmeta.models.domain import TrackMetadata, VideoType
-from ytmeta.utils import format_artists, get_square_thumbnail, parse_playlist_id
 from ytmeta.models.ytmusic import Album, AlbumTrack, PlaylistTrack
+from ytmeta.utils import format_artists, get_square_thumbnail, parse_playlist_id
 
 logger = logging.getLogger(__name__)
 
@@ -148,9 +147,7 @@ class MetadataExtractorService:
         for result in results:
             if result.album:
                 atv_id = (
-                    result.video_id
-                    if result.video_type == VIDEO_TYPE_ATV
-                    else None
+                    result.video_id if result.video_type == VIDEO_TYPE_ATV else None
                 )
                 return result.album.id, atv_id
 
@@ -178,9 +175,7 @@ class MetadataExtractorService:
 
         # Second try: match by duration if unique
         if target_duration:
-            matches = [
-                t for t in album.tracks if t.duration_seconds == target_duration
-            ]
+            matches = [t for t in album.tracks if t.duration_seconds == target_duration]
             if len(matches) == 1:
                 return matches[0]
 
