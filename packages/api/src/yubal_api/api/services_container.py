@@ -3,10 +3,11 @@
 This module is separate from app.py to avoid circular imports.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from loguru import logger
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from yubal_api.services.job_executor import JobExecutor

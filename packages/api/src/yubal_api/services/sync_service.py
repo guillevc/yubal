@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from mutagen import File as MutagenFile
 from yubal import (
     AudioCodec,
     DownloadConfig,
+    DownloadResult,
     DownloadStatus,
     TrackMetadata,
     create_downloader,
@@ -164,7 +164,7 @@ class SyncService:
             )
             downloader = create_downloader(config)
 
-            downloaded: list[tuple[TrackMetadata, Path]] = []
+            downloaded: list[DownloadResult] = []
             failed_count = 0
 
             for progress in downloader.download_tracks(tracks):
@@ -175,9 +175,9 @@ class SyncService:
 
                 result = progress.result
                 if result.status == DownloadStatus.SUCCESS and result.output_path:
-                    downloaded.append((result.track, result.output_path))
+                    downloaded.append(result)
                 elif result.status == DownloadStatus.SKIPPED and result.output_path:
-                    downloaded.append((result.track, result.output_path))
+                    downloaded.append(result)
                 else:
                     failed_count += 1
 
@@ -200,7 +200,7 @@ class SyncService:
                 )
 
             # Update bitrate from first downloaded file
-            bitrate = self._get_file_bitrate(downloaded[0][1])
+            bitrate = downloaded[0].bitrate
             if bitrate:
                 album_info.audio_bitrate = bitrate
 
@@ -208,12 +208,15 @@ class SyncService:
             emit(ProgressStep.IMPORTING, "Finalizing...", 90.0)
 
             # Determine destination from first downloaded file
-            destination = str(downloaded[0][1].parent)
+            destination = str(downloaded[0].output_path.parent)
 
             # Generate M3U for playlists (not albums)
             if playlist_info.title and not is_album_playlist(playlist_info.playlist_id):
                 emit(ProgressStep.IMPORTING, "Generating playlist file...", 95.0)
-                m3u_path = write_m3u(self._base_path, playlist_info.title, downloaded)
+                tracks_for_m3u = [(r.track, r.output_path) for r in downloaded]
+                m3u_path = write_m3u(
+                    self._base_path, playlist_info.title, tracks_for_m3u
+                )
                 destination = str(m3u_path.parent)
 
             emit(ProgressStep.COMPLETED, f"Sync complete: {destination}", 100.0)
@@ -231,16 +234,3 @@ class SyncService:
                 album_info=album_info,
                 error=str(e),
             )
-
-    @staticmethod
-    def _get_file_bitrate(file_path: Path) -> int | None:
-        """Get actual average bitrate from audio file."""
-        try:
-            audio = MutagenFile(str(file_path))
-            if not audio or not audio.info or not audio.info.length:
-                return None
-            file_size = file_path.stat().st_size
-            duration = audio.info.length
-            return int((file_size * 8) / duration / 1000)
-        except Exception:
-            return None

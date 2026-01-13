@@ -1,5 +1,6 @@
 """FastAPI application factory and configuration."""
 
+import logging
 import shutil
 import uuid
 from collections.abc import AsyncGenerator
@@ -10,18 +11,19 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from loguru import logger
 
 from yubal_api.api.exceptions import register_exception_handlers
 from yubal_api.api.routes import cookies, health, jobs
-from yubal_api.api.services_container import (
-    Services,
-    clear_services,
-    set_services,
-)
+from yubal_api.api.services_container import Services, clear_services, set_services
 from yubal_api.services.job_executor import JobExecutor
 from yubal_api.services.job_store import JobStore
 from yubal_api.settings import get_settings
+
+logging.basicConfig(
+    level=get_settings().log_level,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 
 def create_services() -> Services:
@@ -65,7 +67,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     temp_dir = get_settings().temp_dir
     if temp_dir.exists():
-        logger.info("Cleaning up temp directory: {}", temp_dir)
+        logger.info("Cleaning up temp directory: %s", temp_dir)
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     logger.info("Shutdown complete")

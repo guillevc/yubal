@@ -81,6 +81,19 @@ class DownloadResult(BaseModel):
     error: str | None = None
     video_id_used: str | None = None
 
+    @property
+    def bitrate(self) -> int | None:
+        """Get audio bitrate in kbps from downloaded file."""
+        if not self.output_path or not self.output_path.exists():
+            return None
+        try:
+            from mediafile import MediaFile
+
+            audio = MediaFile(self.output_path)
+            return audio.bitrate
+        except Exception:
+            return None
+
 
 class PlaylistInfo(BaseModel):
     """Information about a playlist.

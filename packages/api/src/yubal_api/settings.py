@@ -33,6 +33,7 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, description="Server port")
     reload: bool = Field(default=False, description="Enable auto-reload")
     debug: bool = Field(default=False, description="Enable debug mode")
+    log_level: str = Field(default="INFO", description="Log level")
 
     # Audio settings
     audio_format: AudioFormat = Field(default="opus", description="Audio format")
