@@ -1,5 +1,8 @@
 set dotenv-load
 
+# Project root directory (can be overridden via .env or env var)
+export YUBAL_ROOT := justfile_directory()
+
 default:
     @just --list
 

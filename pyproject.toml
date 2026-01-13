@@ -18,6 +18,7 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "RUF", "ANN"]
+ignore = ["ANN401"]  # Allow Any for pydantic validators
 
 [tool.ruff.format]
 quote-style = "double"
