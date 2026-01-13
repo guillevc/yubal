@@ -20,17 +20,30 @@ class TestVideoType:
     """Tests for VideoType enum."""
 
     def test_atv_value(self) -> None:
-        """ATV should have correct value."""
-        assert VideoType.ATV == "ATV"
+        """ATV should have correct value matching ytmusicapi."""
+        assert VideoType.ATV == "MUSIC_VIDEO_TYPE_ATV"
 
     def test_omv_value(self) -> None:
-        """OMV should have correct value."""
-        assert VideoType.OMV == "OMV"
+        """OMV should have correct value matching ytmusicapi."""
+        assert VideoType.OMV == "MUSIC_VIDEO_TYPE_OMV"
 
     def test_string_comparison(self) -> None:
-        """Should compare equal to string values."""
-        assert VideoType.ATV == "ATV"
-        assert VideoType.OMV == "OMV"
+        """Should compare equal to ytmusicapi string values."""
+        assert VideoType.ATV == "MUSIC_VIDEO_TYPE_ATV"
+        assert VideoType.OMV == "MUSIC_VIDEO_TYPE_OMV"
+
+    def test_all_video_types(self) -> None:
+        """All video types should have correct values."""
+        assert VideoType.ATV == "MUSIC_VIDEO_TYPE_ATV"
+        assert VideoType.OMV == "MUSIC_VIDEO_TYPE_OMV"
+        assert VideoType.OFFICIAL_SOURCE_MUSIC == "MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC"
+        assert VideoType.UGC == "MUSIC_VIDEO_TYPE_UGC"
+
+    def test_parse_from_api_string(self) -> None:
+        """Should parse from ytmusicapi raw string values."""
+        assert VideoType("MUSIC_VIDEO_TYPE_ATV") == VideoType.ATV
+        assert VideoType("MUSIC_VIDEO_TYPE_OMV") == VideoType.OMV
+        assert VideoType("MUSIC_VIDEO_TYPE_UGC") == VideoType.UGC
 
 
 class TestTrackMetadata:
@@ -84,7 +97,7 @@ class TestTrackMetadata:
         )
         data = track.model_dump()
         assert data["omv_video_id"] == "abc123"
-        assert data["video_type"] == "ATV"
+        assert data["video_type"] == "MUSIC_VIDEO_TYPE_ATV"
         assert data["artists"] == ["Artist"]
         assert data["album_artists"] == ["Artist"]
 

@@ -83,10 +83,16 @@ class YTMusicClient:
 
         # Filter out unavailable tracks (no videoId) before validation
         raw_tracks = data.get("tracks") or []
-        data["tracks"] = [t for t in raw_tracks if t and t.get("videoId")]
+        valid_tracks = [t for t in raw_tracks if t and t.get("videoId")]
+        unavailable_count = len(raw_tracks) - len(valid_tracks)
+
+        data["tracks"] = valid_tracks
+        data["unavailable_count"] = unavailable_count
 
         logger.debug(
-            "Fetched playlist with %d valid tracks", len(data.get("tracks", []))
+            "Fetched playlist with %d valid tracks (%d unavailable)",
+            len(valid_tracks),
+            unavailable_count,
         )
         return Playlist.model_validate(data)
 

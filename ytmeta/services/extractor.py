@@ -12,8 +12,8 @@ from ytmeta.utils import format_artists, get_square_thumbnail, parse_playlist_id
 
 logger = logging.getLogger(__name__)
 
-# Raw video type string for ATV
-VIDEO_TYPE_ATV = "MUSIC_VIDEO_TYPE_ATV"
+# Supported video types for download
+SUPPORTED_VIDEO_TYPES = {VideoType.ATV, VideoType.OMV}
 
 
 class MetadataExtractorService:
@@ -60,7 +60,12 @@ class MetadataExtractorService:
 
         playlist = self._client.get_playlist(playlist_id)
         total = len(playlist.tracks)
-        logger.info("Found %d tracks in playlist", total)
+        unavailable_count = playlist.unavailable_count
+        logger.info(
+            "Found %d tracks in playlist (%d unavailable)",
+            total,
+            unavailable_count,
+        )
 
         # Create playlist info for progress updates
         playlist_info = PlaylistInfo(
@@ -68,7 +73,10 @@ class MetadataExtractorService:
             title=playlist.title,
         )
 
-        for i, track in enumerate(playlist.tracks):
+        extracted_count = 0
+        skipped_count = 0
+
+        for track in playlist.tracks:
             try:
                 metadata = self._extract_track(track)
             except Exception as e:
@@ -80,14 +88,27 @@ class MetadataExtractorService:
                 # Continue with partial results instead of failing entirely
                 metadata = self._create_fallback_metadata(track)
 
+            # Skip tracks that return None (unsupported video types)
+            if metadata is None:
+                skipped_count += 1
+                continue
+
+            extracted_count += 1
             yield ExtractProgress(
-                current=i + 1,
+                current=extracted_count,
                 total=total,
+                skipped=skipped_count,
+                unavailable=unavailable_count,
                 track=metadata,
                 playlist_info=playlist_info,
             )
 
-        logger.info("Extracted metadata for %d tracks", total)
+        logger.info(
+            "Extracted metadata for %d tracks (%d skipped, %d unavailable)",
+            extracted_count,
+            skipped_count,
+            unavailable_count,
+        )
 
     def extract_all(self, url: str) -> list[TrackMetadata]:
         """Extract metadata for all tracks in a playlist.
@@ -107,16 +128,21 @@ class MetadataExtractorService:
         """
         return [p.track for p in self.extract(url)]
 
-    def _extract_track(self, track: PlaylistTrack) -> TrackMetadata:
+    def _extract_track(self, track: PlaylistTrack) -> TrackMetadata | None:
         """Extract metadata for a single track.
 
         Args:
             track: Playlist track to process.
 
         Returns:
-            Extracted track metadata.
+            Extracted track metadata, or None if track should be skipped.
         """
         video_type = self._determine_video_type(track)
+
+        # Skip tracks with unsupported video type (warning already logged)
+        if video_type is None:
+            return None
+
         album_id = track.album.id if track.album else None
         search_atv_id: str | None = None
 
@@ -139,17 +165,42 @@ class MetadataExtractorService:
             )
         return self._create_fallback_metadata(track, video_type)
 
-    def _determine_video_type(self, track: PlaylistTrack) -> VideoType:
+    def _determine_video_type(self, track: PlaylistTrack) -> VideoType | None:
         """Determine the video type from track info.
 
         Args:
             track: Playlist track.
 
         Returns:
-            VideoType enum value.
+            VideoType enum value, or None if missing/unsupported.
         """
-        video_type_raw = track.video_type or ""
-        return VideoType.ATV if "ATV" in video_type_raw else VideoType.OMV
+        if not track.video_type:
+            logger.warning(
+                "Missing video type for track '%s'",
+                track.title,
+            )
+            return None
+
+        try:
+            video_type = VideoType(track.video_type)
+        except ValueError:
+            logger.warning(
+                "Unknown video type '%s' for track '%s'",
+                track.video_type,
+                track.title,
+            )
+            return None
+
+        # Only ATV and OMV are supported
+        if video_type not in SUPPORTED_VIDEO_TYPES:
+            logger.warning(
+                "Unsupported video type '%s' for track '%s'",
+                video_type.name,
+                track.title,
+            )
+            return None
+
+        return video_type
 
     def _search_for_album(self, track: PlaylistTrack) -> tuple[str | None, str | None]:
         """Search for album info for a track.
@@ -175,7 +226,7 @@ class MetadataExtractorService:
         for result in results:
             if result.album:
                 atv_id = (
-                    result.video_id if result.video_type == VIDEO_TYPE_ATV else None
+                    result.video_id if result.video_type == VideoType.ATV else None
                 )
                 return result.album.id, atv_id
 
@@ -346,7 +397,7 @@ class MetadataExtractorService:
         self,
         track: PlaylistTrack,
         video_type: VideoType | None = None,
-    ) -> TrackMetadata:
+    ) -> TrackMetadata | None:
         """Create fallback metadata when album info is unavailable.
 
         Args:
@@ -354,10 +405,15 @@ class MetadataExtractorService:
             video_type: Optional video type (determined if not provided).
 
         Returns:
-            Basic track metadata.
+            Basic track metadata, or None if video type is unsupported.
         """
         if video_type is None:
             video_type = self._determine_video_type(track)
+
+        # Skip unsupported video types
+        # None means unknown/unsupported from _determine_video_type
+        if video_type is None or video_type not in SUPPORTED_VIDEO_TYPES:
+            return None
 
         # Assign video ID based on track type
         if video_type == VideoType.ATV:

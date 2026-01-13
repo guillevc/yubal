@@ -145,6 +145,7 @@ class TestMetadataExtractorService:
                 "tracks": [
                     {
                         "videoId": "v1",
+                        "videoType": "MUSIC_VIDEO_TYPE_OMV",
                         "title": "Unknown Song",
                         "artists": [{"name": "Unknown Artist"}],
                         "thumbnails": [
@@ -180,6 +181,7 @@ class TestMetadataExtractorService:
                 "tracks": [
                     {
                         "videoId": "v1",
+                        "videoType": "MUSIC_VIDEO_TYPE_ATV",
                         "title": "Good Song",
                         "artists": [{"name": "Artist"}],
                         "album": {"id": "alb1", "name": "Album"},
@@ -190,6 +192,7 @@ class TestMetadataExtractorService:
                     },
                     {
                         "videoId": "v2",
+                        "videoType": "MUSIC_VIDEO_TYPE_OMV",
                         "title": "Another Song",
                         "artists": [{"name": "Artist"}],
                         "thumbnails": [
@@ -740,10 +743,11 @@ class TestMetadataExtractorService:
         assert tracks[0].omv_video_id == "omv456"
         assert tracks[0].video_type == VideoType.ATV
 
-    def test_extract_video_type_none_defaults_to_omv(
+    def test_extract_video_type_none_skips_track(
         self,
+        caplog: pytest.LogCaptureFixture,
     ) -> None:
-        """Should default to OMV when video_type is missing."""
+        """Should skip track when video_type is missing."""
         playlist = Playlist.model_validate(
             {
                 "tracks": [
@@ -762,29 +766,15 @@ class TestMetadataExtractorService:
             }
         )
 
-        album = Album.model_validate(
-            {
-                "title": "Album",
-                "artists": [{"name": "Artist"}],
-                "thumbnails": [{"url": "https://t.jpg", "width": 544, "height": 544}],
-                "tracks": [
-                    {
-                        "videoId": "v123",
-                        "title": "Test Song",
-                        "artists": [{"name": "Artist"}],
-                        "trackNumber": 1,
-                        "duration_seconds": 180,
-                    }
-                ],
-            }
-        )
-
-        mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
+        mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
 
-        # Should default to OMV
-        assert tracks[0].video_type == VideoType.OMV
+        with caplog.at_level(logging.WARNING):
+            tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+
+        # Track should be skipped due to missing video type
+        assert len(tracks) == 0
+        assert "Missing video type" in caplog.text
 
     def test_extract_fuzzy_match_high_confidence(
         self,
@@ -1151,3 +1141,172 @@ class TestMetadataExtractorService:
         assert tracks[0].track_number == 5
         assert tracks[0].total_tracks == 1
         assert tracks[0].omv_video_id == "omv123"
+
+    def test_extract_skips_ugc_video_type(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Should skip UGC (User Generated Content) video types with warning."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "ugc123",
+                        "videoType": "MUSIC_VIDEO_TYPE_UGC",
+                        "title": "User Upload",
+                        "artists": [{"name": "Some User"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    }
+                ]
+            }
+        )
+
+        mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        with caplog.at_level(logging.WARNING):
+            tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+
+        # UGC track should be skipped
+        assert len(tracks) == 0
+        assert "Unsupported video type 'UGC'" in caplog.text
+
+    def test_extract_skips_official_source_music_video_type(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Should skip OFFICIAL_SOURCE_MUSIC video types with warning."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "osm123",
+                        "videoType": "MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC",
+                        "title": "Official Source Track",
+                        "artists": [{"name": "Label"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    }
+                ]
+            }
+        )
+
+        mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        with caplog.at_level(logging.WARNING):
+            tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+
+        # OFFICIAL_SOURCE_MUSIC track should be skipped
+        assert len(tracks) == 0
+        assert "Unsupported video type 'OFFICIAL_SOURCE_MUSIC'" in caplog.text
+
+    def test_extract_skips_unknown_video_type(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Should skip unknown video types with warning."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "unk123",
+                        "videoType": "MUSIC_VIDEO_TYPE_UNKNOWN_FUTURE",
+                        "title": "Unknown Type Track",
+                        "artists": [{"name": "Artist"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    }
+                ]
+            }
+        )
+
+        mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        with caplog.at_level(logging.WARNING):
+            tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+
+        # Unknown type track should be skipped
+        assert len(tracks) == 0
+        assert "Unknown video type" in caplog.text
+
+    def test_extract_mixed_video_types_skips_unsupported(
+        self,
+        caplog: pytest.LogCaptureFixture,
+    ) -> None:
+        """Should process supported types and skip unsupported in mixed playlists."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "atv1",
+                        "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                        "title": "Good ATV Track",
+                        "artists": [{"name": "Artist"}],
+                        "album": {"id": "alb1", "name": "Album"},
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    },
+                    {
+                        "videoId": "ugc1",
+                        "videoType": "MUSIC_VIDEO_TYPE_UGC",
+                        "title": "Bad UGC Track",
+                        "artists": [{"name": "User"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 200,
+                    },
+                    {
+                        "videoId": "omv1",
+                        "videoType": "MUSIC_VIDEO_TYPE_OMV",
+                        "title": "Good OMV Track",
+                        "artists": [{"name": "Artist"}],
+                        "album": {"id": "alb2", "name": "Album 2"},
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 220,
+                    },
+                ]
+            }
+        )
+
+        album = Album.model_validate(
+            {
+                "title": "Album",
+                "artists": [{"name": "Artist"}],
+                "thumbnails": [{"url": "https://t.jpg", "width": 544, "height": 544}],
+                "tracks": [
+                    {
+                        "videoId": "atv1",
+                        "title": "Good ATV Track",
+                        "artists": [{"name": "Artist"}],
+                        "trackNumber": 1,
+                        "duration_seconds": 180,
+                    }
+                ],
+            }
+        )
+
+        mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        with caplog.at_level(logging.WARNING):
+            tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+
+        # Should have 2 tracks (ATV and OMV), UGC skipped
+        assert len(tracks) == 2
+        assert tracks[0].video_type == VideoType.ATV
+        assert tracks[1].video_type == VideoType.OMV
+        assert "Unsupported video type 'UGC'" in caplog.text

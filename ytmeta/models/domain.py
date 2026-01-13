@@ -12,10 +12,15 @@ from pydantic import BaseModel, ConfigDict
 
 
 class VideoType(StrEnum):
-    """YouTube Music video types."""
+    """YouTube Music video types.
 
-    ATV = "ATV"  # Audio Track Video (album version)
-    OMV = "OMV"  # Official Music Video
+    Maps to ytmusicapi.models.content.enums.VideoType values.
+    """
+
+    ATV = "MUSIC_VIDEO_TYPE_ATV"  # Audio Track Video (album version)
+    OMV = "MUSIC_VIDEO_TYPE_OMV"  # Official Music Video
+    OFFICIAL_SOURCE_MUSIC = "MUSIC_VIDEO_TYPE_OFFICIAL_SOURCE_MUSIC"  # Official source
+    UGC = "MUSIC_VIDEO_TYPE_UGC"  # User Generated Content
 
 
 class DownloadStatus(StrEnum):
@@ -39,7 +44,7 @@ class TrackMetadata(BaseModel):
     total_tracks: int | None = None
     year: str | None = None
     cover_url: str | None = None
-    video_type: VideoType
+    video_type: VideoType | None = None
 
     @property
     def artist(self) -> str:
@@ -99,8 +104,10 @@ class ExtractProgress(BaseModel):
     Yielded by MetadataExtractorService.extract() to report progress.
 
     Attributes:
-        current: Number of tracks processed so far (1-indexed).
-        total: Total number of tracks in the playlist.
+        current: Number of tracks successfully extracted so far (1-indexed).
+        total: Total number of tracks in the original playlist.
+        skipped: Number of tracks skipped so far (unsupported video types).
+        unavailable: Number of tracks without videoId (not available/not music).
         track: Extracted track metadata.
         playlist_info: Information about the playlist being extracted.
     """
@@ -109,6 +116,8 @@ class ExtractProgress(BaseModel):
 
     current: int
     total: int
+    skipped: int
+    unavailable: int
     track: TrackMetadata
     playlist_info: PlaylistInfo
 

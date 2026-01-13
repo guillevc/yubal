@@ -63,6 +63,7 @@ class Playlist(YTMusicModel):
 
     title: str | None = None
     tracks: list[PlaylistTrack]
+    unavailable_count: int = 0  # Tracks without videoId (set by client)
 
 
 class AlbumTrack(YTMusicModel):

@@ -48,11 +48,15 @@ def setup_logging() -> None:
     )
 
 
-def print_table(tracks: list[TrackMetadata]) -> None:
+def print_table(
+    tracks: list[TrackMetadata], skipped: int = 0, unavailable: int = 0
+) -> None:
     """Print tracks as a Rich table.
 
     Args:
         tracks: List of track metadata to display.
+        skipped: Number of tracks skipped (unsupported video type).
+        unavailable: Number of tracks unavailable (no videoId).
     """
     console = Console()
     table = Table(show_header=True, header_style="bold")
@@ -91,7 +95,20 @@ def print_table(tracks: list[TrackMetadata]) -> None:
         )
 
     console.print(table)
-    console.print(f"\nExtracted {len(tracks)} track(s)")
+
+    # Build summary message with optional skipped/unavailable info
+    summary_parts = []
+    if skipped > 0:
+        summary_parts.append(f"[yellow]{skipped} skipped[/yellow] (unsupported type)")
+    if unavailable > 0:
+        summary_parts.append(
+            f"[yellow]{unavailable} unavailable[/yellow] (no video/not music)"
+        )
+
+    if summary_parts:
+        console.print(f"\nExtracted {len(tracks)} track(s) ({', '.join(summary_parts)})")
+    else:
+        console.print(f"\nExtracted {len(tracks)} track(s)")
 
 
 @click.group()
@@ -116,6 +133,8 @@ def meta_cmd(url: str, as_json: bool) -> None:
         service = MetadataExtractorService(client)
 
         tracks: list[TrackMetadata] = []
+        skipped = 0
+        unavailable = 0
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -130,15 +149,17 @@ def meta_cmd(url: str, as_json: bool) -> None:
                 progress.update(
                     task,
                     completed=extract_progress.current,
-                    total=extract_progress.total,
+                    total=extract_progress.total - extract_progress.skipped,
                 )
                 tracks.append(extract_progress.track)
+                skipped = extract_progress.skipped
+                unavailable = extract_progress.unavailable
 
         if as_json:
             data = [t.model_dump() for t in tracks]
             json.dump(data, sys.stdout, indent=2, ensure_ascii=False, default=str)
         else:
-            print_table(tracks)
+            print_table(tracks, skipped=skipped, unavailable=unavailable)
 
     except YTMetaError as e:
         logger.error(str(e))
@@ -194,6 +215,8 @@ def download_cmd(
 
         tracks: list[TrackMetadata] = []
         playlist_info: PlaylistInfo | None = None
+        skipped = 0
+        unavailable = 0
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -208,16 +231,18 @@ def download_cmd(
                 progress.update(
                     task,
                     completed=extract_progress.current,
-                    total=extract_progress.total,
+                    total=extract_progress.total - extract_progress.skipped,
                 )
                 if extract_progress.track:
                     tracks.append(extract_progress.track)
+                skipped = extract_progress.skipped
+                unavailable = extract_progress.unavailable
                 # Capture playlist info from the first progress event
                 if playlist_info is None:
                     playlist_info = extract_progress.playlist_info
 
         console.print()
-        print_table(tracks)
+        print_table(tracks, skipped=skipped, unavailable=unavailable)
         console.print()
 
         # Step 2: Download tracks
