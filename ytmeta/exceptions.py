@@ -37,15 +37,6 @@ class PlaylistNotFoundError(YTMetaError):
     status_code: int = 404  # Not Found
 
 
-class AlbumNotFoundError(YTMetaError):
-    """Album not found.
-
-    Raised when an album lookup fails.
-    """
-
-    status_code: int = 404  # Not Found
-
-
 class APIError(YTMetaError):
     """YouTube Music API error.
 
@@ -55,15 +46,6 @@ class APIError(YTMetaError):
     status_code: int = 502  # Bad Gateway (upstream failure)
 
 
-class TrackExtractionError(YTMetaError):
-    """Failed to extract track metadata.
-
-    Raised when track processing fails.
-    """
-
-    status_code: int = 500  # Internal Server Error
-
-
 class DownloadError(YTMetaError):
     """Failed to download a track.
 
@@ -71,12 +53,3 @@ class DownloadError(YTMetaError):
     """
 
     status_code: int = 500  # Internal Server Error
-
-
-class DownloadConfigError(YTMetaError):
-    """Invalid download configuration.
-
-    Raised when download configuration is invalid (e.g., missing base path).
-    """
-
-    status_code: int = 400  # Bad Request

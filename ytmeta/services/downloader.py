@@ -1,6 +1,5 @@
 """Download service for YouTube Music tracks using yt-dlp."""
 
-import asyncio
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -309,47 +308,3 @@ class DownloadService:
         )
 
         return results
-
-    async def download_track_async(
-        self,
-        track: TrackMetadata,
-    ) -> DownloadResult:
-        """Async version of download_track().
-
-        Runs the synchronous download in a thread pool to avoid blocking
-        the event loop. Use this method in async contexts.
-
-        Args:
-            track: Track metadata.
-
-        Returns:
-            DownloadResult with status and path.
-        """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, self.download_track, track)
-
-    async def download_tracks_async(
-        self,
-        tracks: list[TrackMetadata],
-        on_progress: Callable[[int, int, DownloadResult], None] | None = None,
-    ) -> list[DownloadResult]:
-        """Async version of download_tracks().
-
-        Runs the synchronous download_tracks() in a thread pool to avoid
-        blocking the event loop. Use this method in async contexts.
-
-        Args:
-            tracks: List of track metadata to download.
-            on_progress: Optional callback for progress updates
-                (current, total, result).
-
-        Returns:
-            List of DownloadResults.
-        """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,
-            self.download_tracks,
-            tracks,
-            on_progress,
-        )

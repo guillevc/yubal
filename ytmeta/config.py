@@ -41,7 +41,3 @@ class DownloadConfig:
     codec: AudioCodec = AudioCodec.OPUS
     quality: int = 0
     quiet: bool = True
-
-
-# Default configuration instance
-default_config = APIConfig()

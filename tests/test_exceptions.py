@@ -1,13 +1,9 @@
 """Tests for exceptions."""
 
-import pytest
-
 from ytmeta.exceptions import (
-    AlbumNotFoundError,
     APIError,
     PlaylistNotFoundError,
     PlaylistParseError,
-    TrackExtractionError,
     YTMetaError,
 )
 
@@ -30,20 +26,10 @@ class TestExceptionStatusCodes:
         error = PlaylistNotFoundError("not found")
         assert error.status_code == 404
 
-    def test_album_not_found_error_status_code(self) -> None:
-        """AlbumNotFoundError should have 404 status code."""
-        error = AlbumNotFoundError("not found")
-        assert error.status_code == 404
-
     def test_api_error_status_code(self) -> None:
         """APIError should have 502 status code."""
         error = APIError("upstream failure")
         assert error.status_code == 502
-
-    def test_track_extraction_error_status_code(self) -> None:
-        """TrackExtractionError should have 500 status code."""
-        error = TrackExtractionError("extraction failed")
-        assert error.status_code == 500
 
 
 class TestExceptionHierarchy:
@@ -53,18 +39,14 @@ class TestExceptionHierarchy:
         """All custom exceptions should inherit from YTMetaError."""
         assert issubclass(PlaylistParseError, YTMetaError)
         assert issubclass(PlaylistNotFoundError, YTMetaError)
-        assert issubclass(AlbumNotFoundError, YTMetaError)
         assert issubclass(APIError, YTMetaError)
-        assert issubclass(TrackExtractionError, YTMetaError)
 
     def test_catch_all_with_base_class(self) -> None:
         """Should be able to catch all errors with YTMetaError."""
         errors = [
             PlaylistParseError("test"),
             PlaylistNotFoundError("test"),
-            AlbumNotFoundError("test"),
             APIError("test"),
-            TrackExtractionError("test"),
         ]
 
         for error in errors:

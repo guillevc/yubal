@@ -1,6 +1,5 @@
 """Metadata extraction service."""
 
-import asyncio
 import logging
 from collections.abc import Callable
 
@@ -190,9 +189,7 @@ class MetadataExtractorService:
         # Fourth try: fuzzy title match using rapidfuzz
         return self._find_track_by_fuzzy_title(album, track.title)
 
-    def _find_track_by_fuzzy_title(
-        self, album: Album, title: str
-    ) -> AlbumTrack | None:
+    def _find_track_by_fuzzy_title(self, album: Album, title: str) -> AlbumTrack | None:
         """Find a track using fuzzy/similarity title matching.
 
         Uses rapidfuzz to find the best matching track title.
@@ -240,6 +237,36 @@ class MetadataExtractorService:
             )
             return None
 
+    def _resolve_video_ids(
+        self,
+        playlist_video_id: str,
+        album_video_id: str | None,
+        video_type: VideoType,
+        search_atv_id: str | None,
+    ) -> tuple[str | None, str | None]:
+        """Resolve OMV and ATV video IDs from available sources.
+
+        Args:
+            playlist_video_id: Video ID from the playlist track.
+            album_video_id: Video ID from the album track (if found).
+            video_type: Whether the playlist track is ATV or OMV.
+            search_atv_id: ATV video ID from search results (if any).
+
+        Returns:
+            Tuple of (omv_video_id, atv_video_id).
+        """
+        if video_type == VideoType.ATV:
+            # Playlist track is ATV
+            atv_id = playlist_video_id
+            # OMV comes from album, but only if different from ATV
+            omv_id = album_video_id if album_video_id != atv_id else None
+        else:
+            # Playlist track is OMV
+            omv_id = album_video_id or playlist_video_id
+            atv_id = search_atv_id
+
+        return omv_id, atv_id
+
     def _build_metadata_from_album(
         self,
         track: PlaylistTrack,
@@ -265,19 +292,17 @@ class MetadataExtractorService:
         track_artists = album_track.artists if album_track else track.artists
         track_number = album_track.track_number if album_track else None
 
-        # Determine video IDs based on track type
-        omv_id = album_track.video_id if album_track else None
-        atv_id = track.video_id if video_type == VideoType.ATV else search_atv_id
-
-        # For ATV tracks, only use omv_id if it differs from atv_id
-        # (album playlists contain ATVs, so omv_id == atv_id means no separate OMV)
-        if video_type == VideoType.ATV:
-            final_omv_id = omv_id if omv_id and omv_id != atv_id else None
-        else:
-            final_omv_id = omv_id or track.video_id
+        # Resolve video IDs
+        album_video_id = album_track.video_id if album_track else None
+        omv_id, atv_id = self._resolve_video_ids(
+            playlist_video_id=track.video_id,
+            album_video_id=album_video_id,
+            video_type=video_type,
+            search_atv_id=search_atv_id,
+        )
 
         return TrackMetadata(
-            omv_video_id=final_omv_id,
+            omv_video_id=omv_id,
             atv_video_id=atv_id,
             title=track_title,
             artists=[a.name for a in track_artists],
@@ -327,34 +352,4 @@ class MetadataExtractorService:
             year=None,
             cover_url=get_square_thumbnail(track.thumbnails),
             video_type=video_type,
-        )
-
-    async def extract_async(
-        self,
-        url: str,
-        on_progress: Callable[[int, int], None] | None = None,
-    ) -> list[TrackMetadata]:
-        """Async version of extract() for use with FastAPI/async frameworks.
-
-        Runs the synchronous extract() in a thread pool to avoid blocking
-        the event loop. Use this method in async contexts.
-
-        Args:
-            url: YouTube Music playlist URL.
-            on_progress: Optional callback for progress updates (current, total).
-
-        Returns:
-            List of extracted track metadata.
-
-        Raises:
-            PlaylistParseError: If URL is invalid.
-            PlaylistNotFoundError: If playlist doesn't exist.
-            APIError: If API requests fail.
-        """
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None,  # Use default executor
-            self.extract,
-            url,
-            on_progress,
         )

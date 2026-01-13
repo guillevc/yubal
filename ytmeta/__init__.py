@@ -14,9 +14,6 @@ Example:
     >>> for track in tracks:
     ...     print(f"{track.artist} - {track.title}")
 
-For async usage (FastAPI):
-    >>> tracks = await extractor.extract_async(url)
-
 For downloading tracks:
     >>> from ytmeta import DownloadService, DownloadConfig
     >>> config = DownloadConfig(base_path=Path("./music"))
@@ -25,15 +22,12 @@ For downloading tracks:
 """
 
 from ytmeta.client import YTMusicClient, YTMusicProtocol
-from ytmeta.config import APIConfig, AudioCodec, DownloadConfig, default_config
+from ytmeta.config import APIConfig, AudioCodec, DownloadConfig
 from ytmeta.exceptions import (
-    AlbumNotFoundError,
     APIError,
-    DownloadConfigError,
     DownloadError,
     PlaylistNotFoundError,
     PlaylistParseError,
-    TrackExtractionError,
     YTMetaError,
 )
 from ytmeta.models.domain import TrackMetadata, VideoType
@@ -99,10 +93,8 @@ def create_downloader(config: DownloadConfig) -> DownloadService:
 __all__ = [
     "APIConfig",
     "APIError",
-    "AlbumNotFoundError",
     "AudioCodec",
     "DownloadConfig",
-    "DownloadConfigError",
     "DownloadError",
     "DownloadResult",
     "DownloadService",
@@ -111,7 +103,6 @@ __all__ = [
     "MetadataExtractorService",
     "PlaylistNotFoundError",
     "PlaylistParseError",
-    "TrackExtractionError",
     "TrackMetadata",
     "VideoType",
     "YTDLPDownloader",
@@ -120,5 +111,4 @@ __all__ = [
     "YTMusicProtocol",
     "create_downloader",
     "create_extractor",
-    "default_config",
 ]

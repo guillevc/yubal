@@ -5,7 +5,7 @@ from typing import Protocol
 
 from ytmusicapi import YTMusic
 
-from ytmeta.config import APIConfig, default_config
+from ytmeta.config import APIConfig
 from ytmeta.exceptions import APIError, PlaylistNotFoundError
 from ytmeta.models.ytmusic import Album, Playlist, SearchResult
 
@@ -51,7 +51,7 @@ class YTMusicClient:
             config: Optional API configuration. Uses defaults if not provided.
         """
         self._ytm = ytmusic or YTMusic()
-        self._config = config or default_config
+        self._config = config or APIConfig()
 
     def get_playlist(self, playlist_id: str) -> Playlist:
         """Fetch a playlist by ID.

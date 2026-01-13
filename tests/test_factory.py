@@ -1,11 +1,8 @@
 """Tests for factory functions and public API."""
 
-import pytest
-
 from ytmeta import (
     APIConfig,
     MetadataExtractorService,
-    YTMusicClient,
     create_extractor,
 )
 
@@ -50,15 +47,12 @@ class TestPublicAPI:
 
         # Config
         assert hasattr(ytmeta, "APIConfig")
-        assert hasattr(ytmeta, "default_config")
 
         # Exceptions
         assert hasattr(ytmeta, "YTMetaError")
         assert hasattr(ytmeta, "PlaylistParseError")
         assert hasattr(ytmeta, "PlaylistNotFoundError")
-        assert hasattr(ytmeta, "AlbumNotFoundError")
         assert hasattr(ytmeta, "APIError")
-        assert hasattr(ytmeta, "TrackExtractionError")
 
     def test_version_available(self) -> None:
         """Version should be available."""

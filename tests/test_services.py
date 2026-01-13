@@ -108,7 +108,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        tracks = service.extract("https://music.youtube.com/playlist?list=PLtest")
+        service.extract("https://music.youtube.com/playlist?list=PLtest")
 
         # Should have searched for the song
         assert len(mock.search_songs_calls) == 1
