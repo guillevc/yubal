@@ -62,3 +62,21 @@ class TrackExtractionError(YTMetaError):
     """
 
     status_code: int = 500  # Internal Server Error
+
+
+class DownloadError(YTMetaError):
+    """Failed to download a track.
+
+    Raised when yt-dlp fails to download audio.
+    """
+
+    status_code: int = 500  # Internal Server Error
+
+
+class DownloadConfigError(YTMetaError):
+    """Invalid download configuration.
+
+    Raised when download configuration is invalid (e.g., missing base path).
+    """
+
+    status_code: int = 400  # Bad Request
