@@ -1,22 +1,15 @@
 import { Badge, Button } from "@heroui/react";
 import { Disc3, Download, ListMusic } from "lucide-react";
-import { motion } from "motion/react";
 import { useState } from "react";
 import { match } from "ts-pattern";
 import { ConsolePanel } from "./components/console-panel";
 import { DownloadsPanel } from "./components/downloads-panel";
 import { Footer } from "./components/layout/footer";
 import { Header } from "./components/layout/header";
+import { BlurFade } from "./components/magicui/blur-fade";
 import { UrlInput } from "./components/url-input";
 import { useJobs } from "./hooks/use-jobs";
 import { getUrlType, isValidUrl, UrlType } from "./lib/url";
-
-// Shared spring transition for appearance animations
-const appearTransition = {
-  type: "spring" as const,
-  bounce: 0.15,
-  duration: 0.5,
-};
 
 export default function App() {
   const [url, setUrl] = useState("");
@@ -37,76 +30,62 @@ export default function App() {
   };
 
   return (
-    <div className="bg-background flex min-h-screen flex-col justify-center px-4 py-6">
-      <div className="mx-auto w-full max-w-2xl">
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={appearTransition}
-        >
-          <Header />
-        </motion.div>
+    <div className="bg-background min-h-screen">
+      <Header />
 
+      <main className="mx-auto w-full max-w-4xl px-4 py-8">
         {/* URL Input Section */}
-        <motion.section
-          className="mb-6 flex gap-2"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...appearTransition, delay: 0.05 }}
-        >
-          <div className="flex-1">
-            <UrlInput value={url} onChange={setUrl} />
-          </div>
-          <Badge
-            color="secondary"
-            content="beta"
-            size="sm"
-            isInvisible={urlType != UrlType.PLAYLIST}
-          >
-            <Button
-              color="primary"
-              radius="full"
-              variant={canSync ? "shadow" : "solid"}
-              onPress={handleSync}
-              isDisabled={!canSync}
-              startContent={match(urlType)
-                .with(UrlType.ALBUM, () => <Disc3 className="h-4 w-4" />)
-                .with(UrlType.PLAYLIST, () => <ListMusic className="h-4 w-4" />)
-                .otherwise(() => (
-                  <Download className="h-4 w-4" />
-                ))}
+        <BlurFade delay={0.05} direction="up">
+          <section className="mb-6 flex gap-2">
+            <div className="flex-1">
+              <UrlInput value={url} onChange={setUrl} />
+            </div>
+            <Badge
+              color="secondary"
+              content="beta"
+              size="sm"
+              isInvisible={urlType != UrlType.PLAYLIST}
             >
-              {match(urlType)
-                .with(UrlType.ALBUM, () => "Download album")
-                .with(UrlType.PLAYLIST, () => "Download playlist")
-                .otherwise(() => "Download")}
-            </Button>
-          </Badge>
-        </motion.section>
+              <Button
+                color="primary"
+                radius="full"
+                variant={canSync ? "shadow" : "solid"}
+                onPress={handleSync}
+                isDisabled={!canSync}
+                startContent={match(urlType)
+                  .with(UrlType.ALBUM, () => <Disc3 className="h-4 w-4" />)
+                  .with(UrlType.PLAYLIST, () => (
+                    <ListMusic className="h-4 w-4" />
+                  ))
+                  .otherwise(() => (
+                    <Download className="h-4 w-4" />
+                  ))}
+              >
+                {match(urlType)
+                  .with(UrlType.ALBUM, () => "Download album")
+                  .with(UrlType.PLAYLIST, () => "Download playlist")
+                  .otherwise(() => "Download")}
+              </Button>
+            </Badge>
+          </section>
+        </BlurFade>
 
         {/* Stacked Panels */}
-        <motion.section
-          className="mb-6 flex flex-col gap-4"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...appearTransition, delay: 0.1 }}
-        >
-          <DownloadsPanel
-            jobs={jobs}
-            onCancel={cancelJob}
-            onDelete={handleDelete}
-          />
-          <ConsolePanel logs={logs} jobs={jobs} />
-        </motion.section>
+        <BlurFade delay={0.1} direction="up">
+          <section className="mb-6 flex flex-col gap-4">
+            <DownloadsPanel
+              jobs={jobs}
+              onCancel={cancelJob}
+              onDelete={handleDelete}
+            />
+            <ConsolePanel logs={logs} jobs={jobs} />
+          </section>
+        </BlurFade>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ ...appearTransition, delay: 0.15 }}
-        >
+        <BlurFade delay={0.15} direction="up">
           <Footer />
-        </motion.div>
-      </div>
+        </BlurFade>
+      </main>
     </div>
   );
 }
