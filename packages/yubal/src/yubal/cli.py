@@ -24,16 +24,10 @@ from rich.progress import (
 from rich.table import Table
 
 from yubal.client import YTMusicClient
-from yubal.config import DownloadConfig
+from yubal.config import AudioCodec, DownloadConfig, PlaylistDownloadConfig
 from yubal.exceptions import YTMetaError
-from yubal.models.domain import TrackMetadata
-from yubal.services import (
-    DownloadService,
-    DownloadStatus,
-    MetadataExtractorService,
-    PlaylistInfo,
-)
-from yubal.utils import is_album_playlist, write_m3u
+from yubal.models.domain import DownloadStatus, TrackMetadata
+from yubal.services import MetadataExtractorService, PlaylistDownloadService
 
 logger = logging.getLogger("yubal")
 
@@ -209,16 +203,28 @@ def download_cmd(
     console = Console()
 
     try:
-        # Step 1: Extract metadata
-        console.print("[bold]Extracting playlist metadata...[/bold]")
+        # Configure the playlist download service
+        config = PlaylistDownloadConfig(
+            download=DownloadConfig(
+                base_path=output,
+                codec=AudioCodec(codec),
+                quiet=True,
+            )
+        )
+        service = PlaylistDownloadService(config)
 
-        client = YTMusicClient()
-        extractor = MetadataExtractorService(client)
+        # Status icons for display
+        status_icon = {
+            DownloadStatus.SUCCESS: "[green]OK[/green]",
+            DownloadStatus.SKIPPED: "[yellow]SKIP[/yellow]",
+            DownloadStatus.FAILED: "[red]FAIL[/red]",
+        }
 
+        # Track extraction info for table display
         tracks: list[TrackMetadata] = []
-        playlist_info: PlaylistInfo | None = None
         skipped = 0
         unavailable = 0
+
         with Progress(
             SpinnerColumn(),
             TextColumn("[progress.description]{task.description}"),
@@ -227,99 +233,71 @@ def download_cmd(
             TimeElapsedColumn(),
             console=console,
         ) as progress:
-            task = progress.add_task("Extracting metadata", total=None)
+            extract_task = progress.add_task("Extracting metadata", total=None)
+            download_task = progress.add_task("Downloading", total=None, visible=False)
 
-            for extract_progress in extractor.extract(url):
-                progress.update(
-                    task,
-                    completed=extract_progress.current,
-                    total=extract_progress.total - extract_progress.skipped,
-                )
-                if extract_progress.track:
-                    tracks.append(extract_progress.track)
-                skipped = extract_progress.skipped
-                unavailable = extract_progress.unavailable
-                # Capture playlist info from the first progress event
-                if playlist_info is None:
-                    playlist_info = extract_progress.playlist_info
+            for p in service.download_playlist(url):
+                if p.phase == "extracting" and p.extract_progress:
+                    ep = p.extract_progress
+                    progress.update(
+                        extract_task,
+                        completed=ep.current,
+                        total=ep.total - ep.skipped,
+                    )
+                    tracks.append(ep.track)
+                    skipped = ep.skipped
+                    unavailable = ep.unavailable
 
-        console.print()
-        print_table(tracks, skipped=skipped, unavailable=unavailable)
-        console.print()
+                elif p.phase == "downloading" and p.download_progress:
+                    # Hide extract task, show download task on first download
+                    if not progress.tasks[download_task].visible:
+                        progress.update(extract_task, visible=False)
+                        progress.update(download_task, visible=True)
+                        # Show track table before downloads
+                        console.print()
+                        print_table(tracks, skipped=skipped, unavailable=unavailable)
+                        console.print()
+                        console.print(f"[bold]Downloading to {output}...[/bold]\n")
 
-        # Step 2: Download tracks
-        console.print(f"[bold]Downloading to {output}...[/bold]\n")
-
-        from yubal.config import AudioCodec
-
-        config = DownloadConfig(
-            base_path=output,
-            codec=AudioCodec(codec),
-            quiet=True,  # We handle our own progress display
-        )
-        downloader = DownloadService(config)
-
-        results = []
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TaskProgressColumn(),
-            TimeElapsedColumn(),
-            console=console,
-        ) as progress:
-            overall_task = progress.add_task("Downloading", total=len(tracks))
-
-            status_icon = {
-                DownloadStatus.SUCCESS: "[green]OK[/green]",
-                DownloadStatus.SKIPPED: "[yellow]SKIP[/yellow]",
-                DownloadStatus.FAILED: "[red]FAIL[/red]",
-            }
-
-            for download_progress in downloader.download_tracks(tracks):
-                result = download_progress.result
-                if result:
-                    results.append(result)
-                    progress.update(overall_task, completed=download_progress.current)
+                    dp = p.download_progress
+                    progress.update(download_task, completed=dp.current, total=dp.total)
+                    result = dp.result
                     console.print(
-                        f"  [{download_progress.current}/{download_progress.total}] "
+                        f"  [{dp.current}/{dp.total}] "
                         f"{result.track.artist} - {result.track.title}: "
                         f"{status_icon[result.status]}"
                     )
 
-        # Step 3: Show results summary
-        console.print()
-        successful = [r for r in results if r.status == DownloadStatus.SUCCESS]
-        skipped = [r for r in results if r.status == DownloadStatus.SKIPPED]
-        failed = [r for r in results if r.status == DownloadStatus.FAILED]
+        # Get final result
+        result = service.get_result()
+        if not result:
+            console.print("[yellow]No tracks found in playlist[/yellow]")
+            return
 
+        # Show summary
+        console.print()
         console.print(
-            f"[green]Downloaded: {len(successful)}[/green] | "
-            f"[yellow]Skipped: {len(skipped)}[/yellow] | "
-            f"[red]Failed: {len(failed)}[/red]"
+            f"[green]Downloaded: {result.success_count}[/green] | "
+            f"[yellow]Skipped: {result.skipped_count}[/yellow] | "
+            f"[red]Failed: {result.failed_count}[/red]"
         )
 
+        # Show failed downloads
+        failed = [
+            r for r in result.download_results if r.status == DownloadStatus.FAILED
+        ]
         if failed:
             console.print("\n[red]Failed downloads:[/red]")
-            for result in failed:
+            for r in failed:
                 console.print(
-                    f"  [red]- {result.track.artist} - {result.track.title}: "
-                    f"{result.error}[/red]"
+                    f"  [red]- {r.track.artist} - {r.track.title}: {r.error}[/red]"
                 )
 
-        # Step 4: Generate M3U playlist (skip for album playlists)
-        if playlist_info and not is_album_playlist(playlist_info.playlist_id):
-            # Collect successful downloads (including skipped = already exists)
-            m3u_tracks: list[tuple[TrackMetadata, Path]] = []
-            for result in results:
-                if result.status in (DownloadStatus.SUCCESS, DownloadStatus.SKIPPED):
-                    if result.output_path:
-                        m3u_tracks.append((result.track, result.output_path))
-
-            if m3u_tracks:
-                playlist_name = playlist_info.title or "Untitled Playlist"
-                m3u_path = write_m3u(output, playlist_name, m3u_tracks)
-                console.print(f"\n[cyan]M3U playlist saved:[/cyan] {m3u_path}")
+        # Show generated files
+        if result.m3u_path:
+            console.print(f"\n[cyan]M3U playlist saved:[/cyan] {result.m3u_path}")
+        if result.cover_path:
+            console.print(f"[cyan]Playlist cover saved:[/cyan] {result.cover_path}")
 
     except YTMetaError as e:
         logger.error(str(e))

@@ -4,11 +4,15 @@ M3U files are written with UTF-8 encoding, which is the modern standard
 supported by most media players.
 """
 
+import logging
 import os
 from pathlib import Path
 
 from yubal.models.domain import TrackMetadata
+from yubal.utils.cover import fetch_cover
 from yubal.utils.filename import clean_filename
+
+logger = logging.getLogger(__name__)
 
 
 def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> str:
@@ -99,3 +103,57 @@ def write_m3u(
     m3u_path.write_text(content, encoding="utf-8")
 
     return m3u_path
+
+
+def write_playlist_cover(
+    base_path: Path,
+    playlist_name: str,
+    cover_url: str | None,
+) -> Path | None:
+    """Write a playlist cover image as a sidecar file.
+
+    Creates a JPEG file with the same name as the playlist M3U file.
+    Most media players (Jellyfin, Plex, foobar2000) will automatically
+    pick up this sidecar image.
+
+    Args:
+        base_path: Base directory for downloads (e.g., /music or ./data).
+        playlist_name: Name of the playlist (will be sanitized for filename).
+        cover_url: URL of the cover image to download.
+
+    Returns:
+        Path to the written cover file, or None if no cover URL provided
+        or download failed.
+
+    Example:
+        >>> from pathlib import Path
+        >>> cover_path = write_playlist_cover(
+        ...     Path("/music"),
+        ...     "My Favorites",
+        ...     "https://example.com/cover.jpg"
+        ... )
+        >>> print(cover_path)
+        /music/Playlists/My Favorites.jpg
+    """
+    if not cover_url:
+        return None
+
+    cover_data = fetch_cover(cover_url)
+    if not cover_data:
+        return None
+
+    # Create Playlists directory
+    playlists_dir = base_path / "Playlists"
+    playlists_dir.mkdir(parents=True, exist_ok=True)
+
+    # Sanitize playlist name for safe filename
+    safe_name = clean_filename(playlist_name)
+    if not safe_name or not safe_name.strip():
+        safe_name = "Untitled Playlist"
+
+    cover_path = playlists_dir / f"{safe_name}.jpg"
+    cover_path.write_bytes(cover_data)
+
+    logger.debug("Wrote playlist cover: %s", cover_path)
+
+    return cover_path

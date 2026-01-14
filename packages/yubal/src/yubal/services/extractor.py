@@ -71,6 +71,7 @@ class MetadataExtractorService:
         playlist_info = PlaylistInfo(
             playlist_id=playlist_id,
             title=playlist.title,
+            cover_url=get_square_thumbnail(playlist.thumbnails),
         )
 
         extracted_count = 0

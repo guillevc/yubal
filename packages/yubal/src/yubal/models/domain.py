@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -103,12 +104,14 @@ class PlaylistInfo(BaseModel):
     Attributes:
         playlist_id: The YouTube Music playlist ID.
         title: The playlist title/name.
+        cover_url: URL to the playlist cover image.
     """
 
     model_config = ConfigDict(frozen=True)
 
     playlist_id: str
     title: str | None = None
+    cover_url: str | None = None
 
 
 class ExtractProgress(BaseModel):
@@ -151,3 +154,69 @@ class DownloadProgress(BaseModel):
     current: int
     total: int
     result: DownloadResult
+
+
+class PlaylistProgress(BaseModel):
+    """Progress update during playlist download.
+
+    Unified progress for the entire playlist workflow, yielded by
+    PlaylistDownloadService.download_playlist().
+
+    Attributes:
+        phase: Current phase of the workflow.
+        current: Number of items processed in current phase (1-indexed).
+        total: Total items in current phase.
+        message: Optional status message.
+        extract_progress: Extraction progress (when phase is "extracting").
+        download_progress: Download progress (when phase is "downloading").
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    phase: Literal["extracting", "downloading", "composing"]
+    current: int
+    total: int
+    message: str | None = None
+    extract_progress: ExtractProgress | None = None
+    download_progress: DownloadProgress | None = None
+
+
+class PlaylistDownloadResult(BaseModel):
+    """Complete result of a playlist download operation.
+
+    Returned by PlaylistDownloadService after completing a download.
+
+    Attributes:
+        playlist_info: Metadata about the downloaded playlist.
+        download_results: Results for each track download.
+        m3u_path: Path to the generated M3U file (if created).
+        cover_path: Path to the saved cover image (if created).
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    playlist_info: PlaylistInfo
+    download_results: list[DownloadResult]
+    m3u_path: Path | None = None
+    cover_path: Path | None = None
+
+    @property
+    def success_count(self) -> int:
+        """Number of successfully downloaded tracks."""
+        return sum(
+            1 for r in self.download_results if r.status == DownloadStatus.SUCCESS
+        )
+
+    @property
+    def skipped_count(self) -> int:
+        """Number of skipped tracks (already exist)."""
+        return sum(
+            1 for r in self.download_results if r.status == DownloadStatus.SKIPPED
+        )
+
+    @property
+    def failed_count(self) -> int:
+        """Number of failed downloads."""
+        return sum(
+            1 for r in self.download_results if r.status == DownloadStatus.FAILED
+        )

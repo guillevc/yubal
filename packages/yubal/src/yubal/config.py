@@ -41,3 +41,22 @@ class DownloadConfig:
     codec: AudioCodec = AudioCodec.OPUS
     quality: int = 0
     quiet: bool = True
+
+
+@dataclass(frozen=True)
+class PlaylistDownloadConfig:
+    """Playlist download service configuration.
+
+    Combines download settings with playlist-specific options.
+
+    Attributes:
+        download: Download configuration for tracks.
+        generate_m3u: Whether to generate M3U playlist file.
+        save_cover: Whether to save playlist cover image.
+        skip_album_m3u: Skip M3U generation for album playlists.
+    """
+
+    download: DownloadConfig
+    generate_m3u: bool = True
+    save_cover: bool = True
+    skip_album_m3u: bool = True

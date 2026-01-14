@@ -62,6 +62,7 @@ class Playlist(YTMusicModel):
     """Playlist response from get_playlist()."""
 
     title: str | None = None
+    thumbnails: list[Thumbnail] = Field(default_factory=list)
     tracks: list[PlaylistTrack]
     unavailable_count: int = 0  # Tracks without videoId (set by client)
 

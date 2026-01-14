@@ -1,5 +1,6 @@
 """Unified sync service using yubal library."""
 
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -20,8 +21,6 @@ from yubal.utils import is_album_playlist, write_m3u
 from yubal_api.core.enums import ProgressStep
 from yubal_api.core.models import AlbumInfo
 from yubal_api.services.sync.cancel import CancelToken
-
-import logging
 
 logger = logging.getLogger(__name__)
 

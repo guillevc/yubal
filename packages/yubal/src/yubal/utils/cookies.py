@@ -6,7 +6,6 @@ Converts Netscape cookie format (used by yt-dlp) to ytmusicapi auth format.
 import hashlib
 import logging
 import time
-from http.cookies import SimpleCookie
 from pathlib import Path
 
 logger = logging.getLogger(__name__)

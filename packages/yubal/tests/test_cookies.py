@@ -1,9 +1,6 @@
 """Tests for cookie conversion utilities."""
 
-import tempfile
 from pathlib import Path
-
-import pytest
 
 from yubal.utils.cookies import (
     build_cookie_header,
@@ -48,9 +45,7 @@ class TestParseNetscapeCookies:
         """Should skip empty lines."""
         cookies_file = tmp_path / "cookies.txt"
         cookies_file.write_text(
-            "\n"
-            ".youtube.com\tTRUE\t/\tTRUE\t1735689600\tSID\tvalue1\n"
-            "\n"
+            "\n.youtube.com\tTRUE\t/\tTRUE\t1735689600\tSID\tvalue1\n\n"
         )
 
         result = parse_netscape_cookies(cookies_file)
@@ -69,8 +64,7 @@ class TestParseNetscapeCookies:
         """Should skip lines with insufficient fields."""
         cookies_file = tmp_path / "cookies.txt"
         cookies_file.write_text(
-            "malformed line\n"
-            ".youtube.com\tTRUE\t/\tTRUE\t1735689600\tSID\tvalue1\n"
+            "malformed line\n.youtube.com\tTRUE\t/\tTRUE\t1735689600\tSID\tvalue1\n"
         )
 
         result = parse_netscape_cookies(cookies_file)
@@ -201,9 +195,7 @@ class TestIsAuthenticatedCookies:
     def test_returns_false_without_sapisid(self, tmp_path: Path) -> None:
         """Should return False when SAPISID missing."""
         cookies_file = tmp_path / "cookies.txt"
-        cookies_file.write_text(
-            ".youtube.com\tTRUE\t/\tTRUE\t1735689600\tSID\tvalue\n"
-        )
+        cookies_file.write_text(".youtube.com\tTRUE\t/\tTRUE\t1735689600\tSID\tvalue\n")
 
         result = is_authenticated_cookies(cookies_file)
 

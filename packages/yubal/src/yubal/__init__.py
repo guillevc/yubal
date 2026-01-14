@@ -24,7 +24,7 @@ For downloading tracks:
 from pathlib import Path
 
 from yubal.client import YTMusicClient, YTMusicProtocol
-from yubal.config import APIConfig, AudioCodec, DownloadConfig
+from yubal.config import APIConfig, AudioCodec, DownloadConfig, PlaylistDownloadConfig
 from yubal.exceptions import (
     APIError,
     AuthenticationRequiredError,
@@ -42,6 +42,11 @@ from yubal.services import (
     DownloadService,
     DownloadStatus,
     MetadataExtractorService,
+    PlaylistComposerService,
+    PlaylistDownloadResult,
+    PlaylistDownloadService,
+    PlaylistInfo,
+    PlaylistProgress,
     YTDLPDownloader,
     tag_track,
 )
@@ -105,6 +110,45 @@ def create_downloader(config: DownloadConfig) -> DownloadService:
     return DownloadService(config)
 
 
+def create_playlist_downloader(
+    config: PlaylistDownloadConfig,
+    cookies_path: Path | None = None,
+) -> PlaylistDownloadService:
+    """Create a configured playlist download service.
+
+    This is the recommended way to download complete playlists. It handles
+    the full workflow: metadata extraction, downloading, and M3U/cover generation.
+
+    Args:
+        config: Playlist download configuration.
+        cookies_path: Optional path to cookies.txt for YouTube Music authentication.
+                     Enables access to private playlists when provided.
+
+    Returns:
+        A configured PlaylistDownloadService instance.
+
+    Example:
+        >>> config = PlaylistDownloadConfig(
+        ...     download=DownloadConfig(base_path=Path("./music"))
+        ... )
+        >>> service = create_playlist_downloader(config)
+        >>>
+        >>> # With progress updates
+        >>> for progress in service.download_playlist(url):
+        ...     print(f"[{progress.phase}] {progress.current}/{progress.total}")
+        >>> result = service.get_result()
+        >>>
+        >>> # Or all at once
+        >>> result = service.download_playlist_all(url)
+        >>> print(f"Downloaded: {result.success_count}")
+        >>> print(f"M3U: {result.m3u_path}")
+
+        # With authentication for private playlists
+        >>> service = create_playlist_downloader(config, cookies_path=Path("cookies.txt"))
+    """
+    return PlaylistDownloadService(config, cookies_path=cookies_path)
+
+
 __all__ = [
     "APIConfig",
     "APIError",
@@ -119,8 +163,14 @@ __all__ = [
     "DownloaderProtocol",
     "ExtractProgress",
     "MetadataExtractorService",
+    "PlaylistComposerService",
+    "PlaylistDownloadConfig",
+    "PlaylistDownloadResult",
+    "PlaylistDownloadService",
+    "PlaylistInfo",
     "PlaylistNotFoundError",
     "PlaylistParseError",
+    "PlaylistProgress",
     "TrackMetadata",
     "UnsupportedPlaylistError",
     "VideoType",
@@ -131,6 +181,7 @@ __all__ = [
     "clear_cover_cache",
     "create_downloader",
     "create_extractor",
+    "create_playlist_downloader",
     "fetch_cover",
     "tag_track",
 ]
