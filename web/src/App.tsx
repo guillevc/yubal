@@ -30,10 +30,10 @@ export default function App() {
   };
 
   return (
-    <div className="bg-background min-h-screen">
+    <div className="bg-background flex min-h-screen flex-col">
       <Header />
 
-      <main className="mx-auto w-full max-w-4xl px-4 py-8">
+      <main className="mx-auto w-full max-w-4xl flex-1 px-4 py-8">
         {/* URL Input Section */}
         <BlurFade delay={0.05} direction="up">
           <section className="mb-6 flex gap-2">
@@ -82,10 +82,11 @@ export default function App() {
           </section>
         </BlurFade>
 
-        <BlurFade delay={0.15} direction="up">
-          <Footer />
-        </BlurFade>
       </main>
+
+      <BlurFade delay={0.15} direction="up">
+        <Footer />
+      </BlurFade>
     </div>
   );
 }
