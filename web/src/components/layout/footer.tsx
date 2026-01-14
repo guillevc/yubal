@@ -8,7 +8,7 @@ const KofiIcon = ({ className }: { className?: string }) => (
 
 export function Footer() {
   return (
-    <footer className="mx-auto max-w-4xl px-4 py-6" >
+    <footer className="mx-auto max-w-4xl px-4 py-6">
       <div className="flex flex-col items-center gap-2 text-center">
         <p className="text-foreground-500 font-mono text-xs">
           Made by{" "}

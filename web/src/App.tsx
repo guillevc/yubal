@@ -81,7 +81,6 @@ export default function App() {
             <ConsolePanel logs={logs} jobs={jobs} />
           </section>
         </BlurFade>
-
       </main>
 
       <BlurFade delay={0.15} direction="up">

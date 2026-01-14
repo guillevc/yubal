@@ -60,7 +60,11 @@ function Thumbnail({ url, status }: { url: string | null; status: JobStatus }) {
   if (url) {
     return (
       <div className="relative shrink-0">
-        <img src={url} alt="" className="h-16 w-16 rounded-small object-cover" />
+        <img
+          src={url}
+          alt=""
+          className="rounded-small h-16 w-16 object-cover"
+        />
         <div className="bg-content2/80 absolute right-0.5 bottom-0.5 rounded-full p-0.5">
           <StatusIcon status={status} />
         </div>
@@ -125,10 +129,9 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
 
   return (
     <div
-      className={`bg-content2 rounded-large px-3 py-2.5 transition-colors ${job.status === "cancelled"
-        ? "opacity-50"
-        : ""
-        }`}
+      className={`bg-content2 rounded-large px-3 py-2.5 transition-colors ${
+        job.status === "cancelled" ? "opacity-50" : ""
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >

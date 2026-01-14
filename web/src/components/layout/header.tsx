@@ -137,19 +137,22 @@ export function Header() {
       </NavbarContent>
 
       {/* Brand - centered on mobile, left on desktop */}
-      <NavbarContent className="sm:hidden pr-3" justify="center">
+      <NavbarContent className="pr-3 sm:hidden" justify="center">
         <NavbarBrand className="gap-2">
           <Disc3 className="text-primary h-7 w-7" />
-          <span className="text-foreground font-mono text-large font-bold">
+          <span className="text-foreground text-large font-mono font-bold">
             yubal
           </span>
         </NavbarBrand>
       </NavbarContent>
 
       {/* Desktop brand with version chip */}
-      <MotionNavbarBrand className="hidden sm:flex gap-3" {...blurFadeAnimation}>
+      <MotionNavbarBrand
+        className="hidden gap-3 sm:flex"
+        {...blurFadeAnimation}
+      >
         <Disc3 className="text-primary h-8 w-8" />
-        <span className="text-foreground font-mono text-large font-bold">
+        <span className="text-foreground text-large font-mono font-bold">
           yubal
         </span>
         <Chip
@@ -172,7 +175,7 @@ export function Header() {
       {/* Desktop navigation items */}
       <MotionNavbarContent
         justify="end"
-        className="hidden sm:flex gap-1"
+        className="hidden gap-1 sm:flex"
         {...blurFadeAnimation}
       >
         <NavbarItem>
@@ -211,7 +214,7 @@ export function Header() {
                   aria-label="Cookie options"
                   isLoading={isDeleting}
                 >
-                  <Cookie className="text-amber-500 dark:text-orange-300 h-5 w-5" />
+                  <Cookie className="h-5 w-5 text-amber-500 dark:text-orange-300" />
                 </Button>
               </DropdownTrigger>
               <DropdownMenu
