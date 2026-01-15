@@ -20,6 +20,7 @@ class AlbumInfo(BaseModel):
     thumbnail_url: str | None = None
     audio_codec: str | None = None  # e.g. "opus", "mp3"
     audio_bitrate: int | None = None  # kbps, e.g. 128
+    kind: str = "playlist"  # "album" or "playlist"
 
 
 class LogEntry(BaseModel):

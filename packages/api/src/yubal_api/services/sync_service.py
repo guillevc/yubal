@@ -74,6 +74,7 @@ def album_info_from_yubal(
         thumbnail_url=playlist_info.cover_url or (first.cover_url if first else None),
         audio_codec=audio_format.upper(),
         audio_bitrate=None,  # Set after download
+        kind=playlist_info.kind.value,
     )
 
 

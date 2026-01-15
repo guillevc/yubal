@@ -70,6 +70,13 @@ class DownloadStatus(StrEnum):
     FAILED = "failed"
 
 
+class ContentKind(StrEnum):
+    """Type of music content (album vs playlist)."""
+
+    ALBUM = "album"
+    PLAYLIST = "playlist"
+
+
 class TrackMetadata(BaseModel):
     """Metadata for a single track."""
 
@@ -143,6 +150,7 @@ class PlaylistInfo(BaseModel):
         playlist_id: The YouTube Music playlist ID.
         title: The playlist title/name.
         cover_url: URL to the playlist cover image.
+        kind: Whether this is an album or playlist.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -150,6 +158,7 @@ class PlaylistInfo(BaseModel):
     playlist_id: str
     title: str | None = None
     cover_url: str | None = None
+    kind: ContentKind = ContentKind.PLAYLIST
 
 
 class ExtractProgress(BaseModel):

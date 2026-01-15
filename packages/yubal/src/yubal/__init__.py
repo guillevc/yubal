@@ -35,7 +35,13 @@ from yubal.exceptions import (
     UnsupportedPlaylistError,
     YTMetaError,
 )
-from yubal.models.domain import CancelToken, ExtractProgress, TrackMetadata, VideoType
+from yubal.models.domain import (
+    CancelToken,
+    ContentKind,
+    ExtractProgress,
+    TrackMetadata,
+    VideoType,
+)
 from yubal.services import (
     DownloaderProtocol,
     DownloadProgress,
@@ -157,6 +163,7 @@ __all__ = [
     "AuthenticationRequiredError",
     "CancelToken",
     "CancellationError",
+    "ContentKind",
     "DownloadConfig",
     "DownloadError",
     "DownloadProgress",

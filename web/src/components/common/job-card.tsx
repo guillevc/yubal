@@ -48,9 +48,19 @@ function StatusIcon({ status }: { status: JobStatus }) {
   );
 }
 
-function MetadataChip({ children }: { children: React.ReactNode }) {
+function MetadataChip({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
-    <Chip size="sm" variant="flat" className="text-foreground-500">
+    <Chip
+      size="sm"
+      variant="flat"
+      className={`text-foreground-500 ${className ?? ""}`}
+    >
       {children}
     </Chip>
   );
@@ -87,6 +97,7 @@ function AlbumInfo({
   audioCodec,
   audioBitrate,
   showBitrate,
+  kind,
 }: {
   title: string;
   artist: string | null;
@@ -95,6 +106,7 @@ function AlbumInfo({
   audioCodec: string | null;
   audioBitrate: number | null;
   showBitrate: boolean;
+  kind: string | null;
 }) {
   return (
     <>
@@ -106,6 +118,7 @@ function AlbumInfo({
         {artist}
       </p>
       <div className="flex items-center gap-1">
+        {kind && <MetadataChip className="capitalize">{kind}</MetadataChip>}
         {trackCount && <MetadataChip>{trackCount} tracks</MetadataChip>}
         {audioCodec && (
           <MetadataChip>
@@ -129,8 +142,9 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
 
   return (
     <div
-      className={`bg-content2 shadow-small rounded-large px-3 py-2.5 transition-colors ${job.status === "cancelled" ? "opacity-50" : ""
-        }`}
+      className={`bg-content2 shadow-small rounded-large px-3 py-2.5 transition-colors ${
+        job.status === "cancelled" ? "opacity-50" : ""
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -150,6 +164,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
               audioCodec={album_info.audio_codec ?? null}
               audioBitrate={album_info.audio_bitrate ?? null}
               showBitrate={isJobFinished}
+              kind={album_info.kind ?? null}
             />
           ) : (
             <p className="text-foreground-500 truncate text-xs">{job.url}</p>

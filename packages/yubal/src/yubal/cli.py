@@ -47,6 +47,8 @@ def print_table(
     skipped: int = 0,
     unavailable: int = 0,
     playlist_total: int = 0,
+    kind: str | None = None,
+    title: str | None = None,
 ) -> None:
     """Print tracks as a Rich table.
 
@@ -55,9 +57,11 @@ def print_table(
         skipped: Number of tracks skipped (unsupported video type).
         unavailable: Number of tracks unavailable (no videoId).
         playlist_total: Total tracks in playlist (0 means no limit applied).
+        kind: Content kind ("album" or "playlist").
+        title: Title of the album/playlist.
     """
     console = Console()
-    table = Table(show_header=True, header_style="bold")
+    table = Table(show_header=True, header_style="bold", show_lines=True)
 
     table.add_column("OMV ID")
     table.add_column("ATV ID")
@@ -92,20 +96,26 @@ def print_table(
             t.video_type,
         )
 
+    # Print header with kind and title
+    if kind and title:
+        kind_label = kind.capitalize()
+        console.print(f"\n[bold cyan]{kind_label}:[/bold cyan] {title}")
+
     console.print(table)
 
     # Build summary message
     track_count = len(tracks)
     is_limited = playlist_total > 0 and track_count < playlist_total
+    kind_suffix = f" from {kind}" if kind else ""
 
     if is_limited:
         # Show "X of Y tracks" when limit is applied
         msg = (
             f"\nDownloading [cyan]{track_count}[/cyan] "
-            f"of [cyan]{playlist_total}[/cyan] tracks"
+            f"of [cyan]{playlist_total}[/cyan] tracks{kind_suffix}"
         )
     else:
-        msg = f"\nExtracted {track_count} track(s)"
+        msg = f"\nExtracted {track_count} track(s){kind_suffix}"
 
     # Add skipped/unavailable info
     summary_parts = []
@@ -248,6 +258,8 @@ def download_cmd(
         skipped = 0
         unavailable = 0
         playlist_total = 0
+        playlist_kind: str | None = None
+        playlist_title: str | None = None
 
         with Progress(
             SpinnerColumn(),
@@ -272,6 +284,8 @@ def download_cmd(
                     skipped = ep.skipped
                     unavailable = ep.unavailable
                     playlist_total = ep.playlist_total
+                    playlist_kind = ep.playlist_info.kind.value
+                    playlist_title = ep.playlist_info.title
 
                 elif p.phase == "downloading" and p.download_progress:
                     # Hide extract task, show download task on first download
@@ -285,6 +299,8 @@ def download_cmd(
                             skipped=skipped,
                             unavailable=unavailable,
                             playlist_total=playlist_total,
+                            kind=playlist_kind,
+                            title=playlist_title,
                         )
                         console.print()
                         console.print(f"[bold]Downloading to {output}...[/bold]\n")

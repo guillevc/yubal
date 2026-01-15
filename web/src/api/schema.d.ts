@@ -176,6 +176,11 @@ export interface components {
       audio_codec?: string | null;
       /** Audio Bitrate */
       audio_bitrate?: number | null;
+      /**
+       * Kind
+       * @default playlist
+       */
+      kind: string;
     };
     /**
      * CancelJobResponse

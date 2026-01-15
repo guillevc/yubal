@@ -6,7 +6,13 @@ from collections.abc import Iterator
 from rapidfuzz import process
 
 from yubal.client import YTMusicProtocol
-from yubal.models.domain import ExtractProgress, PlaylistInfo, TrackMetadata, VideoType
+from yubal.models.domain import (
+    ContentKind,
+    ExtractProgress,
+    PlaylistInfo,
+    TrackMetadata,
+    VideoType,
+)
 from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
 from yubal.utils import (
     format_artists,
@@ -93,10 +99,16 @@ class MetadataExtractorService:
             )
 
         # Create playlist info for progress updates
+        kind = (
+            ContentKind.ALBUM
+            if is_album_playlist(playlist_id)
+            else ContentKind.PLAYLIST
+        )
         playlist_info = PlaylistInfo(
             playlist_id=playlist_id,
             title=playlist.title,
             cover_url=get_square_thumbnail(playlist.thumbnails),
+            kind=kind,
         )
 
         extracted_count = 0
