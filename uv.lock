@@ -994,6 +994,7 @@ source = { editable = "packages/api" }
 dependencies = [
     { name = "fastapi" },
     { name = "pydantic-settings" },
+    { name = "rich" },
     { name = "uvicorn", extra = ["standard"] },
     { name = "yubal" },
 ]
@@ -1002,6 +1003,7 @@ dependencies = [
 requires-dist = [
     { name = "fastapi", specifier = ">=0.127.1" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
+    { name = "rich", specifier = ">=14.2.0" },
     { name = "uvicorn", extras = ["standard"], specifier = ">=0.40.0" },
     { name = "yubal", editable = "packages/yubal" },
 ]

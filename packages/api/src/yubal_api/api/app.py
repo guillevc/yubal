@@ -11,6 +11,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from rich.logging import RichHandler
 
 from yubal_api.api.exceptions import register_exception_handlers
 from yubal_api.api.routes import cookies, health, jobs
@@ -19,10 +20,25 @@ from yubal_api.services.job_executor import JobExecutor
 from yubal_api.services.job_store import JobStore
 from yubal_api.settings import get_settings
 
-logging.basicConfig(
-    level=get_settings().log_level,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+
+def setup_logging() -> None:
+    """Configure logging with Rich handler for all loggers including uvicorn."""
+    settings = get_settings()
+    handler = RichHandler(rich_tracebacks=True, show_path=False)
+    handler.setFormatter(logging.Formatter("%(name)s - %(message)s", datefmt="[%X]"))
+
+    # Configure root logger
+    logging.root.handlers = [handler]
+    logging.root.setLevel(settings.log_level)
+
+    # Configure uvicorn loggers to use Rich
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        uvicorn_logger = logging.getLogger(name)
+        uvicorn_logger.handlers = [handler]
+        uvicorn_logger.propagate = False
+
+
+setup_logging()
 logger = logging.getLogger(__name__)
 
 
