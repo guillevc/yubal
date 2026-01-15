@@ -4,9 +4,6 @@ from collections.abc import Callable
 from datetime import datetime
 from typing import Literal
 
-# Supported audio formats for yt-dlp downloads
-type AudioFormat = Literal["opus", "mp3", "m4a", "aac", "flac", "wav", "vorbis"]
-
 # Audio file extensions (includes vorbis as .ogg, weba for WebM audio)
 AUDIO_EXTENSIONS = frozenset(
     {

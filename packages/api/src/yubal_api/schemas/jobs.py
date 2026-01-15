@@ -3,16 +3,16 @@
 from typing import Literal
 
 from pydantic import BaseModel, Field
+from yubal import AudioCodec
 
 from yubal_api.core.models import Job, LogEntry
-from yubal_api.core.types import AudioFormat
 
 
 class CreateJobRequest(BaseModel):
     """Request to create a new sync job."""
 
     url: str
-    audio_format: AudioFormat | None = None  # None = use server default
+    audio_format: AudioCodec | None = None  # None = use server default
     max_items: int | None = Field(default=None, ge=1, le=10000)
 
 

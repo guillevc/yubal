@@ -9,8 +9,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-from yubal_api.core.types import AudioFormat
+from yubal import AudioCodec
 
 
 class Settings(BaseSettings):
@@ -36,7 +35,9 @@ class Settings(BaseSettings):
     log_level: str = Field(default="INFO", description="Log level")
 
     # Audio settings
-    audio_format: AudioFormat = Field(default="opus", description="Audio format")
+    audio_format: AudioCodec = Field(
+        default=AudioCodec.OPUS, description="Audio format"
+    )
     audio_quality: str = Field(default="0", description="Audio quality (0 = best)")
 
     # Temp directory

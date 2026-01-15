@@ -224,17 +224,11 @@ def meta_cmd(url: str, as_json: bool) -> None:
 
 @main.command(name="download")
 @click.argument("url", metavar="PLAYLIST_URL")
-@click.option(
-    "-o",
-    "--output",
-    type=click.Path(path_type=Path),
-    default=Path.cwd(),
-    help="Output directory for downloaded files (default: current directory).",
-)
+@click.argument("output", type=click.Path(path_type=Path), metavar="OUTPUT_DIR")
 @click.option(
     "--codec",
-    type=click.Choice(["opus", "mp3", "m4a"]),
-    default="opus",
+    type=click.Choice([c.value for c in AudioCodec]),
+    default=AudioCodec.OPUS.value,
     help="Audio codec (default: opus).",
 )
 @click.option(
@@ -251,18 +245,13 @@ def download_cmd(
 ) -> None:
     """Download tracks from a YouTube Music playlist.
 
-    PLAYLIST_URL should be a full YouTube Music playlist URL like:
-    https://music.youtube.com/playlist?list=PLxxxxxxxx
-
     Downloads each track using yt-dlp, preferring the ATV (Audio Track Video)
     version for better audio quality, falling back to OMV (Official Music Video)
     if ATV is unavailable. Existing files are automatically skipped.
 
-    Examples:
+    Example:
 
-        yubal download "https://music.youtube.com/playlist?list=PLxxx"
-
-        yubal download "https://music.youtube.com/playlist?list=PLxxx" -o ~/Music
+        yubal download "https://music.youtube.com/playlist?list=PLxxx" ~/Music
     """
     console = Console()
 

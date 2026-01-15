@@ -4,9 +4,11 @@ import threading
 from collections import OrderedDict, defaultdict
 from datetime import datetime
 
+from yubal import AudioCodec
+
 from yubal_api.core.enums import JobStatus
 from yubal_api.core.models import AlbumInfo, Job, LogEntry
-from yubal_api.core.types import AudioFormat, Clock, IdGenerator, LogStatus
+from yubal_api.core.types import Clock, IdGenerator, LogStatus
 
 
 class JobStore:
@@ -44,7 +46,7 @@ class JobStore:
     def create_job(
         self,
         url: str,
-        audio_format: AudioFormat = "opus",
+        audio_format: AudioCodec = AudioCodec.OPUS,
         max_items: int | None = None,
     ) -> tuple[Job, bool] | None:
         """Create a new job.

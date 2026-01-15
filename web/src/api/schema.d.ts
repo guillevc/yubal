@@ -183,6 +183,12 @@ export interface components {
       kind: string;
     };
     /**
+     * AudioCodec
+     * @description Supported audio output codecs.
+     * @enum {string}
+     */
+    AudioCodec: "opus" | "mp3" | "m4a";
+    /**
      * CancelJobResponse
      * @description Response when a job is cancelled.
      */
@@ -190,8 +196,9 @@ export interface components {
       /**
        * Message
        * @default Job cancelled
+       * @constant
        */
-      message: string;
+      message: "Job cancelled";
     };
     /**
      * ClearJobsResponse
@@ -222,8 +229,11 @@ export interface components {
      * @description Cookies upload response model.
      */
     CookiesUploadResponse: {
-      /** Status */
-      status: string;
+      /**
+       * Status
+       * @constant
+       */
+      status: "ok";
     };
     /**
      * CreateJobRequest
@@ -232,8 +242,9 @@ export interface components {
     CreateJobRequest: {
       /** Url */
       url: string;
-      /** Audio Format */
-      audio_format?: string | null;
+      audio_format?: components["schemas"]["AudioCodec"] | null;
+      /** Max Items */
+      max_items?: number | null;
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -245,8 +256,11 @@ export interface components {
      * @description Health check response model.
      */
     HealthResponse: {
-      /** Status */
-      status: string;
+      /**
+       * Status
+       * @constant
+       */
+      status: "healthy";
     };
     /**
      * Job
@@ -257,11 +271,10 @@ export interface components {
       id: string;
       /** Url */
       url: string;
-      /**
-       * Audio Format
-       * @default mp3
-       */
-      audio_format: string;
+      /** @default opus */
+      audio_format: components["schemas"]["AudioCodec"];
+      /** Max Items */
+      max_items?: number | null;
       /** @default pending */
       status: components["schemas"]["JobStatus"];
       /**
@@ -281,15 +294,15 @@ export interface components {
       completed_at?: string | null;
     };
     /**
-     * JobConflictError
+     * JobConflictErrorResponse
      * @description Error response when job creation is rejected.
      */
-    JobConflictError: {
+    JobConflictErrorResponse: {
       /**
        * Error
-       * @default A job is already running
+       * @enum {string}
        */
-      error: string;
+      error: "A job is already running" | "Queue is full";
       /** Active Job Id */
       active_job_id?: string | null;
     };
@@ -303,8 +316,9 @@ export interface components {
       /**
        * Message
        * @default Job created
+       * @constant
        */
-      message: string;
+      message: "Job created";
     };
     /**
      * JobListResponse
@@ -342,11 +356,18 @@ export interface components {
        * Format: date-time
        */
       timestamp: string;
-      /** Status */
-      status: string;
+      status: components["schemas"]["LogStatus"];
       /** Message */
       message: string;
     };
+    /** @enum {string} */
+    LogStatus:
+      | "fetching_info"
+      | "downloading"
+      | "importing"
+      | "completed"
+      | "failed"
+      | "cancelled";
     /** ValidationError */
     ValidationError: {
       /** Location */
@@ -433,7 +454,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["JobConflictError"];
+          "application/json": components["schemas"]["JobConflictErrorResponse"];
         };
       };
       /** @description Validation Error */

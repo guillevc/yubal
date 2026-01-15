@@ -3,9 +3,10 @@
 from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
+from yubal import AudioCodec
 
 from yubal_api.core.enums import JobStatus
-from yubal_api.core.types import AudioFormat, LogStatus
+from yubal_api.core.types import LogStatus
 
 
 class AlbumInfo(BaseModel):
@@ -38,7 +39,7 @@ class Job(BaseModel):
 
     id: str
     url: str
-    audio_format: AudioFormat = "opus"
+    audio_format: AudioCodec = AudioCodec.OPUS
     max_items: int | None = None
     status: JobStatus = JobStatus.PENDING
     progress: float = 0.0
