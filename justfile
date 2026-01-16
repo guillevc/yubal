@@ -165,6 +165,24 @@ test-py:
 test-web:
     bun run test
 
+# Coverage
+[group('test')]
+[doc("Run all tests with coverage")]
+test-cov: test-cov-py test-cov-web
+
+[group('test')]
+[private]
+[no-exit-message]
+test-cov-py:
+    mkdir -p coverage
+    uv run pytest packages scripts --cov --cov-report=lcov:coverage/py.lcov
+
+[group('test')]
+[private]
+[working-directory('web')]
+test-cov-web:
+    bun test --coverage --coverage-reporter=lcov
+
 # Utils
 [group('utils')]
 [doc("Generate OpenAPI schema and TypeScript types")]
@@ -174,12 +192,30 @@ gen-api:
 # CI
 [group('ci')]
 [doc("Run all checks (CI)")]
-check: format-check lint typecheck test build
+check test_recipe="test": format-check lint typecheck
+    just {{ test_recipe }}
+    just smoke
+
+[group('ci')]
+[doc("Run smoke tests")]
+smoke: smoke-py smoke-web
+
+[group('ci')]
+[private]
+smoke-py:
+    uv build --package yubal
+    uv build --package yubal-api
+    uv run python -c "import yubal_api; print('OK')"
+
+[group('ci')]
+[private]
+smoke-web: build
+    @test -d web/dist && echo "OK"
 
 [group('ci')]
 [confirm("Delete all caches?")]
 clean:
-    rm -rf .pytest_cache .ruff_cache packages/*/.pytest_cache web/dist web/node_modules/.vite
+    rm -rf .pytest_cache .ruff_cache packages/*/.pytest_cache web/dist web/node_modules/.vite dist
 
 # Docker
 [group('docker')]

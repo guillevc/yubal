@@ -4,6 +4,8 @@
 .env.docker
 *.tsbuildinfo
 .playwright-mcp
+/coverage/
+/web/coverage
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,python,visualstudiocode,react
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,python,visualstudiocode,react

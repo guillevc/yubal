@@ -25,4 +25,4 @@ quote-style = "double"
 
 [tool.pytest.ini_options]
 testpaths = ["packages/*/tests"]
-addopts = "--tb=short --cov --cov-report=term-missing"
+addopts = "--tb=short"

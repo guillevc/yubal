@@ -15,8 +15,28 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+
       - uses: jdx/mise-action@v3
         with:
           version: 2025.12.12
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+            .venv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
+          restore-keys: uv-${{ runner.os }}-
+
+      - uses: actions/cache@v4
+        with:
+          path: web/node_modules
+          key: bun-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
       - run: just install
-      - run: just check
+      - run: just check test-cov
+
+      - uses: codecov/codecov-action@v5
+        with:
+          files: coverage/py.lcov,web/coverage/lcov.info
