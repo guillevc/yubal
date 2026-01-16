@@ -193,10 +193,11 @@ export function Header() {
                   variant="dot"
                   color="secondary"
                   classNames={{
-                    dot: "animate-pulse"
+                    dot: "animate-pulse",
                   }}
                 >
-                  <span className="font-mono">{versionInfo.latestVersion} released
+                  <span className="font-mono">
+                    {versionInfo.latestVersion} released
                   </span>
                 </Chip>
               </Tooltip>
@@ -357,7 +358,7 @@ export function Header() {
             <Link
               as="button"
               color="foreground"
-              className="w-full gap-2 cursor-pointer"
+              className="w-full cursor-pointer gap-2"
               size="lg"
               onPress={() => fileInputRef.current?.click()}
             >
@@ -390,11 +391,13 @@ export function Header() {
               className="w-full gap-2"
               size="lg"
             >
-              <span className="text-secondary">Update to {versionInfo.latestVersion}</span>
+              <span className="text-secondary">
+                Update to {versionInfo.latestVersion}
+              </span>
             </Link>
           </NavbarMenuItem>
         )}
       </NavbarMenu>
-    </Navbar >
+    </Navbar>
   );
 }

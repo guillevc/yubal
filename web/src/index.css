@@ -46,33 +46,28 @@
   }
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Background */
 html {
   background:
-    radial-gradient(at 0% 0%, rgb(58 169 159 / 0.08) 0%, transparent 50%),
-    radial-gradient(at 100% 0%, rgb(168 134 225 / 0.12) 0%, transparent 50%),
-    radial-gradient(at 100% 100%, rgb(236 72 153 / 0.06) 0%, transparent 40%);
-  background-color: #ffffff;
+    radial-gradient(
+      ellipse 2000px 800px at 50% 0%,
+      rgba(139, 126, 200, 0.15) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 1800px 700px at 50% 100%,
+      rgba(58, 169, 159, 0.05) 0%,
+      transparent 60%
+    );
+  background-color: #fff;
 }
 
 html.flexoki-dark {
-  background:
-    radial-gradient(at 0% 0%, rgb(58 169 159 / 0.12) 0%, transparent 50%),
-    radial-gradient(at 100% 0%, rgb(168 134 225 / 0.2) 0%, transparent 50%),
-    radial-gradient(at 100% 100%, rgb(236 72 153 / 0.1) 0%, transparent 40%);
-  background-color: #000000;
-}
-
-html::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(
-    180deg,
-    rgb(255 255 255 / 0.03) 0%,
-    transparent 30%
-  );
+  background-color: #000;
 }
 
 /* Console panel ANSI styling using HeroUI semantic colors */
