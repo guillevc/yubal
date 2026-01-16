@@ -75,7 +75,11 @@ class PlaylistComposerService:
                 tracks = self._collect_tracks_for_m3u(results)
                 if tracks:
                     m3u_path = write_m3u(base_path, playlist_name, tracks)
-                    logger.info("Generated M3U playlist: '%s'", m3u_path)
+                    logger.info(
+                        "Generated M3U playlist: '%s'",
+                        m3u_path,
+                        extra={"file_type": "m3u", "file_path": str(m3u_path)},
+                    )
                 else:
                     logger.debug("No tracks available for M3U generation")
 
@@ -85,7 +89,11 @@ class PlaylistComposerService:
                 base_path, playlist_name, playlist_info.cover_url
             )
             if cover_path:
-                logger.info("Saved playlist cover: '%s'", cover_path)
+                logger.info(
+                    "Saved playlist cover: '%s'",
+                    cover_path,
+                    extra={"file_type": "cover", "file_path": str(cover_path)},
+                )
 
         return m3u_path, cover_path
 

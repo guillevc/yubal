@@ -123,8 +123,18 @@ class PlaylistDownloadService:
         if cancel_token and cancel_token.is_cancelled:
             raise CancellationError("Operation cancelled")
 
+        # Header for new download
+        logger.info(
+            "Starting new download",
+            extra={"header": "New Download"},
+        )
+
         # Phase 1: Extract metadata
-        logger.info("Phase 1: Extracting metadata from %s", url)
+        logger.info(
+            "Extracting metadata from %s",
+            url,
+            extra={"phase": "extracting", "phase_num": 1},
+        )
         for progress in self._extractor.extract(url, max_items=self._config.max_items):
             tracks.append(progress.track)
             playlist_info = progress.playlist_info
@@ -147,7 +157,11 @@ class PlaylistDownloadService:
             raise CancellationError("Operation cancelled")
 
         # Phase 2: Download tracks
-        logger.info("Phase 2: Downloading %d tracks", len(tracks))
+        logger.info(
+            "Downloading %d tracks",
+            len(tracks),
+            extra={"phase": "downloading", "phase_num": 2},
+        )
         results: list[DownloadResult] = []
         for progress in self._downloader.download_tracks(tracks, cancel_token):
             results.append(progress.result)
@@ -158,11 +172,18 @@ class PlaylistDownloadService:
                 download_progress=progress,
             )
 
+        success_count = sum(1 for r in results if r.status.value == "success")
+        skipped_count = sum(1 for r in results if r.status.value == "skipped")
+        failed_count = sum(1 for r in results if r.status.value == "failed")
         logger.info(
-            "Downloads complete: %d success, %d skipped, %d failed",
-            sum(1 for r in results if r.status.value == "success"),
-            sum(1 for r in results if r.status.value == "skipped"),
-            sum(1 for r in results if r.status.value == "failed"),
+            "Downloads complete",
+            extra={
+                "stats": {
+                    "success": success_count,
+                    "skipped": skipped_count,
+                    "failed": failed_count,
+                }
+            },
         )
 
         # Check for cancellation before composing
@@ -170,7 +191,10 @@ class PlaylistDownloadService:
             raise CancellationError("Operation cancelled")
 
         # Phase 3: Compose playlist artifacts
-        logger.info("Phase 3: Generating playlist files")
+        logger.info(
+            "Generating playlist files",
+            extra={"phase": "composing", "phase_num": 3},
+        )
         yield PlaylistProgress(
             phase="composing",
             current=0,
@@ -202,7 +226,7 @@ class PlaylistDownloadService:
             cover_path=cover_path,
         )
 
-        logger.info("Playlist download complete")
+        logger.info("Playlist download complete", extra={"status": "success"})
 
     def download_playlist_all(
         self,

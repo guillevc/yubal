@@ -97,6 +97,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/logs/history": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get buffered log entries
+     * @description Returns all currently buffered log entries as an array.
+     */
+    get: operations["get_log_history_logs_history_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/logs/sse": {
     parameters: {
       query?: never;
@@ -105,11 +125,8 @@ export interface paths {
       cookie?: never;
     };
     /**
-     * Stream Logs
-     * @description Stream log lines via Server-Sent Events.
-     *
-     *     Sends all existing buffered lines on connect, then streams new lines
-     *     as they arrive. Lines include Rich ANSI formatting codes.
+     * Stream structured logs via SSE
+     * @description Each SSE data line contains a JSON-serialized LogEntry object.
      */
     get: operations["stream_logs_logs_sse_get"];
     put?: never;
@@ -362,6 +379,150 @@ export interface components {
       /** Jobs */
       jobs: components["schemas"]["Job"][];
     };
+    /**
+     * LogEntry
+     * @description Structured log entry sent to frontend via SSE.
+     *
+     *     Each log line from the backend is serialized as JSON using this schema.
+     *     The frontend parses these entries and applies theme-aware styling.
+     *
+     *     The `entry_type` field enables discriminated union pattern matching
+     *     in TypeScript for exhaustive type narrowing.
+     * @example {
+     *       "entry_type": "phase",
+     *       "level": "INFO",
+     *       "message": "Extracting metadata from playlist",
+     *       "phase": "extracting",
+     *       "phase_num": 1,
+     *       "timestamp": "11:09:53"
+     *     }
+     * @example {
+     *       "current": 1,
+     *       "entry_type": "progress",
+     *       "event_type": "track_download",
+     *       "level": "INFO",
+     *       "message": "Queen - Bohemian Rhapsody",
+     *       "timestamp": "11:09:54",
+     *       "total": 10,
+     *       "track_artist": "Queen",
+     *       "track_title": "Bohemian Rhapsody"
+     *     }
+     * @example {
+     *       "entry_type": "stats",
+     *       "level": "INFO",
+     *       "message": "Downloads complete",
+     *       "stats": {
+     *         "failed": 0,
+     *         "skipped": 2,
+     *         "success": 8
+     *       },
+     *       "timestamp": "11:09:55"
+     *     }
+     */
+    LogEntry: {
+      /**
+       * Entry Type
+       * @description Entry type for discriminated union matching
+       * @default default
+       * @enum {string}
+       */
+      entry_type:
+        | "header"
+        | "phase"
+        | "stats"
+        | "progress"
+        | "status"
+        | "file"
+        | "default";
+      /**
+       * Timestamp
+       * @description Log timestamp in HH:MM:SS format
+       */
+      timestamp: string;
+      /**
+       * Level
+       * @description Log level: DEBUG, INFO, WARNING, ERROR
+       */
+      level: string;
+      /**
+       * Message
+       * @description Human-readable log message
+       */
+      message: string;
+      /**
+       * Phase
+       * @description Current operation phase: extracting, downloading, composing
+       */
+      phase?: string | null;
+      /**
+       * Phase Num
+       * @description Phase number (1, 2, 3)
+       */
+      phase_num?: number | null;
+      /**
+       * Event Type
+       * @description Specific event type for granular tracking
+       */
+      event_type?: string | null;
+      /**
+       * Current
+       * @description Current item index in progress (0-indexed)
+       */
+      current?: number | null;
+      /**
+       * Total
+       * @description Total number of items to process
+       */
+      total?: number | null;
+      /**
+       * Status
+       * @description Operation result status
+       */
+      status?: ("success" | "skipped" | "failed") | null;
+      /** @description Aggregate statistics for batch operations */
+      stats?: components["schemas"]["LogStats"] | null;
+      /**
+       * File Path
+       * @description Path to generated or downloaded file
+       */
+      file_path?: string | null;
+      /**
+       * File Type
+       * @description Type of file: m3u, cover, audio
+       */
+      file_type?: string | null;
+      /**
+       * Track Title
+       * @description Track title being processed
+       */
+      track_title?: string | null;
+      /**
+       * Track Artist
+       * @description Track artist name
+       */
+      track_artist?: string | null;
+      /**
+       * Header
+       * @description Section header text for visual separation
+       */
+      header?: string | null;
+    };
+    /**
+     * LogStats
+     * @description Statistics for batch operations.
+     */
+    LogStats: {
+      /** Success */
+      success?: number | null;
+      /** Skipped */
+      skipped?: number | null;
+      /** Failed */
+      failed?: number | null;
+      /** Extracted */
+      extracted?: number | null;
+      /** Unavailable */
+      unavailable?: number | null;
+    };
     /** ValidationError */
     ValidationError: {
       /** Location */
@@ -542,7 +703,7 @@ export interface operations {
       };
     };
   };
-  stream_logs_logs_sse_get: {
+  get_log_history_logs_history_get: {
     parameters: {
       query?: never;
       header?: never;
@@ -557,8 +718,26 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": unknown;
+          "application/json": components["schemas"]["LogEntry"][];
         };
+      };
+    };
+  };
+  stream_logs_logs_sse_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
     };
   };

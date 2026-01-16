@@ -29,7 +29,7 @@ from yubal_api.settings import get_settings
 def setup_logging() -> None:
     """Configure logging with Rich handler for all loggers including uvicorn."""
     settings = get_settings()
-    handler = RichHandler(rich_tracebacks=True, show_path=False)
+    handler = RichHandler(rich_tracebacks=True, show_path=False, markup=True)
     handler.setFormatter(logging.Formatter("%(name)s - %(message)s", datefmt="[%X]"))
 
     # Configure root logger

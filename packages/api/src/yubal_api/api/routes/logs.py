@@ -1,21 +1,54 @@
 """Log streaming endpoints."""
 
+import asyncio
 from collections.abc import AsyncIterator
 
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from yubal_api.schemas.log import LogEntry
 from yubal_api.services.log_buffer import get_log_buffer
 
 router = APIRouter(prefix="/logs", tags=["logs"])
 
+# Heartbeat interval in seconds to prevent connection timeouts
+HEARTBEAT_INTERVAL = 30
 
-@router.get("/sse")
+
+@router.get(
+    "/history",
+    summary="Get buffered log entries",
+    description="Returns all currently buffered log entries as an array.",
+)
+async def get_log_history() -> list[LogEntry]:
+    """Get all buffered log entries.
+
+    Returns the current log buffer contents. Useful for initial page load
+    before connecting to the SSE stream.
+    """
+    buffer = get_log_buffer()
+    entries: list[LogEntry] = []
+    for line in buffer.get_lines():
+        try:
+            entries.append(LogEntry.model_validate_json(line))
+        except Exception:
+            pass  # Skip invalid entries
+    return entries
+
+
+@router.get(
+    "/sse",
+    response_class=StreamingResponse,
+    summary="Stream structured logs via SSE",
+    description="Each SSE data line contains a JSON-serialized LogEntry object.",
+)
 async def stream_logs() -> StreamingResponse:
-    """Stream log lines via Server-Sent Events.
+    """Stream structured log entries via Server-Sent Events.
 
     Sends all existing buffered lines on connect, then streams new lines
-    as they arrive. Lines include Rich ANSI formatting codes.
+    as they arrive. Each line is a JSON-serialized LogEntry.
+
+    Heartbeats are sent every 30 seconds to prevent connection timeouts.
     """
     buffer = get_log_buffer()
 
@@ -25,10 +58,16 @@ async def stream_logs() -> StreamingResponse:
             for line in buffer.get_lines():
                 yield f"data: {line}\n\n"
 
-            # Stream new lines as they arrive
+            # Stream new lines with heartbeat to prevent timeouts
             while True:
-                line = await queue.get()
-                yield f"data: {line}\n\n"
+                try:
+                    line = await asyncio.wait_for(
+                        queue.get(), timeout=HEARTBEAT_INTERVAL
+                    )
+                    yield f"data: {line}\n\n"
+                except TimeoutError:
+                    # Send SSE comment as heartbeat
+                    yield ": heartbeat\n\n"
 
     return StreamingResponse(
         event_generator(),
@@ -36,5 +75,6 @@ async def stream_logs() -> StreamingResponse:
         headers={
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",  # Disable nginx buffering
         },
     )

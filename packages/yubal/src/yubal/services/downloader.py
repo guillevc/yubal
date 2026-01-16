@@ -251,7 +251,11 @@ class DownloadService:
             # Tag the downloaded file
             self._tag_file(actual_path, track)
 
-            logger.info("Downloaded: '%s'", actual_path)
+            logger.info(
+                "Downloaded: '%s'",
+                actual_path,
+                extra={"status": "success", "file_path": str(actual_path)},
+            )
 
             return DownloadResult(
                 track=track,
@@ -314,11 +318,16 @@ class DownloadService:
                 raise CancellationError("Download cancelled")
 
             logger.info(
-                "Downloading [%d/%d]: %s - %s",
-                i + 1,
-                total,
+                "%s - %s",
                 track.artist,
                 track.title,
+                extra={
+                    "event_type": "track_download",
+                    "current": i + 1,
+                    "total": total,
+                    "track_title": track.title,
+                    "track_artist": track.artist,
+                },
             )
 
             result = self.download_track(track)

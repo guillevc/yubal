@@ -57,7 +57,7 @@ lint: lint-py lint-web
 [group('lint')]
 [private]
 lint-py:
-    uv run ruff check packages
+    uv run ruff check packages scripts
 
 [group('lint')]
 [private]
@@ -73,7 +73,7 @@ lint-fix: lint-fix-py lint-fix-web
 [group('lint')]
 [private]
 lint-fix-py:
-    uv run ruff check packages --fix
+    uv run ruff check packages scripts --fix
 
 [group('lint')]
 [private]
@@ -89,7 +89,7 @@ format: format-py format-web
 [group('format')]
 [private]
 format-py:
-    uv run ruff format packages
+    uv run ruff format packages scripts
 
 [group('format')]
 [private]
@@ -105,7 +105,7 @@ format-check: format-check-py format-check-web
 [group('format')]
 [private]
 format-check-py:
-    uv run ruff format --check packages
+    uv run ruff format --check packages scripts
 
 [group('format')]
 [private]
@@ -121,7 +121,7 @@ typecheck: typecheck-py typecheck-web
 [group('typecheck')]
 [private]
 typecheck-py:
-    uv run ty check packages
+    uv run ty check packages scripts
 
 [group('typecheck')]
 [private]
@@ -138,7 +138,7 @@ test: test-py test-web
 [private]
 [no-exit-message]
 test-py:
-    uv run pytest packages
+    uv run pytest packages scripts
 
 [group('test')]
 [private]
@@ -148,9 +148,9 @@ test-web:
 
 # Utils
 [group('utils')]
-[working-directory('web')]
+[doc("Generate OpenAPI schema and TypeScript types")]
 gen-api:
-    bun run generate-api
+    @python scripts/generate_openapi.py
 
 # CI
 [group('ci')]

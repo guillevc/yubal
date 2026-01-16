@@ -86,7 +86,7 @@ class MetadataExtractorService:
                 tracks = tracks[:max_items]
                 # Don't report unavailable count when truncating (outside scope)
                 unavailable_count = 0
-            limited = True
+                limited = True
 
         total = len(tracks)
         if limited:
@@ -143,10 +143,14 @@ class MetadataExtractorService:
             )
 
         logger.info(
-            "Extracted metadata for %d tracks (%d skipped, %d unavailable)",
-            extracted_count,
-            skipped_count,
-            unavailable_count,
+            "Extraction complete",
+            extra={
+                "stats": {
+                    "extracted": extracted_count,
+                    "skipped": skipped_count,
+                    "unavailable": unavailable_count,
+                }
+            },
         )
 
     def extract_all(

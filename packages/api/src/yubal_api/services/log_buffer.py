@@ -1,26 +1,30 @@
-"""Global log buffer for capturing and streaming ANSI-formatted output."""
+"""Global log buffer for capturing and streaming structured JSON logs."""
 
 import asyncio
+import html
 import logging
 import threading
 from collections import deque
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from io import StringIO
+from datetime import datetime
+from typing import Any, ClassVar, override
 
-from rich.console import Console
-from rich.logging import RichHandler
-from rich.traceback import Traceback
+from yubal_api.schemas.log import LogEntry, LogEntryType, LogStats
 
 
 class LogBuffer:
     """Thread-safe global buffer for log lines with SSE subscription support.
 
-    Captures Rich-formatted output and makes it available for streaming
+    Captures structured log output and makes it available for streaming
     to clients via Server-Sent Events.
+
+    Uses drop_oldest backpressure strategy: when a subscriber queue is full,
+    the oldest message is dropped to make room for the new one.
     """
 
     MAX_LINES = 500
+    SUBSCRIBER_QUEUE_SIZE = 100
 
     def __init__(self) -> None:
         self._lines: deque[str] = deque(maxlen=self.MAX_LINES)
@@ -33,13 +37,18 @@ class LogBuffer:
         with self._lock:
             self._lines.append(line)
 
-        # Notify SSE subscribers (non-blocking)
+        # Notify SSE subscribers with drop_oldest backpressure
         with self._subscribers_lock:
             for queue in self._subscribers:
                 try:
                     queue.put_nowait(line)
                 except asyncio.QueueFull:
-                    pass  # Drop if subscriber is too slow
+                    # Drop oldest message to make room for new one
+                    try:
+                        queue.get_nowait()
+                        queue.put_nowait(line)
+                    except asyncio.QueueEmpty:
+                        pass  # Race condition, queue was drained
 
     def get_lines(self) -> list[str]:
         """Get all buffered lines."""
@@ -54,7 +63,7 @@ class LogBuffer:
     @asynccontextmanager
     async def subscribe(self) -> AsyncIterator[asyncio.Queue[str]]:
         """Subscribe to new log lines via context manager."""
-        queue: asyncio.Queue[str] = asyncio.Queue()
+        queue: asyncio.Queue[str] = asyncio.Queue(maxsize=self.SUBSCRIBER_QUEUE_SIZE)
         with self._subscribers_lock:
             self._subscribers.append(queue)
         try:
@@ -64,58 +73,85 @@ class LogBuffer:
                 self._subscribers.remove(queue)
 
 
-class BufferHandler(RichHandler):
-    """Captures RichHandler output as ANSI instead of printing to console."""
+class BufferHandler(logging.Handler):
+    """Sends Pydantic-validated JSON logs for frontend rendering.
+
+    The frontend is responsible for styling based on the structured data.
+    This keeps the backend presentation-agnostic while ensuring type safety.
+
+    Security: Messages are HTML-escaped to prevent XSS attacks.
+    """
+
+    EXTRA_FIELDS: ClassVar[list[str]] = [
+        "phase",
+        "phase_num",
+        "event_type",
+        "current",
+        "total",
+        "status",
+        "file_path",
+        "file_type",
+        "track_title",
+        "track_artist",
+        "header",
+    ]
 
     def __init__(self, buffer: LogBuffer) -> None:
-        console = Console(
-            file=StringIO(),
-            force_terminal=True,
-            width=10000,  # Prevent line wrapping (SSE doesn't handle multiline)
-            legacy_windows=False,
-            color_system="truecolor",
-        )
-        super().__init__(
-            console=console,
-            rich_tracebacks=True,
-            show_path=False,
-            log_time_format="[%X]",  # Time only, consistent with terminal
-        )
+        super().__init__()
         self._buffer = buffer
 
+    @override
     def emit(self, record: logging.LogRecord) -> None:
-        """Render log with RichHandler styling and export as ANSI."""
+        """Serialize log record to validated JSON and append to buffer."""
         try:
-            self.console.file = StringIO()  # Reset buffer
+            entry_data: dict[str, Any] = {
+                "timestamp": datetime.fromtimestamp(record.created).strftime(
+                    "%H:%M:%S"
+                ),
+                "level": record.levelname,
+                "message": html.escape(record.getMessage()),  # XSS prevention
+            }
 
-            # Handle traceback like RichHandler.emit() does
-            traceback = None
-            if (
-                self.rich_tracebacks
-                and record.exc_info
-                and record.exc_info != (None, None, None)
-            ):
-                exc_type, exc_value, exc_traceback = record.exc_info
-                if exc_type is not None and exc_value is not None:
-                    traceback = Traceback.from_exception(
-                        exc_type, exc_value, exc_traceback
-                    )
+            # Add structured extras
+            for field in self.EXTRA_FIELDS:
+                if hasattr(record, field):
+                    entry_data[field] = getattr(record, field)
 
-            # Use RichHandler's render() - handles all styling automatically
-            output = self.render(
-                record=record,
-                traceback=traceback,
-                message_renderable=self.render_message(record, record.getMessage()),
-            )
+            # Handle stats (convert dict to LogStats model)
+            stats_value = getattr(record, "stats", None)
+            if isinstance(stats_value, dict):
+                entry_data["stats"] = LogStats(**stats_value)
 
-            self.console.print(output, highlight=True)
-            # Get ANSI output (frontend will convert to HTML)
-            file = self.console.file
-            assert isinstance(file, StringIO)
-            ansi_output = file.getvalue().rstrip()
-            self._buffer.append(ansi_output)
+            # Compute entry_type for frontend discriminated union
+            entry_data["entry_type"] = self._compute_entry_type(entry_data)
+
+            # Validate with Pydantic and serialize
+            log_entry = LogEntry(**entry_data)
+            self._buffer.append(log_entry.model_dump_json())
         except Exception:
             self.handleError(record)
+
+    def _compute_entry_type(self, entry_data: dict[str, Any]) -> LogEntryType:
+        """Determine entry type based on present fields for discriminated union."""
+        if entry_data.get("header") is not None:
+            return "header"
+        if entry_data.get("phase") is not None:
+            return "phase"
+        if entry_data.get("stats") is not None:
+            return "stats"
+        if (
+            entry_data.get("current") is not None
+            and entry_data.get("total") is not None
+        ):
+            return "progress"
+        if entry_data.get("status") is not None:
+            return "status"
+        if (
+            entry_data.get("file_path") is not None
+            or entry_data.get("file_type") is not None
+        ):
+            return "file"
+        return "default"
 
 
 # Global singleton

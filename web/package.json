@@ -7,7 +7,7 @@
     "dev": "vite --clearScreen false",
     "build": "tsc -b && vite build",
     "preview": "vite preview --clearScreen false",
-    "generate-api": "openapi-typescript http://localhost:8000/api/openapi.json -o src/api/schema.d.ts",
+    "generate-api": "openapi-typescript http://localhost:8765/api/openapi.json -o src/api/schema.d.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
