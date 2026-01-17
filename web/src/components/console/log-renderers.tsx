@@ -8,11 +8,12 @@ type LogStatus = NonNullable<LogEntry["status"]>;
 const ICON_CLASS = "h-4 w-4 shrink-0";
 
 /** Status icon configuration mapping status to icon component and color */
-const STATUS_CONFIG: Record<LogStatus, { icon: typeof Check; color: string }> = {
-  success: { icon: Check, color: "text-success" },
-  skipped: { icon: Circle, color: "text-warning" },
-  failed: { icon: X, color: "text-danger" },
-};
+const STATUS_CONFIG: Record<LogStatus, { icon: typeof Check; color: string }> =
+  {
+    success: { icon: Check, color: "text-success" },
+    skipped: { icon: Circle, color: "text-warning" },
+    failed: { icon: X, color: "text-danger" },
+  };
 
 /** Header log - prominent visual separator */
 export function HeaderLog({ header }: { header: string }) {

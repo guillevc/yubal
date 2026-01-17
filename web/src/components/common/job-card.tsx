@@ -146,8 +146,9 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
 
   return (
     <div
-      className={`overflow-hidden bg-content2 shadow-small rounded-large px-3 py-2.5 transition-colors ${job.status === "cancelled" ? "opacity-50" : ""
-        }`}
+      className={`bg-content2 shadow-small rounded-large overflow-hidden px-3 py-2.5 transition-colors ${
+        job.status === "cancelled" ? "opacity-50" : ""
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
