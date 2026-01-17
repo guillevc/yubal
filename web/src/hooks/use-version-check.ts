@@ -23,14 +23,14 @@ interface GitHubRelease {
 
 function compareVersions(current: string, latest: string): boolean {
   const normalize = (v: string) => v.replace(/^v/, "");
-  const curr = normalize(current).split(".").map(Number);
-  const lat = normalize(latest).split(".").map(Number);
+  const currentParts = normalize(current).split(".").map(Number);
+  const latestParts = normalize(latest).split(".").map(Number);
 
-  for (let i = 0; i < Math.max(curr.length, lat.length); i++) {
-    const c = curr[i] || 0;
-    const l = lat[i] || 0;
-    if (l > c) return true;
-    if (c > l) return false;
+  for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
+    const currentPart = currentParts[i] || 0;
+    const latestPart = latestParts[i] || 0;
+    if (latestPart > currentPart) return true;
+    if (currentPart > latestPart) return false;
   }
   return false;
 }

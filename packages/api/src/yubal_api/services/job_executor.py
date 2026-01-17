@@ -193,8 +193,8 @@ class JobExecutor:
         if data := details.get("album_info"):
             try:
                 return AlbumInfo(**data)
-            except Exception:
-                pass
+            except (TypeError, ValueError) as e:
+                logger.warning("Failed to parse album info: %s", e)
         return None
 
     def _start_next_pending(self) -> None:
