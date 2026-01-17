@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from "react";
 import type { components } from "../api/schema";
 import { useLocalStorage } from "../hooks/use-local-storage";
 import { useLogs } from "../hooks/use-logs";
+import { EmptyState } from "./common/empty-state";
 import { Panel, PanelContent, PanelHeader } from "./common/panel";
 import { LogLine } from "./console/log-renderers";
 
@@ -47,7 +48,10 @@ export function ConsolePanel() {
         leadingIcon={<Terminal size={18} />}
         badge={
           !isConnected && (
-            <span className="text-warning text-xs">disconnected</span>
+            <span className="bg-warning/10 text-warning inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs">
+              <span className="bg-warning h-1.5 w-1.5 animate-pulse rounded-full" />
+              offline
+            </span>
           )
         }
         trailingIcon={
@@ -76,11 +80,7 @@ export function ConsolePanel() {
               className="console-logs space-y-0.5 p-4 font-mono text-xs"
             >
               {parsedLines.length === 0 ? (
-                <div className="flex h-full items-center justify-center">
-                  <span className="text-foreground-400">
-                    Awaiting YouTube URL...
-                  </span>
-                </div>
+                <EmptyState icon={Terminal} title="No activity yet" mono />
               ) : (
                 <AnimatePresence initial={false}>
                   {parsedLines.map((parsed, idx) => (

@@ -1,7 +1,8 @@
-import { Download } from "lucide-react";
+import { Download, Inbox } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import type { Job } from "../api/jobs";
 import { isActive } from "../lib/job-status";
+import { EmptyState } from "./common/empty-state";
 import { JobCard } from "./common/job-card";
 import { Panel, PanelContent, PanelHeader } from "./common/panel";
 
@@ -32,11 +33,7 @@ export function DownloadsPanel({
       </PanelHeader>
       <PanelContent height="h-[400px]" className="space-y-2">
         {jobs.length === 0 ? (
-          <div className="flex h-full items-center justify-center">
-            <p className="text-foreground-400 font-mono text-xs">
-              No downloads yet
-            </p>
-          </div>
+          <EmptyState icon={Inbox} title="No downloads yet" />
         ) : (
           <AnimatePresence initial={false}>
             {jobs.map((job) => (
