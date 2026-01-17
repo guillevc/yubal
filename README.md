@@ -119,7 +119,7 @@ For age-restricted content, private playlists, or higher bitrate (Premium):
 - [x] Multi-arch Docker (amd64/arm64)
 - [x] Configurable audio format
 - [x] Playlist support with M3U generation
-- [ ] Flat folder structure for playlists
+- [ ] Flat folder structure mode (Do not organize into subfolders)
 - [ ] Browser extension
 - [ ] Batch import (multiple URLs)
 - [ ] Post-import webhooks (Navidrome/Jellyfin/Gonic)
