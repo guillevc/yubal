@@ -166,23 +166,31 @@ def print_tracks(
 
 @click.group()
 def main() -> None:
-    """Extract metadata from YouTube Music playlists."""
+    """Extract and download from YouTube Music albums and playlists."""
     setup_logging()
 
 
 @main.command(name="meta")
-@click.argument("url", metavar="PLAYLIST_URL")
+@click.argument("url", metavar="URL")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON.")
-def meta_cmd(url: str, as_json: bool) -> None:
-    """Extract structured metadata from a playlist.
+@click.option(
+    "--cookies",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to cookies.txt for YouTube Music authentication.",
+)
+def meta_cmd(url: str, as_json: bool, cookies: Path | None) -> None:
+    """Extract structured metadata from an album or playlist.
 
-    PLAYLIST_URL should be a full YouTube Music playlist URL like:
-    https://music.youtube.com/playlist?list=PLxxxxxxxx
+    URL should be a YouTube Music album or playlist URL:
+
+    \b
+      Album:    https://music.youtube.com/playlist?list=OLAK5uy_xxx
+      Playlist: https://music.youtube.com/playlist?list=PLxxx
     """
     console = Console()
 
     try:
-        client = YTMusicClient()
+        client = YTMusicClient(cookies_path=cookies)
         service = MetadataExtractorService(client)
 
         tracks: list[TrackMetadata] = []
@@ -223,7 +231,7 @@ def meta_cmd(url: str, as_json: bool) -> None:
 
 
 @main.command(name="download")
-@click.argument("url", metavar="PLAYLIST_URL")
+@click.argument("url", metavar="URL")
 @click.argument("output", type=click.Path(path_type=Path), metavar="OUTPUT_DIR")
 @click.option(
     "--codec",
@@ -232,26 +240,58 @@ def meta_cmd(url: str, as_json: bool) -> None:
     help="Audio codec (default: opus).",
 )
 @click.option(
+    "--quality",
+    type=click.IntRange(0, 10),
+    default=0,
+    help="Audio quality, 0 (best) to 10 (worst). Only applies to lossy codecs.",
+)
+@click.option(
     "--max-items",
     type=int,
     default=None,
     help="Maximum number of tracks to download (playlists only, not albums).",
 )
+@click.option(
+    "--cookies",
+    type=click.Path(exists=True, path_type=Path),
+    help="Path to cookies.txt for YouTube Music authentication.",
+)
+@click.option(
+    "--no-m3u",
+    is_flag=True,
+    help="Disable M3U playlist file generation.",
+)
+@click.option(
+    "--no-cover",
+    is_flag=True,
+    help="Disable cover image saving.",
+)
+@click.option(
+    "--album-m3u",
+    is_flag=True,
+    help="Generate M3U files for albums (disabled by default).",
+)
 def download_cmd(
     url: str,
     output: Path,
     codec: str,
+    quality: int,
     max_items: int | None,
+    cookies: Path | None,
+    no_m3u: bool,
+    no_cover: bool,
+    album_m3u: bool,
 ) -> None:
-    """Download tracks from a YouTube Music playlist.
+    """Download tracks from a YouTube Music album or playlist.
 
     Downloads each track using yt-dlp, preferring the ATV (Audio Track Video)
     version for better audio quality, falling back to OMV (Official Music Video)
     if ATV is unavailable. Existing files are automatically skipped.
 
-    Example:
-
-        yubal download "https://music.youtube.com/playlist?list=PLxxx" ~/Music
+    \b
+    Examples:
+      yubal download "https://music.youtube.com/playlist?list=OLAK5uy_xxx" ~/Music
+      yubal download "https://music.youtube.com/playlist?list=PLxxx" ~/Music
     """
     console = Console()
 
@@ -261,11 +301,15 @@ def download_cmd(
             download=DownloadConfig(
                 base_path=output,
                 codec=AudioCodec(codec),
+                quality=quality,
                 quiet=True,
             ),
+            generate_m3u=not no_m3u,
+            save_cover=not no_cover,
+            skip_album_m3u=not album_m3u,
             max_items=max_items,
         )
-        service = PlaylistDownloadService(config)
+        service = PlaylistDownloadService(config, cookies_path=cookies)
 
         # Status icons for display
         status_icon = {
