@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **Upgrading from v0.1?** The folder structure and config have changed. See the [v0.2.0 release notes](https://github.com/guillevc/yubal/releases/tag/v0.2.0) for migration steps.
+
 <div align="center">
 
 # yubal
