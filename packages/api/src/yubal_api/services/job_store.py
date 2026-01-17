@@ -156,10 +156,7 @@ class JobStore:
         started_at: datetime | None = None,
         completed_at: datetime | None = None,
     ) -> None:
-        """Apply updates to a job. Must be called with lock held.
-
-        Centralizes the update logic for both update_job and transition_job.
-        """
+        """Apply updates to a job. Must be called with lock held."""
         if status is not None:
             job.status = status
         if progress is not None:
@@ -176,26 +173,6 @@ class JobStore:
             job.completed_at = job.completed_at or self._clock()
             if self._active_job_id == job.id:
                 self._active_job_id = None
-
-    def update_job(
-        self,
-        job_id: str,
-        status: JobStatus | None = None,
-        progress: float | None = None,
-        album_info: AlbumInfo | None = None,
-        started_at: datetime | None = None,
-        completed_at: datetime | None = None,
-    ) -> Job | None:
-        """Update job fields. Caller is responsible for checking job state first."""
-        with self._lock:
-            job = self._jobs.get(job_id)
-            if not job:
-                return None
-
-            self._apply_job_updates(
-                job, status, progress, album_info, started_at, completed_at
-            )
-            return job
 
     def transition_job(
         self,

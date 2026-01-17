@@ -1,13 +1,6 @@
 from enum import StrEnum
 
 
-class ImportType(StrEnum):
-    """Type of import operation (album vs playlist)."""
-
-    ALBUM = "album"
-    PLAYLIST = "playlist"
-
-
 class JobStatus(StrEnum):
     """Status of a background job."""
 

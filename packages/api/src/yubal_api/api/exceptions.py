@@ -20,12 +20,6 @@ class ErrorResponse(BaseModel):
     message: str
 
 
-class JobErrorResponse(ErrorResponse):
-    """Error response with job context."""
-
-    job_id: str | None = None
-
-
 # -- Base Exceptions --
 
 
