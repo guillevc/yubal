@@ -1,6 +1,7 @@
 """FastAPI application factory and configuration."""
 
 import logging
+import mimetypes
 import shutil
 import uuid
 from collections.abc import AsyncGenerator
@@ -149,6 +150,10 @@ def create_app() -> FastAPI:
     app.mount("/api", create_api())
 
     # Static files from YUBAL_ROOT/web/dist
+    # Fix MIME types for Windows (registry defaults .js to text/plain)
+    mimetypes.add_type("application/javascript", ".js")
+    mimetypes.add_type("text/css", ".css")
+
     web_build = get_settings().root / "web" / "dist"
     if web_build.exists():
         app.mount("/", StaticFiles(directory=web_build, html=True), name="static")

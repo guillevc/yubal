@@ -5,6 +5,7 @@ dependencies = [
   "fastapi>=0.127.1",
   "pydantic-settings>=2.12.0",
   "rich>=14.2.0",
+  "tzdata>=2025.1",
   "uvicorn[standard]>=0.40.0",
   "yubal",
 ]
