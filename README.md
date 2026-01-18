@@ -13,7 +13,7 @@
 [![codecov](https://codecov.io/gh/guillevc/yubal/branch/master/graph/badge.svg)](https://codecov.io/gh/guillevc/yubal)
 
 <picture>
-  <img src="docs/demo.gif" alt="yubal demo" width="700">
+  <img src="docs/demo.gif" alt="yubal demo">
 </picture>
 
 <sub>GIF is 3× speed</sub>
