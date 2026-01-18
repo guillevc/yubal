@@ -1,38 +1,18 @@
 """Data models for yubal.
 
-Public models (domain.py):
-    TrackMetadata - Primary output model
+Public API:
+    TrackMetadata - Extracted track metadata (title, artist, album, etc.)
     VideoType - Video type enum (ATV/OMV)
+    ContentKind - Content classification (ALBUM/PLAYLIST)
 
-Internal models (ytmusic.py):
-    Models for parsing ytmusicapi responses. These are implementation
-    details and may change if the YouTube Music API changes.
+Internal (not exported):
+    ytmusic.py - Models for parsing ytmusicapi responses
 """
 
-# Public domain models
-from yubal.models.domain import TrackMetadata, VideoType
-
-# Internal ytmusicapi response models
-from yubal.models.ytmusic import (
-    Album,
-    AlbumRef,
-    AlbumTrack,
-    Artist,
-    Playlist,
-    PlaylistTrack,
-    SearchResult,
-    Thumbnail,
-)
+from yubal.models.domain import ContentKind, TrackMetadata, VideoType
 
 __all__ = [
-    "Album",
-    "AlbumRef",
-    "AlbumTrack",
-    "Artist",
-    "Playlist",
-    "PlaylistTrack",
-    "SearchResult",
-    "Thumbnail",
+    "ContentKind",
     "TrackMetadata",
     "VideoType",
 ]

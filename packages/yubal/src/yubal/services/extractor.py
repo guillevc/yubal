@@ -14,11 +14,9 @@ from yubal.models.domain import (
     VideoType,
 )
 from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
-from yubal.utils import (
-    format_artists,
-    get_square_thumbnail,
-    parse_playlist_id,
-)
+from yubal.utils.artists import format_artists
+from yubal.utils.thumbnails import get_square_thumbnail
+from yubal.utils.url import parse_playlist_id
 
 logger = logging.getLogger(__name__)
 
@@ -33,32 +31,49 @@ FUZZY_MATCH_LOW_CONFIDENCE = 50  # Minimum acceptable threshold
 class MetadataExtractorService:
     """Service for extracting metadata from YouTube Music playlists.
 
-    This service orchestrates the extraction process:
-    1. Fetch playlist
-    2. For each track, resolve album info
-    3. Build structured metadata
+    Pipeline Overview:
+    ==================
+    1. extract() - Main entry point: fetches playlist, classifies content type,
+                   yields progress updates as tracks are processed
+    2. _classify_playlist_as_album_or_playlist() - Determines if OLAK5uy_
+                   playlists represent complete albums vs curated playlists
+    3. _extract_single_track() - Processes each track: validates video type,
+                   searches for album info, builds complete metadata
+    4. _match_playlist_track_to_album() - Four-tier matching strategy to find
+                   the corresponding album track (video ID → title → duration → fuzzy)
+    5. _build_metadata_with_album_info() - Constructs final TrackMetadata using
+                   enriched album information
     """
 
     def __init__(self, client: YTMusicProtocol) -> None:
         """Initialize the service.
 
         Args:
-            client: YouTube Music API client.
+            client: YouTube Music API client for fetching playlist/album data.
         """
         self._client = client
+
+    # ============================================================================
+    # PUBLIC API - Main entry points for metadata extraction
+    # ============================================================================
 
     def extract(
         self, url: str, max_items: int | None = None
     ) -> Iterator[ExtractProgress]:
-        """Extract metadata for all tracks in a playlist.
+        """Extract metadata for all tracks in a playlist with progress updates.
 
-        Yields progress updates as each track is processed. Use extract_all()
-        for a simpler interface that returns all results at once.
+        This is the main extraction pipeline. It fetches the playlist, determines
+        whether it's a complete album or a curated playlist, then processes each
+        track to enrich it with album metadata. Progress updates are yielded as
+        each track completes, making this ideal for CLI progress bars or UI updates.
+
+        Why yield progress: Allows callers to display real-time feedback during
+        long-running extractions (some playlists have hundreds of tracks).
 
         Args:
             url: YouTube Music playlist URL.
             max_items: Maximum number of tracks to extract. If None, extracts
-                all tracks.
+                all tracks. Useful for testing or quick previews.
 
         Yields:
             ExtractProgress with current/total counts and the extracted track.
@@ -100,8 +115,11 @@ class MetadataExtractorService:
                 unavailable_count,
             )
 
-        # Detect if this is a complete album vs a playlist
-        kind = self._detect_content_kind(playlist_id, playlist.tracks)
+        # Classify content: determines if OLAK5uy_ playlist is a complete album
+        # (all tracks from one album) or a curated playlist (e.g., "Top songs")
+        kind = self._classify_playlist_as_album_or_playlist(
+            playlist_id, playlist.tracks
+        )
         playlist_info = PlaylistInfo(
             playlist_id=playlist_id,
             title=playlist.title,
@@ -115,7 +133,7 @@ class MetadataExtractorService:
 
         for track in tracks:
             try:
-                metadata = self._extract_track(track)
+                metadata = self._extract_single_track(track)
             except Exception as e:
                 logger.warning(
                     "Failed to extract track '%s': %s",
@@ -155,9 +173,11 @@ class MetadataExtractorService:
     def extract_all(
         self, url: str, max_items: int | None = None
     ) -> list[TrackMetadata]:
-        """Extract metadata for all tracks in a playlist.
+        """Extract metadata for all tracks, returning complete results at once.
 
-        Convenience method that collects all results from extract().
+        Convenience wrapper around extract() for cases where you don't need
+        incremental progress updates. Simply collects all results and returns
+        them as a list.
 
         Args:
             url: YouTube Music playlist URL.
@@ -174,22 +194,33 @@ class MetadataExtractorService:
         """
         return [p.track for p in self.extract(url, max_items=max_items)]
 
-    def _detect_content_kind(
+    # ============================================================================
+    # CONTENT CLASSIFICATION - Distinguish albums from curated playlists
+    # ============================================================================
+
+    def _classify_playlist_as_album_or_playlist(
         self, playlist_id: str, tracks: list[PlaylistTrack]
     ) -> ContentKind:
-        """Detect if a playlist represents a complete album.
+        """Classify playlist as a complete album vs a curated playlist.
 
-        A playlist is considered an album if:
-        1. It has the OLAK5uy_ prefix (album playlist format)
-        2. All tracks reference the same album
-        3. The playlist contains all tracks from that album
+        Why this matters: YouTube Music creates playlists for both complete albums
+        (all tracks from one album) and curated collections (e.g., "Top songs from
+        artist"). We need to distinguish these because they require different
+        metadata handling strategies.
 
-        This prevents false positives for "Top songs" playlists or curated
-        playlists that happen to contain tracks from a single album.
+        Classification strategy (5 checks, all must pass):
+        1. OLAK5uy_ prefix - YouTube's album playlist identifier
+        2. Has tracks - Not empty
+        3. Single album reference - All tracks point to same album ID
+        4. Album exists - Can fetch the album from YouTube Music
+        5. Complete match - Playlist contains ALL tracks from the album
+
+        Why so strict: Prevents false positives like "Greatest Hits" playlists
+        that contain a subset of tracks from a single album.
 
         Args:
-            playlist_id: The playlist ID.
-            tracks: List of playlist tracks.
+            playlist_id: The playlist ID to classify.
+            tracks: List of tracks in the playlist.
 
         Returns:
             ContentKind.ALBUM if complete album, ContentKind.PLAYLIST otherwise.
@@ -209,7 +240,9 @@ class MetadataExtractorService:
         logger.debug("Album IDs found on tracks: %s", album_ids)
 
         if len(album_ids) != 1:
-            logger.debug("Not an album: tracks reference %d different albums", len(album_ids))
+            logger.debug(
+                "Not an album: tracks reference %d different albums", len(album_ids)
+            )
             return ContentKind.PLAYLIST
 
         # Check 4: Fetch the album to verify all tracks are present
@@ -224,7 +257,7 @@ class MetadataExtractorService:
         matched_album_tracks: set[str] = set()
 
         for playlist_track in tracks:
-            album_track = self._find_track_in_album(album, playlist_track)
+            album_track = self._match_playlist_track_to_album(album, playlist_track)
             if album_track:
                 matched_album_tracks.add(album_track.video_id)
 
@@ -244,14 +277,29 @@ class MetadataExtractorService:
         )
         return ContentKind.PLAYLIST
 
-    def _extract_track(self, track: PlaylistTrack) -> TrackMetadata | None:
-        """Extract metadata for a single track.
+    # ============================================================================
+    # SINGLE TRACK EXTRACTION - Process individual tracks and enrich with album data
+    # ============================================================================
+
+    def _extract_single_track(self, track: PlaylistTrack) -> TrackMetadata | None:
+        """Extract and enrich metadata for a single track.
+
+        This is the core per-track processing pipeline:
+        1. Validate video type (skip unsupported types like UGC videos)
+        2. Find album info (from track data or search)
+        3. Fetch full album details from YouTube Music
+        4. Build enriched metadata with album info, or fallback to basic data
+
+        Why search for albums: Some playlist tracks don't include album IDs,
+        so we search YouTube Music to find the corresponding album. This ensures
+        we get complete metadata (track numbers, year, album artists, etc).
 
         Args:
             track: Playlist track to process.
 
         Returns:
-            Extracted track metadata, or None if track should be skipped.
+            Extracted track metadata, or None if track should be skipped
+            (e.g., unsupported video type).
         """
         video_type = self._determine_video_type(track)
 
@@ -274,21 +322,30 @@ class MetadataExtractorService:
             except Exception as e:
                 logger.debug("Failed to fetch album %s: %s", album_id, e)
 
-        # Build metadata from album or fallback
+        # Build enriched metadata from album, or fallback to basic metadata
         if album:
-            return self._build_metadata_from_album(
+            return self._build_metadata_with_album_info(
                 track, album, video_type, search_atv_id
             )
         return self._create_fallback_metadata(track, video_type)
 
+    # ============================================================================
+    # VIDEO TYPE VALIDATION - Ensure track is a supported format
+    # ============================================================================
+
     def _determine_video_type(self, track: PlaylistTrack) -> VideoType | None:
-        """Determine the video type from track info.
+        """Validate and determine the video type from track information.
+
+        Why this matters: YouTube Music has different video types (ATV = Audio Track
+        Video, OMV = Official Music Video, UGC = User Generated Content, etc).
+        We only support ATV and OMV because they have reliable metadata. UGC videos
+        often have incorrect or missing metadata.
 
         Args:
-            track: Playlist track.
+            track: Playlist track to check.
 
         Returns:
-            VideoType enum value, or None if missing/unsupported.
+            VideoType enum value if supported, or None if missing/unsupported.
         """
         if not track.video_type:
             logger.warning(
@@ -318,14 +375,26 @@ class MetadataExtractorService:
 
         return video_type
 
+    # ============================================================================
+    # ALBUM DISCOVERY - Search for album info when not directly available
+    # ============================================================================
+
     def _search_for_album(self, track: PlaylistTrack) -> tuple[str | None, str | None]:
-        """Search for album info for a track.
+        """Search YouTube Music to find album information for a track.
+
+        Why search: Some playlist tracks don't include album IDs in their metadata.
+        Searching allows us to find the canonical album and enrich the track with
+        complete metadata (track numbers, album artists, release year, etc).
+
+        Search strategy: Query using "artist + title" and take the first result
+        with album information. Also captures the ATV video ID from search results
+        for tracks that are OMVs in the playlist (gives us both video variants).
 
         Args:
             track: Track to search for.
 
         Returns:
-            Tuple of (album_id, atv_video_id) if found.
+            Tuple of (album_id, atv_video_id) if found, (None, None) otherwise.
         """
         artists = format_artists(track.artists)
         query = f"{artists} {track.title}".strip()
@@ -346,17 +415,35 @@ class MetadataExtractorService:
 
         return None, None
 
-    def _find_track_in_album(
+    # ============================================================================
+    # TRACK MATCHING - Four-tier strategy to match playlist tracks to album tracks
+    # ============================================================================
+
+    def _match_playlist_track_to_album(
         self, album: Album, track: PlaylistTrack
     ) -> AlbumTrack | None:
-        """Find a track in album by video_id, title, duration, or fuzzy title match.
+        """Match a playlist track to its album track using 4-tier strategy.
+
+        Why this is complex: Playlist tracks and album tracks may have different
+        video IDs, slightly different titles (e.g., "Song" vs "Song (Remaster)"),
+        or other variations. We need multiple fallback strategies to reliably
+        match them.
+
+        Matching tiers (in order of reliability):
+        1. Video ID match - Most reliable, matches exact video
+        2. Title match (exact) - Case-insensitive exact title match
+        3. Duration match - If only one album track has matching duration
+        4. Fuzzy title match - Uses similarity algorithm (50-80% threshold)
+
+        Why four tiers: Balances accuracy (avoiding false matches) with coverage
+        (successfully matching as many tracks as possible).
 
         Args:
             album: Album to search in.
-            track: Track to find.
+            track: Playlist track to find in album.
 
         Returns:
-            Matching album track or None.
+            Matching album track or None if no confident match found.
         """
         target_video_id = track.video_id
         target_title = track.title.lower().strip()
@@ -382,13 +469,21 @@ class MetadataExtractorService:
         return self._find_track_by_fuzzy_title(album, track.title)
 
     def _find_track_by_fuzzy_title(self, album: Album, title: str) -> AlbumTrack | None:
-        """Find a track using fuzzy/similarity title matching.
+        """Match track using fuzzy string similarity (tier 4 fallback).
 
-        Uses rapidfuzz to find the best matching track title. The matching
-        strategy uses two thresholds:
-        - High confidence (>80%): Accept silently
-        - Medium confidence (50-80%): Accept with warning
-        - Low confidence (<50%): Reject
+        Why fuzzy matching: Handles minor title variations like:
+        - "Song (Remastered)" vs "Song"
+        - "Song - Live" vs "Song (Live)"
+        - Typos or punctuation differences
+
+        Uses rapidfuzz library with confidence thresholds:
+        - >80% score: High confidence, accept silently
+        - 50-80% score: Medium confidence, accept with warning
+        - <50% score: Low confidence, reject to avoid false matches
+
+        Why two thresholds: >80% catches obvious matches like "Song (2024 Remaster)"
+        vs "Song". 50-80% catches fuzzier matches but warns the user in case it's
+        a false positive. <50% is rejected because it's likely a different track.
 
         Args:
             album: Album to search in.
@@ -430,6 +525,10 @@ class MetadataExtractorService:
         )
         return None
 
+    # ============================================================================
+    # METADATA CONSTRUCTION - Build final TrackMetadata objects
+    # ============================================================================
+
     def _resolve_video_ids(
         self,
         playlist_video_id: str,
@@ -437,7 +536,18 @@ class MetadataExtractorService:
         video_type: VideoType,
         search_atv_id: str | None,
     ) -> tuple[str | None, str | None]:
-        """Resolve OMV and ATV video IDs from available sources.
+        """Resolve OMV and ATV video IDs from multiple sources.
+
+        Why this matters: Tracks can have two video variants (OMV and ATV), and
+        we want to capture both when possible. This allows users to choose their
+        preferred format during download (audio track vs music video).
+
+        Resolution logic:
+        - If playlist track is ATV: use it directly, get OMV from album
+        - If playlist track is OMV: use it, get ATV from search results
+
+        Why check if IDs are different: Sometimes album returns the same video ID
+        for both variants. We only store OMV if it's actually different from ATV.
 
         Args:
             playlist_video_id: Video ID from the playlist track.
@@ -460,25 +570,37 @@ class MetadataExtractorService:
 
         return omv_id, atv_id
 
-    def _build_metadata_from_album(
+    def _build_metadata_with_album_info(
         self,
         track: PlaylistTrack,
         album: Album,
         video_type: VideoType,
         search_atv_id: str | None,
     ) -> TrackMetadata:
-        """Build track metadata using album information.
+        """Build enriched track metadata using album information.
+
+        This is where we combine playlist track data with album data to create
+        complete, accurate metadata. Album info provides:
+        - Track numbers and total tracks
+        - Album artists (may differ from track artists)
+        - Release year
+        - High-quality album art
+        - Canonical track titles
+
+        Why prefer album data: Album metadata is more authoritative and complete
+        than playlist metadata. If we can't match the track to the album, we
+        fall back to the original playlist track data.
 
         Args:
             track: Original playlist track.
             album: Album containing the track.
-            video_type: Source video type.
+            video_type: Source video type (ATV or OMV).
             search_atv_id: ATV video ID from search (if any).
 
         Returns:
-            Complete track metadata.
+            Complete track metadata with album information.
         """
-        album_track = self._find_track_in_album(album, track)
+        album_track = self._match_playlist_track_to_album(album, track)
 
         # Use album track info if found, otherwise use original track info
         track_title = album_track.title if album_track else track.title
@@ -513,10 +635,22 @@ class MetadataExtractorService:
         track: PlaylistTrack,
         video_type: VideoType | None = None,
     ) -> TrackMetadata | None:
-        """Create fallback metadata when album info is unavailable.
+        """Create basic metadata when album information is unavailable.
+
+        Why fallback: If we can't find album info (search failed, album doesn't
+        exist, API errors), we still want to extract what we can from the
+        playlist track itself. This ensures the user gets something rather than
+        nothing.
+
+        Fallback limitations (missing data):
+        - No track numbers
+        - No total tracks
+        - No release year
+        - No album artists (uses track artists instead)
+        - Lower quality album art
 
         Args:
-            track: Playlist track.
+            track: Playlist track to create fallback from.
             video_type: Optional video type (determined if not provided).
 
         Returns:

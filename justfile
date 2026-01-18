@@ -15,6 +15,7 @@ alias t := test
 alias c := check
 alias p := prod
 alias b := build
+alias doc := docs-serve
 
 # Install (frozen lockfiles for CI)
 [group('setup')]
@@ -309,6 +310,17 @@ docker-size:
 [doc("Lint Dockerfile")]
 docker-lint:
     @docker run --rm -i hadolint/hadolint < Dockerfile
+
+# Documentation
+[group('docs')]
+[doc("Generate API documentation")]
+docs:
+    uv run --with pdoc pdoc yubal --output-dir docs/pdoc/yubal --docformat google
+
+[group('docs')]
+[doc("Serve API documentation locally")]
+docs-serve:
+    uv run --with pdoc pdoc yubal --docformat google
 
 # yubal CLI
 [group('cli')]

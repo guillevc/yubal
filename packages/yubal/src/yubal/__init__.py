@@ -7,23 +7,31 @@ and artist data. It also supports downloading tracks using yt-dlp.
 Designed for use as a library in applications (e.g., FastAPI) with
 a CLI for debugging and development.
 
-Example:
-    >>> from yubal import create_extractor
-    >>> extractor = create_extractor()
-    >>> tracks = extractor.extract("https://music.youtube.com/playlist?list=...")
-    >>> for track in tracks:
-    ...     print(f"{track.artist} - {track.title}")
+Examples:
+    Extract metadata from a playlist:
+    ```python
+    from yubal import create_extractor
 
-For downloading tracks:
-    >>> from yubal import DownloadService, DownloadConfig
-    >>> config = DownloadConfig(base_path=Path("./music"))
-    >>> downloader = DownloadService(config)
-    >>> results = downloader.download_tracks(tracks)
+    extractor = create_extractor()
+    for progress in extractor.extract("https://music.youtube.com/playlist?list=..."):
+        print(f"{progress.track.artist} - {progress.track.title}")
+    ```
+
+    Download a complete playlist:
+    ```python
+    from yubal import create_playlist_downloader, PlaylistDownloadConfig, DownloadConfig
+    from pathlib import Path
+
+    config = PlaylistDownloadConfig(download=DownloadConfig(base_path=Path("./music")))
+    downloader = create_playlist_downloader(config)
+    result = downloader.download_playlist_all(url)
+    ```
 """
 
 from pathlib import Path
 
-from yubal.client import YTMusicClient, YTMusicProtocol
+# Internal imports (not exported)
+from yubal.client import YTMusicClient as _YTMusicClient
 from yubal.config import APIConfig, AudioCodec, DownloadConfig, PlaylistDownloadConfig
 from yubal.exceptions import (
     APIError,
@@ -38,25 +46,18 @@ from yubal.exceptions import (
 from yubal.models.domain import (
     CancelToken,
     ContentKind,
+    DownloadProgress,
+    DownloadResult,
+    DownloadStatus,
     ExtractProgress,
+    PlaylistDownloadResult,
+    PlaylistInfo,
+    PlaylistProgress,
     TrackMetadata,
     VideoType,
 )
-from yubal.services import (
-    DownloaderProtocol,
-    DownloadProgress,
-    DownloadResult,
-    DownloadService,
-    DownloadStatus,
-    MetadataExtractorService,
-    PlaylistComposerService,
-    PlaylistDownloadResult,
-    PlaylistDownloadService,
-    PlaylistInfo,
-    PlaylistProgress,
-    YTDLPDownloader,
-    tag_track,
-)
+from yubal.services import MetadataExtractorService, PlaylistDownloadService
+from yubal.services.downloader import DownloadService as _DownloadService
 from yubal.utils import clear_cover_cache, fetch_cover
 
 
@@ -77,22 +78,29 @@ def create_extractor(
     Returns:
         A configured MetadataExtractorService instance.
 
-    Example:
-        >>> extractor = create_extractor()
-        >>> tracks = extractor.extract(playlist_url)
+    Examples:
+        Basic usage:
+        ```python
+        extractor = create_extractor()
+        tracks = extractor.extract(playlist_url)
+        ```
 
-        # With custom config
-        >>> config = APIConfig(search_limit=3)
-        >>> extractor = create_extractor(config)
+        With custom config:
+        ```python
+        config = APIConfig(search_limit=3)
+        extractor = create_extractor(config)
+        ```
 
-        # With authentication
-        >>> extractor = create_extractor(cookies_path=Path("cookies.txt"))
+        With authentication:
+        ```python
+        extractor = create_extractor(cookies_path=Path("cookies.txt"))
+        ```
     """
-    client = YTMusicClient(config=config, cookies_path=cookies_path)
+    client = _YTMusicClient(config=config, cookies_path=cookies_path)
     return MetadataExtractorService(client)
 
 
-def create_downloader(config: DownloadConfig) -> DownloadService:
+def create_downloader(config: DownloadConfig) -> _DownloadService:
     """Create a configured download service.
 
     This is the recommended way to create a downloader for library usage.
@@ -103,16 +111,21 @@ def create_downloader(config: DownloadConfig) -> DownloadService:
     Returns:
         A configured DownloadService instance.
 
-    Example:
-        >>> config = DownloadConfig(base_path=Path("./music"))
-        >>> downloader = create_downloader(config)
-        >>> results = downloader.download_tracks(tracks)
+    Examples:
+        Basic usage:
+        ```python
+        config = DownloadConfig(base_path=Path("./music"))
+        downloader = create_downloader(config)
+        results = downloader.download_tracks(tracks)
+        ```
 
-        # With custom codec
-        >>> config = DownloadConfig(base_path=Path("./music"), codec=AudioCodec.MP3)
-        >>> downloader = create_downloader(config)
+        With custom codec:
+        ```python
+        config = DownloadConfig(base_path=Path("./music"), codec=AudioCodec.MP3)
+        downloader = create_downloader(config)
+        ```
     """
-    return DownloadService(config)
+    return _DownloadService(config)
 
 
 def create_playlist_downloader(
@@ -132,33 +145,40 @@ def create_playlist_downloader(
     Returns:
         A configured PlaylistDownloadService instance.
 
-    Example:
-        >>> config = PlaylistDownloadConfig(
-        ...     download=DownloadConfig(base_path=Path("./music"))
-        ... )
-        >>> service = create_playlist_downloader(config)
-        >>>
-        >>> # With progress updates
-        >>> for progress in service.download_playlist(url):
-        ...     print(f"[{progress.phase}] {progress.current}/{progress.total}")
-        >>> result = service.get_result()
-        >>>
-        >>> # Or all at once
-        >>> result = service.download_playlist_all(url)
-        >>> print(f"Downloaded: {result.success_count}")
-        >>> print(f"M3U: {result.m3u_path}")
+    Examples:
+        With progress updates:
+        ```python
+        config = PlaylistDownloadConfig(
+            download=DownloadConfig(base_path=Path("./music"))
+        )
+        service = create_playlist_downloader(config)
+        for progress in service.download_playlist(url):
+            print(f"[{progress.phase}] {progress.current}/{progress.total}")
+        result = service.get_result()
+        ```
 
-        # With authentication for private playlists
-        >>> service = create_playlist_downloader(config, cookies_path=cookies)
+        Download all at once:
+        ```python
+        result = service.download_playlist_all(url)
+        print(f"Downloaded: {result.success_count}")
+        ```
+
+        With authentication:
+        ```python
+        service = create_playlist_downloader(config, cookies_path=Path("cookies.txt"))
+        ```
     """
     return PlaylistDownloadService(config, cookies_path=cookies_path)
 
 
 __all__ = [
+    # Configuration
     "APIConfig",
+    # Exceptions
     "APIError",
     "AudioCodec",
     "AuthenticationRequiredError",
+    # Domain models
     "CancelToken",
     "CancellationError",
     "ContentKind",
@@ -166,12 +186,10 @@ __all__ = [
     "DownloadError",
     "DownloadProgress",
     "DownloadResult",
-    "DownloadService",
     "DownloadStatus",
-    "DownloaderProtocol",
     "ExtractProgress",
+    # Services
     "MetadataExtractorService",
-    "PlaylistComposerService",
     "PlaylistDownloadConfig",
     "PlaylistDownloadResult",
     "PlaylistDownloadService",
@@ -182,14 +200,12 @@ __all__ = [
     "TrackMetadata",
     "UnsupportedPlaylistError",
     "VideoType",
-    "YTDLPDownloader",
     "YTMetaError",
-    "YTMusicClient",
-    "YTMusicProtocol",
+    # Utilities
     "clear_cover_cache",
+    # Factory functions (recommended entry points)
     "create_downloader",
     "create_extractor",
     "create_playlist_downloader",
     "fetch_cover",
-    "tag_track",
 ]

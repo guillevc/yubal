@@ -5,7 +5,8 @@
 *.tsbuildinfo
 .playwright-mcp
 /coverage/
-/web/coverage
+/web/coverage/
+/docs/pdoc/
 
 # Created by https://www.toptal.com/developers/gitignore/api/macos,python,visualstudiocode,react
 # Edit at https://www.toptal.com/developers/gitignore?templates=macos,python,visualstudiocode,react

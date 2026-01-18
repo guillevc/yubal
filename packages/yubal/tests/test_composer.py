@@ -225,7 +225,7 @@ class TestPlaylistComposerService:
             ),
         ]
 
-        tracks = composer._collect_tracks_for_m3u(results)
+        tracks = composer._collect_successful_tracks_for_playlist(results)
 
         # Should only include SUCCESS and SKIPPED (2 items)
         assert len(tracks) == 2
@@ -244,6 +244,6 @@ class TestPlaylistComposerService:
             ),
         ]
 
-        tracks = composer._collect_tracks_for_m3u(results)
+        tracks = composer._collect_successful_tracks_for_playlist(results)
 
         assert len(tracks) == 0

@@ -1,4 +1,8 @@
-"""Utility functions for yubal."""
+"""Utility functions for yubal.
+
+Available via `from yubal.utils import ...` for power users.
+Not re-exported at the top-level `yubal` package.
+"""
 
 from yubal.utils.artists import format_artists
 from yubal.utils.cookies import cookies_to_ytmusic_auth, is_authenticated_cookies
