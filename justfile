@@ -301,9 +301,9 @@ docker-build:
 [group('docker')]
 [doc("Build image, show size, then remove")]
 docker-size:
-    @docker build -q -t yubal:size-check . > /dev/null
+    docker build -q -t yubal:size-check .
     @docker images yubal:size-check --format '{{"{{"}}.Size{{"}}"}}'
-    @docker rmi yubal:size-check > /dev/null
+    @docker rmi yubal:size-check
 
 [group('docker')]
 [doc("Run docker compose up")]
