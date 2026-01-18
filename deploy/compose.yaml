@@ -2,7 +2,7 @@
 ---
 services:
   yubal:
-    image: ghcr.io/guillevc/yubal:dev
+    image: ghcr.io/guillevc/yubal:master
     container_name: yubal
     ports:
       - 8000:${YUBAL_PORT}
