@@ -144,7 +144,7 @@ If yubal is useful to you, consider supporting its development:
 
 ## 🤝 Acknowledgments
 
-Built with [yt-dlp](https://github.com/yt-dlp/yt-dlp), [ytmusicapi](https://github.com/sigma67/ytmusicapi), and the [Flexoki](https://stephango.com/flexoki) color scheme.
+Built with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi).
 
 Thanks to everyone who's starred, shared, or contributed.
 
