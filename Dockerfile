@@ -22,7 +22,7 @@ WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY packages/ ./packages/
 
-RUN uv sync --package yubal-api --no-dev --frozen --no-cache
+RUN uv sync --package yubal-api --no-dev --frozen --no-cache --no-editable
 
 # Final runtime image
 FROM python:3.12-slim-bookworm

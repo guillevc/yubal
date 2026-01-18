@@ -145,10 +145,8 @@ def create_app() -> FastAPI:
     # Mount API sub-app at /api
     app.mount("/api", create_api())
 
-    # Static files - traverse from api/app.py to repo root
-    web_build = (
-        Path(__file__).parent.parent.parent.parent.parent.parent / "web" / "dist"
-    )
+    # Static files from YUBAL_ROOT/web/dist
+    web_build = get_settings().root / "web" / "dist"
     if web_build.exists():
         app.mount("/", StaticFiles(directory=web_build, html=True), name="static")
 

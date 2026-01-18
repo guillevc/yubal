@@ -59,12 +59,13 @@ class Settings(BaseSettings):
         if not isinstance(data, dict):
             return data
         root = data.get("root")
-        if root:
-            root = Path(root) if isinstance(root, str) else root
-            if not data.get("data"):
-                data["data"] = root / "data"
-            if not data.get("config"):
-                data["config"] = root / "config"
+        if not root:
+            raise ValueError("YUBAL_ROOT environment variable is required")
+        root = Path(root) if isinstance(root, str) else root
+        if not data.get("data"):
+            data["data"] = root / "data"
+        if not data.get("config"):
+            data["config"] = root / "config"
         return data
 
     @property
