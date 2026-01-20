@@ -1,6 +1,8 @@
+> [!TIP]
+> **New in v0.2.0:** Playlist support is here! Download entire playlists with a single URL.
+
 > [!IMPORTANT]
 > **Upgrading from v0.1?** The folder structure and config have changed. See the [v0.2.0 release notes](https://github.com/guillevc/yubal/releases/tag/v0.2.0) for migration steps.
-
 <div align="center">
 
 # yubal
@@ -155,6 +157,8 @@ Share your setup in [Setups](https://github.com/guillevc/yubal/discussions/categ
 If yubal is useful to you, consider supporting its development:
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/guillevc)
+
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/guillevc)
 
 ## Star History
 

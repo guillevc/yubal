@@ -91,17 +91,17 @@ class AudioFileTaggingService:
         be present.
 
         Why artists are pre-joined: The TrackMetadata.artist and album_artist
-        fields are already semicolon-delimited strings (e.g., "Artist 1;Artist 2"),
-        using semicolon without space for Jellyfin compatibility.
+        fields are already semicolon-delimited strings (e.g., "Artist 1; Artist 2"),
+        matching the ID3v2.4 standard for multiple artists.
 
         Args:
             audio: MediaFile instance to modify.
             track: Metadata containing basic tag information.
         """
         audio.title = track.title
-        audio.artist = track.artist  # Already joined with ";"
+        audio.artist = track.artist  # Already joined with "; "
         audio.album = track.album
-        audio.albumartist = track.album_artist  # Already joined with ";"
+        audio.albumartist = track.album_artist  # Already joined with "; "
 
     def _write_track_numbering(self, audio: MediaFile, track: TrackMetadata) -> None:
         """Write track position metadata to audio file.

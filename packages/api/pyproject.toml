@@ -1,6 +1,6 @@
 [project]
 name = "yubal-api"
-version = "0.2.0"
+version = "0.2.2"
 dependencies = [
   "fastapi>=0.127.1",
   "pydantic-settings>=2.12.0",

@@ -34,7 +34,7 @@ def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> st
         >>> content = generate_m3u(tracks, m3u_path)
         >>> print(content)
         #EXTM3U
-        #EXTINF:-1,Artist One;Artist Two - Song Title
+        #EXTINF:-1,Artist One; Artist Two - Song Title
         ../Artist/2024 - Album/01 - Song.opus
     """
     lines = ["#EXTM3U"]
