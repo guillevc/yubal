@@ -50,7 +50,7 @@ class TestTagTrack:
             tag_track(Path("/fake/path.opus"), sample_track)
 
         assert mock_audio.title == "Test Song"
-        assert mock_audio.artist == "Artist One; Artist Two"
+        assert mock_audio.artist == "Artist One;Artist Two"
         assert mock_audio.album == "Test Album"
         assert mock_audio.albumartist == "Album Artist"
         mock_audio.save.assert_called_once()

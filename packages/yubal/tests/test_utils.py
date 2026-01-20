@@ -49,12 +49,12 @@ class TestFormatArtists:
         assert format_artists(artists) == "Taylor Swift"
 
     def test_multiple_artists(self) -> None:
-        """Should join multiple artists with semicolons."""
+        """Should join multiple artists with semicolons (no space for Jellyfin)."""
         artists = [
             Artist(name="John Lennon", id="1"),
             Artist(name="Paul McCartney", id="2"),
         ]
-        assert format_artists(artists) == "John Lennon; Paul McCartney"
+        assert format_artists(artists) == "John Lennon;Paul McCartney"
 
     def test_empty_list(self) -> None:
         """Should return empty string for empty list."""
