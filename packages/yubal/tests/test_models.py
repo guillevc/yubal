@@ -82,7 +82,7 @@ class TestTrackMetadata:
         assert track.track_number == 5
         assert track.year == "2024"
         # Test computed properties
-        assert track.artist == "Artist One;Artist Two"
+        assert track.artist == "Artist One; Artist Two"
         assert track.album_artist == "Various Artists"
         assert track.primary_album_artist == "Various Artists"
 
