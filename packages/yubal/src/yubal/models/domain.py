@@ -95,12 +95,12 @@ class TrackMetadata(BaseModel):
     @property
     def artist(self) -> str:
         """Joined artists for metadata embedding."""
-        return "; ".join(self.artists)
+        return ";".join(self.artists)
 
     @property
     def album_artist(self) -> str:
         """Joined album artists for metadata embedding."""
-        return "; ".join(self.album_artists)
+        return ";".join(self.album_artists)
 
     @property
     def primary_album_artist(self) -> str:
