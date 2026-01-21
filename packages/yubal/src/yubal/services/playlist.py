@@ -196,7 +196,8 @@ class PlaylistDownloadService:
             playlist_info, results, m3u_path, cover_path
         )
 
-        logger.info("Playlist download complete", extra={"status": "success"})
+        kind = playlist_info.kind.value.capitalize()
+        logger.info("%s download complete", kind, extra={"status": "success"})
 
     def download_playlist_all(
         self,
@@ -306,17 +307,18 @@ class PlaylistDownloadService:
             PlaylistProgress with phase="extracting" and track metadata.
         """
         logger.info(
-            "Extracting metadata from %s",
-            url,
+            "Fetching playlist metadata",
             extra={"phase": "extracting", "phase_num": 1},
         )
 
         self._extracted_tracks: list[TrackMetadata] = []
         self._playlist_info: PlaylistInfo | None = None
+        last_progress = None
 
         for progress in self._extractor.extract(url, max_items=self._config.max_items):
             self._extracted_tracks.append(progress.track)
             self._playlist_info = progress.playlist_info
+            last_progress = progress
             yield PlaylistProgress(
                 phase="extracting",
                 current=progress.current,
@@ -324,7 +326,27 @@ class PlaylistDownloadService:
                 extract_progress=progress,
             )
 
-        logger.info("Extracted %d tracks from playlist", len(self._extracted_tracks))
+        # Log extraction summary
+        if last_progress:
+            unavailable = last_progress.playlist_info.unavailable_tracks
+            total_in_playlist = len(self._extracted_tracks) + len(unavailable)
+            kind = last_progress.playlist_info.kind.value.capitalize()
+            if unavailable:
+                logger.info(
+                    "%s contains %d tracks (%d unavailable):",
+                    kind,
+                    total_in_playlist,
+                    len(unavailable),
+                )
+                for ut in unavailable:
+                    logger.info(
+                        "  - %s by %s (%s)",
+                        ut.title or "Unknown",
+                        ut.artist_display,
+                        ut.reason.value,
+                    )
+            else:
+                logger.info("%s contains %d tracks", kind, total_in_playlist)
 
     def _get_extraction_results(
         self,
@@ -443,17 +465,32 @@ class PlaylistDownloadService:
         """
         self._check_cancellation(cancel_token)
 
-        logger.info(
-            "Generating playlist files",
-            extra={"phase": "composing", "phase_num": 3},
-        )
+        # Determine what we're actually generating
+        from yubal.models.domain import ContentKind
 
-        yield PlaylistProgress(
-            phase="composing",
-            current=0,
-            total=1,
-            message="Generating playlist files...",
+        is_album = playlist_info.kind == ContentKind.ALBUM
+        will_generate_m3u = self._config.generate_m3u and not (
+            self._config.skip_album_m3u and is_album
         )
+        will_save_cover = self._config.save_cover
+
+        # Only log if we're actually doing something
+        if will_generate_m3u or will_save_cover:
+            actions = []
+            if will_generate_m3u:
+                actions.append("playlist file")
+            if will_save_cover:
+                actions.append("cover")
+            message = f"Saving {' and '.join(actions)}"
+
+            logger.info(message, extra={"phase": "composing", "phase_num": 3})
+
+            yield PlaylistProgress(
+                phase="composing",
+                current=0,
+                total=1,
+                message=f"{message}...",
+            )
 
         self._m3u_path, self._cover_path = self._composer.compose(
             self._config.download.base_path,

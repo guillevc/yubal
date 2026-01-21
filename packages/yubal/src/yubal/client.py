@@ -14,6 +14,7 @@ from yubal.exceptions import (
     UnsupportedPlaylistError,
     YTMetaError,
 )
+from yubal.models.domain import SkipReason
 from yubal.models.ytmusic import Album, Playlist, SearchResult
 from yubal.utils.cookies import cookies_to_ytmusic_auth
 
@@ -126,18 +127,56 @@ class YTMusicClient:
         if not data:
             raise PlaylistNotFoundError(f"Playlist not found: {playlist_id}")
 
-        # Filter out unavailable tracks (no videoId) before validation
+        # Categorize tracks: available vs unavailable with reasons
         raw_tracks = data.get("tracks") or []
-        valid_tracks = [t for t in raw_tracks if t and t.get("videoId")]
-        unavailable_count = len(raw_tracks) - len(valid_tracks)
+        valid_tracks: list[dict] = []
+        unavailable_tracks: list[dict] = []
+
+        for track in raw_tracks:
+            if not track:
+                continue
+
+            video_id = track.get("videoId")
+            is_available = track.get("isAvailable", True)
+
+            # Extract metadata for display
+            title = track.get("title")
+            artists = [
+                name for a in (track.get("artists") or []) if (name := a.get("name"))
+            ]
+            album_info = track.get("album")
+            album_name = (
+                album_info.get("name") if isinstance(album_info, dict) else None
+            )
+
+            if not video_id:
+                unavailable_tracks.append(
+                    {
+                        "title": title,
+                        "artists": artists,
+                        "album": album_name,
+                        "reason": SkipReason.NO_VIDEO_ID.value,
+                    }
+                )
+            elif not is_available:
+                unavailable_tracks.append(
+                    {
+                        "title": title,
+                        "artists": artists,
+                        "album": album_name,
+                        "reason": SkipReason.REGION_UNAVAILABLE.value,
+                    }
+                )
+            else:
+                valid_tracks.append(track)
 
         data["tracks"] = valid_tracks
-        data["unavailable_count"] = unavailable_count
+        data["unavailable_tracks"] = unavailable_tracks
 
         logger.debug(
             "Fetched playlist with %d valid tracks (%d unavailable)",
             len(valid_tracks),
-            unavailable_count,
+            len(unavailable_tracks),
         )
         return Playlist.model_validate(data)
 

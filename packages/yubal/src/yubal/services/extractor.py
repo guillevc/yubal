@@ -12,6 +12,7 @@ from yubal.models.domain import (
     PlaylistInfo,
     SkipReason,
     TrackMetadata,
+    UnavailableTrack,
     VideoType,
 )
 from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
@@ -90,7 +91,7 @@ class MetadataExtractorService:
             ...     print(f"[{progress.current}/{progress.total}]")
         """
         playlist_id = parse_playlist_id(url)
-        logger.info("Extracting metadata for playlist: %s", playlist_id)
+        logger.debug("Extracting metadata for playlist: %s", playlist_id)
 
         playlist = self._client.get_playlist(playlist_id)
         playlist_total = len(playlist.tracks) + playlist.unavailable_count
@@ -100,41 +101,58 @@ class MetadataExtractorService:
         tracks = playlist.tracks
         limited = False
         if max_items and max_items < len(playlist.tracks):
-            logger.info("Limiting to %d of %d tracks", max_items, playlist_total)
+            logger.debug("Limiting to %d of %d tracks", max_items, playlist_total)
             tracks = tracks[:max_items]
             # Don't report unavailable count when truncating (outside scope)
             unavailable_count = 0
             limited = True
 
         total = len(tracks)
-        if limited:
-            logger.info("Processing %d tracks (limited from %d)", total, playlist_total)
-        else:
-            logger.info(
-                "Found %d tracks in playlist (%d unavailable)",
-                total,
-                unavailable_count,
-            )
+        logger.debug(
+            "Processing %d tracks (limited=%s, unavailable=%d)",
+            total,
+            limited,
+            unavailable_count,
+        )
 
         # Classify content: determines if OLAK5uy_ playlist is a complete album
         # (all tracks from one album) or a curated playlist (e.g., "Top songs")
         kind = self._classify_playlist_as_album_or_playlist(
             playlist_id, playlist.tracks
         )
+
+        # Convert raw unavailable track dicts to domain models
+        unavailable_tracks = [
+            UnavailableTrack(
+                title=raw.get("title"),
+                artists=raw.get("artists", []),
+                album=raw.get("album"),
+                reason=SkipReason(raw["reason"]),
+            )
+            for raw in playlist.unavailable_tracks_raw
+        ]
+
+        # Get unavailable tracks (only include when not limited)
+        unavailable_for_info: list[UnavailableTrack] = (
+            [] if limited else unavailable_tracks
+        )
+
         playlist_info = PlaylistInfo(
             playlist_id=playlist_id,
             title=playlist.title,
             cover_url=get_square_thumbnail(playlist.thumbnails),
             kind=kind,
             author=playlist.author.name if playlist.author else None,
+            unavailable_tracks=unavailable_for_info,
         )
 
         extracted_count = 0
         skipped_by_reason: dict[SkipReason, int] = {}
 
-        # Add unavailable tracks from playlist (no video ID at source)
-        if unavailable_count > 0:
-            skipped_by_reason[SkipReason.NO_VIDEO_ID] = unavailable_count
+        # Add unavailable tracks from playlist by reason
+        for ut in unavailable_tracks:
+            if not limited:  # Only count when not limiting
+                skipped_by_reason[ut.reason] = skipped_by_reason.get(ut.reason, 0) + 1
 
         for track in tracks:
             try:
@@ -153,10 +171,9 @@ class MetadataExtractorService:
                 skipped_by_reason[SkipReason.UNSUPPORTED_VIDEO_TYPE] = (
                     skipped_by_reason.get(SkipReason.UNSUPPORTED_VIDEO_TYPE, 0) + 1
                 )
-                logger.info(
+                logger.debug(
                     "Skipped track '%s': unsupported video type",
                     track.title,
-                    extra={"status": "skipped"},
                 )
                 continue
 
@@ -173,18 +190,10 @@ class MetadataExtractorService:
         # Log with stats_type discriminator and skipped_by_reason dict
         # Note: failed=0 because extraction failures become fallback metadata
         # rather than stopping the process. Skipped tracks are the meaningful metric.
-        logger.info(
-            "Extraction complete",
-            extra={
-                "stats": {
-                    "stats_type": "extraction",
-                    "success": extracted_count,
-                    "failed": 0,
-                    "skipped_by_reason": {
-                        k.value: v for k, v in skipped_by_reason.items()
-                    },
-                }
-            },
+        logger.debug(
+            "Extraction complete: %d extracted, %d skipped",
+            extracted_count,
+            sum(skipped_by_reason.values()),
         )
 
     def extract_all(

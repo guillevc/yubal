@@ -211,7 +211,7 @@ class JobStore:
                 return False  # Cannot delete running job
 
             self._remove_job_internal(job_id)
-            logger.info("Job removed: %s", job_id[:8])
+            logger.debug("Job removed: %s", job_id[:8])
             return True
 
     def clear_completed(self) -> int:

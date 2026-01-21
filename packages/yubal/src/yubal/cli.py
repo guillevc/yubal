@@ -26,7 +26,7 @@ from rich.table import Table
 from yubal.client import YTMusicClient
 from yubal.config import AudioCodec, DownloadConfig, PlaylistDownloadConfig
 from yubal.exceptions import YTMetaError
-from yubal.models.domain import DownloadStatus, TrackMetadata
+from yubal.models.domain import DownloadStatus, TrackMetadata, UnavailableTrack
 from yubal.services import MetadataExtractorService, PlaylistDownloadService
 
 logger = logging.getLogger("yubal")
@@ -109,6 +109,26 @@ def print_track_card(console: Console, track: TrackMetadata, index: int) -> None
     console.print(table)
 
 
+def print_unavailable_tracks(
+    console: Console, unavailable_tracks: list[UnavailableTrack]
+) -> None:
+    """Print unavailable tracks with reasons.
+
+    Args:
+        console: Rich console for output.
+        unavailable_tracks: List of unavailable tracks to display.
+    """
+    if not unavailable_tracks:
+        return
+    console.print()
+    console.print("[yellow]Unavailable tracks:[/yellow]")
+    for ut in unavailable_tracks:
+        console.print(
+            f"  [dim]- {ut.title or 'Unknown'} by {ut.artist_display} "
+            f"({ut.reason.value})[/dim]"
+        )
+
+
 def print_tracks(
     console: Console,
     tracks: list[TrackMetadata],
@@ -117,6 +137,7 @@ def print_tracks(
     playlist_total: int = 0,
     kind: str | None = None,
     title: str | None = None,
+    unavailable_tracks: list[UnavailableTrack] | None = None,
 ) -> None:
     """Print tracks as vertical cards with section header.
 
@@ -128,6 +149,7 @@ def print_tracks(
         playlist_total: Total tracks in playlist (0 means no limit applied).
         kind: Content kind ("album" or "playlist").
         title: Title of the album/playlist.
+        unavailable_tracks: List of unavailable tracks with reasons.
     """
     # Build subtitle with kind and title
     subtitle = ""
@@ -168,6 +190,10 @@ def print_tracks(
 
     console.print(msg)
 
+    # Print unavailable tracks with details
+    if unavailable_tracks:
+        print_unavailable_tracks(console, unavailable_tracks)
+
 
 @click.group()
 @click.option("-v", "--verbose", is_flag=True, help="Enable debug logging.")
@@ -204,6 +230,7 @@ def meta_cmd(url: str, as_json: bool, cookies: Path | None) -> None:
         tracks: list[TrackMetadata] = []
         skipped = 0
         unavailable = 0
+        unavailable_tracks_list: list[UnavailableTrack] = []
         playlist_kind: str | None = None
         playlist_title: str | None = None
         with Progress(
@@ -225,6 +252,9 @@ def meta_cmd(url: str, as_json: bool, cookies: Path | None) -> None:
                 tracks.append(extract_progress.track)
                 skipped = extract_progress.skipped
                 unavailable = extract_progress.unavailable
+                unavailable_tracks_list = list(
+                    extract_progress.playlist_info.unavailable_tracks
+                )
                 playlist_kind = extract_progress.playlist_info.kind.value
                 playlist_title = extract_progress.playlist_info.title
 
@@ -239,6 +269,7 @@ def meta_cmd(url: str, as_json: bool, cookies: Path | None) -> None:
                 unavailable=unavailable,
                 kind=playlist_kind,
                 title=playlist_title,
+                unavailable_tracks=unavailable_tracks_list,
             )
 
     except YTMetaError as e:
@@ -344,6 +375,7 @@ def download_cmd(
         tracks: list[TrackMetadata] = []
         skipped = 0
         unavailable = 0
+        unavailable_tracks_list: list[UnavailableTrack] = []
         playlist_total = 0
         playlist_kind: str | None = None
         playlist_title: str | None = None
@@ -370,6 +402,7 @@ def download_cmd(
                     tracks.append(ep.track)
                     skipped = ep.skipped
                     unavailable = ep.unavailable
+                    unavailable_tracks_list = list(ep.playlist_info.unavailable_tracks)
                     playlist_total = ep.playlist_total
                     playlist_kind = ep.playlist_info.kind.value
                     playlist_title = ep.playlist_info.title
@@ -391,6 +424,7 @@ def download_cmd(
                             tracks,
                             skipped=skipped,
                             unavailable=unavailable,
+                            unavailable_tracks=unavailable_tracks_list,
                             playlist_total=playlist_total,
                             kind=playlist_kind,
                             title=playlist_title,
@@ -415,6 +449,9 @@ def download_cmd(
         result = service.get_result()
         if not result:
             console.print("[yellow]No tracks found in playlist[/yellow]")
+            # Still show unavailable tracks if any
+            if unavailable_tracks_list:
+                print_unavailable_tracks(console, unavailable_tracks_list)
             return
 
         # Show summary section

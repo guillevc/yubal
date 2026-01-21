@@ -4,6 +4,8 @@ These are internal models used to parse and validate responses from
 the YouTube Music API. They may change if the API changes.
 """
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 __all__ = [
@@ -64,8 +66,15 @@ class Playlist(YTMusicModel):
     title: str | None = None
     thumbnails: list[Thumbnail] = Field(default_factory=list)
     tracks: list[PlaylistTrack]
-    unavailable_count: int = 0  # Tracks without videoId (set by client)
+    unavailable_tracks_raw: list[dict[str, Any]] = Field(
+        default_factory=list, alias="unavailable_tracks"
+    )
     author: Artist | None = None  # Channel/creator name
+
+    @property
+    def unavailable_count(self) -> int:
+        """Number of unavailable tracks (for backward compatibility)."""
+        return len(self.unavailable_tracks_raw)
 
 
 class AlbumTrack(YTMusicModel):
