@@ -1,7 +1,7 @@
 import { Button, Chip, Image, Progress } from "@heroui/react";
 import {
-  AlertTriangle,
   CheckCircle,
+  CircleAlert,
   Clock,
   Loader2,
   Trash2,
@@ -19,32 +19,56 @@ interface JobCardProps {
   onDelete?: (jobId: string) => void;
 }
 
-const STATUS_ICON_CLASS = "h-4 w-4";
+type ProgressColor =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "success"
+  | "warning"
+  | "danger";
+
 const STATUS_CONFIG: Record<
   JobStatus,
-  { icon: typeof Clock; color: string; spin?: boolean }
+  {
+    icon: typeof Clock;
+    color: string;
+    progressColor: ProgressColor;
+    spin?: boolean;
+  }
 > = {
-  pending: { icon: Clock, color: "text-foreground-400" },
-  fetching_info: { icon: Loader2, color: "text-foreground-500", spin: true },
-  downloading: { icon: Loader2, color: "text-primary", spin: true },
-  importing: { icon: Loader2, color: "text-secondary", spin: true },
-  completed: { icon: CheckCircle, color: "text-success" },
-  failed: { icon: XCircle, color: "text-danger" },
-  cancelled: { icon: X, color: "text-warning" },
+  pending: {
+    icon: Clock,
+    color: "text-foreground-400",
+    progressColor: "default",
+  },
+  fetching_info: {
+    icon: Loader2,
+    color: "text-foreground-500",
+    progressColor: "default",
+    spin: true,
+  },
+  downloading: {
+    icon: Loader2,
+    color: "text-primary",
+    progressColor: "primary",
+    spin: true,
+  },
+  importing: {
+    icon: Loader2,
+    color: "text-secondary",
+    progressColor: "secondary",
+    spin: true,
+  },
+  completed: {
+    icon: CheckCircle,
+    color: "text-success",
+    progressColor: "success",
+  },
+  failed: { icon: XCircle, color: "text-danger", progressColor: "danger" },
+  cancelled: { icon: X, color: "text-warning", progressColor: "warning" },
 };
 
-const PROGRESS_COLORS: Record<
-  JobStatus,
-  "default" | "primary" | "secondary" | "success" | "warning" | "danger"
-> = {
-  pending: "default",
-  fetching_info: "default",
-  downloading: "primary",
-  importing: "secondary",
-  completed: "success",
-  failed: "danger",
-  cancelled: "warning",
-};
+const ICON_CLASS = "h-4 w-4";
 
 function StatusIcon({
   status,
@@ -53,17 +77,50 @@ function StatusIcon({
   status: JobStatus;
   hasPartialFailures?: boolean;
 }) {
-  // Show warning icon if completed but has some failed tracks
   if (status === "completed" && hasPartialFailures) {
-    return <AlertTriangle className={`${STATUS_ICON_CLASS} text-warning`} />;
+    return <CircleAlert className={`${ICON_CLASS} text-warning`} />;
   }
 
-  const config = STATUS_CONFIG[status];
-  const Icon = config.icon;
+  const { icon: Icon, color, spin } = STATUS_CONFIG[status];
   return (
-    <Icon
-      className={`${STATUS_ICON_CLASS} ${config.color} ${config.spin ? "animate-spin" : ""}`}
-    />
+    <Icon className={`${ICON_CLASS} ${color} ${spin ? "animate-spin" : ""}`} />
+  );
+}
+
+function Thumbnail({
+  url,
+  status,
+  hasPartialFailures,
+}: {
+  url: string | null;
+  status: JobStatus;
+  hasPartialFailures?: boolean;
+}) {
+  const statusIcon = (
+    <StatusIcon status={status} hasPartialFailures={hasPartialFailures} />
+  );
+
+  if (!url) {
+    return (
+      <div className="bg-content3 flex h-16 w-16 shrink-0 items-center justify-center rounded">
+        {statusIcon}
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-16 w-16 shrink-0">
+      <Image
+        src={url}
+        alt=""
+        radius="sm"
+        isBlurred
+        className="h-16 w-16 object-cover"
+      />
+      <div className="bg-content2/80 absolute right-0.5 bottom-0.5 z-10 grid h-5 w-5 place-items-center rounded-full">
+        {statusIcon}
+      </div>
+    </div>
   );
 }
 
@@ -82,41 +139,6 @@ function MetadataChip({
     >
       {children}
     </Chip>
-  );
-}
-
-function Thumbnail({
-  url,
-  status,
-  hasPartialFailures,
-}: {
-  url: string | null;
-  status: JobStatus;
-  hasPartialFailures?: boolean;
-}) {
-  if (url) {
-    return (
-      <div className="relative h-16 w-16 shrink-0">
-        <Image
-          src={url}
-          alt=""
-          radius="sm"
-          isBlurred
-          classNames={{
-            wrapper: "object-cover",
-          }}
-        />
-        <div className="bg-content2/80 absolute right-0.5 bottom-0.5 z-10 rounded-full p-0.5">
-          <StatusIcon status={status} hasPartialFailures={hasPartialFailures} />
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-content3 flex h-16 w-16 shrink-0 items-center justify-center rounded">
-      <StatusIcon status={status} hasPartialFailures={hasPartialFailures} />
-    </div>
   );
 }
 
@@ -168,10 +190,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isRunning = isActive(job.status);
   const isJobFinished = isFinished(job.status);
-
   const { album_info, download_stats } = job;
-
-  // Show warning if job completed but some tracks failed
   const hasPartialFailures =
     job.status === "completed" && (download_stats?.failed ?? 0) > 0;
 
@@ -246,7 +265,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
           <Progress
             value={job.progress}
             size="sm"
-            color={PROGRESS_COLORS[job.status]}
+            color={STATUS_CONFIG[job.status].progressColor}
             className="flex-1"
             classNames={{
               indicator: "transition-all duration-500 ease-out",
