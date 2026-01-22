@@ -183,12 +183,6 @@ For age-restricted content, private playlists, or higher bitrate (Premium):
 - [ ] Batch import (multiple URLs)
 - [ ] Post-import webhooks (Navidrome/Jellyfin/Gonic)
 
-## 💬 Community
-
-Share your setup in [Setups](https://github.com/guillevc/yubal/discussions/categories/setups) — music server, clients, workflow, tips, etc. For questions or troubleshooting, check [Q&A](https://github.com/guillevc/yubal/discussions/categories/q-a).
-
-[Feature requests and bug reports](https://github.com/guillevc/yubal/issues/new) are welcome.
-
 ## 💜 Support
 
 If yubal is useful to you, consider supporting its development:
