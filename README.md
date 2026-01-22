@@ -158,7 +158,7 @@ GONIC_MULTI_VALUE_ARTIST=multi
 GONIC_MULTI_VALUE_ALBUM_ARTIST=multi
 ```
 
-M3U playlists are not supported because relative paths are not supported ([pending PR](https://github.com/sentriz/gonic/pull/537)).
+M3U playlists with relative paths are not supported ([pending PR in gonic](https://github.com/sentriz/gonic/pull/537)).
 
 </details>
 
