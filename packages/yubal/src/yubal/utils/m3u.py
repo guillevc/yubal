@@ -64,19 +64,42 @@ def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> st
     return "\n".join(lines) + "\n"
 
 
+def _format_playlist_filename(playlist_name: str, playlist_id: str) -> str:
+    """Format playlist filename with ID suffix to avoid collisions.
+
+    Args:
+        playlist_name: Name of the playlist (will be sanitized).
+        playlist_id: Unique playlist ID (last 8 chars used as suffix).
+
+    Returns:
+        Formatted filename without extension, e.g., "My Favorites [abcd1234]".
+    """
+    safe_name = clean_filename(playlist_name)
+    if not safe_name or not safe_name.strip():
+        safe_name = "Untitled Playlist"
+
+    # Use last 8 chars of playlist_id (or full ID if shorter)
+    id_suffix = playlist_id[-8:] if len(playlist_id) > 8 else playlist_id
+
+    return f"{safe_name} [{id_suffix}]"
+
+
 def write_m3u(
     base_path: Path,
     playlist_name: str,
+    playlist_id: str,
     tracks: list[tuple[TrackMetadata, Path]],
 ) -> Path:
     """Write an M3U playlist file to the Playlists folder.
 
     Creates the Playlists directory if it doesn't exist.
     Sanitizes the playlist name for safe filesystem usage.
+    Appends a truncated playlist ID to avoid filename collisions.
 
     Args:
         base_path: Base directory for downloads (e.g., /music or ./data).
         playlist_name: Name of the playlist (will be sanitized for filename).
+        playlist_id: Unique playlist ID (last 8 chars appended to filename).
         tracks: List of tuples containing (TrackMetadata, file_path) for each track.
 
     Returns:
@@ -85,21 +108,17 @@ def write_m3u(
     Example:
         >>> from pathlib import Path
         >>> tracks = [(track_meta, Path("/music/Artist/2024 - Album/01 - Song.opus"))]
-        >>> m3u_path = write_m3u(Path("/music"), "My Favorites", tracks)
+        >>> m3u_path = write_m3u(Path("/music"), "My Favorites", "PLxyz123abc", tracks)
         >>> print(m3u_path)
-        /music/Playlists/My Favorites.m3u
+        /music/Playlists/My Favorites [z123abc].m3u
     """
     # Create Playlists directory
     playlists_dir = base_path / "Playlists"
     playlists_dir.mkdir(parents=True, exist_ok=True)
 
-    # Sanitize playlist name for safe filename
-    safe_name = clean_filename(playlist_name)
-    if not safe_name or not safe_name.strip():
-        safe_name = "Untitled Playlist"
-
-    # Build M3U file path
-    m3u_path = playlists_dir / f"{safe_name}.m3u"
+    # Build M3U file path with ID suffix
+    filename = _format_playlist_filename(playlist_name, playlist_id)
+    m3u_path = playlists_dir / f"{filename}.m3u"
 
     # Generate and write content
     content = generate_m3u(tracks, m3u_path)
@@ -111,6 +130,7 @@ def write_m3u(
 def write_playlist_cover(
     base_path: Path,
     playlist_name: str,
+    playlist_id: str,
     cover_url: str | None,
 ) -> Path | None:
     """Write a playlist cover image as a sidecar file.
@@ -122,6 +142,7 @@ def write_playlist_cover(
     Args:
         base_path: Base directory for downloads (e.g., /music or ./data).
         playlist_name: Name of the playlist (will be sanitized for filename).
+        playlist_id: Unique playlist ID (last 8 chars appended to filename).
         cover_url: URL of the cover image to download.
 
     Returns:
@@ -133,10 +154,11 @@ def write_playlist_cover(
         >>> cover_path = write_playlist_cover(
         ...     Path("/music"),
         ...     "My Favorites",
+        ...     "PLxyz123abc",
         ...     "https://example.com/cover.jpg"
         ... )
         >>> print(cover_path)
-        /music/Playlists/My Favorites.jpg
+        /music/Playlists/My Favorites [z123abc].jpg
     """
     if not cover_url:
         return None
@@ -149,12 +171,9 @@ def write_playlist_cover(
     playlists_dir = base_path / "Playlists"
     playlists_dir.mkdir(parents=True, exist_ok=True)
 
-    # Sanitize playlist name for safe filename
-    safe_name = clean_filename(playlist_name)
-    if not safe_name or not safe_name.strip():
-        safe_name = "Untitled Playlist"
-
-    cover_path = playlists_dir / f"{safe_name}.jpg"
+    # Build cover file path with ID suffix
+    filename = _format_playlist_filename(playlist_name, playlist_id)
+    cover_path = playlists_dir / f"{filename}.jpg"
     cover_path.write_bytes(cover_data)
 
     logger.debug("Wrote playlist cover: %s", cover_path)

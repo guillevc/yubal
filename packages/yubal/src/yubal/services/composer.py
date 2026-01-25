@@ -146,7 +146,9 @@ class PlaylistComposerService:
             logger.debug("No tracks available for M3U generation")
             return None
 
-        m3u_path = write_m3u(base_path, playlist_name, tracks)
+        m3u_path = write_m3u(
+            base_path, playlist_name, playlist_info.playlist_id, tracks
+        )
         logger.info(
             "Generated M3U playlist: '%s'",
             m3u_path,
@@ -209,7 +211,7 @@ class PlaylistComposerService:
             return None
 
         cover_path = write_playlist_cover(
-            base_path, playlist_name, playlist_info.cover_url
+            base_path, playlist_name, playlist_info.playlist_id, playlist_info.cover_url
         )
         if cover_path:
             logger.info(
