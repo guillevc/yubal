@@ -1,5 +1,5 @@
 > [!TIP]
-> **New in v0.2.0:** Playlist support is here! Download entire playlists with a single URL.
+> **New in v0.3.0:** Single track support! Download individual songs—just paste any YouTube Music link.
 
 > [!IMPORTANT]
 > **Upgrading from v0.1?** The folder structure and config have changed. See the [v0.2.0 release notes](https://github.com/guillevc/yubal/releases/tag/v0.2.0) for migration steps.
@@ -8,7 +8,7 @@
 
 # yubal
 
-**YouTube Music album & playlist downloader with automatic metadata tagging.**
+**YouTube Music downloader with automatic metadata tagging.**
 
 [![CI](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
 [![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
@@ -25,7 +25,7 @@
 
 ## 📖 Overview
 
-**yubal** is a self-hosted app for building a local music library. Paste a YouTube Music album or playlist URL, and yubal handles downloading, tagging, and album art—automatically.
+**yubal** is a self-hosted app for building a local music library. Paste a YouTube Music album, playlist, or track URL, and yubal handles downloading, tagging, and album art—automatically.
 
 ```
 data/
@@ -60,8 +60,9 @@ Albums are organized by artist and year. When downloading a playlist, each track
 
 - **Web UI** — Real-time progress, job queue, responsive design
 - **Smart tagging** — Metadata from YouTube Music with fuzzy track matching
-- **Albums & playlists** — Automatic album detection, M3U playlist generation
-- **Smart deduplication** — Tracks indexed by path, never downloaded twice across playlists or albums
+- **Albums, playlists & tracks** — Download full albums, playlists with M3U generation, or single tracks
+- **Smart deduplication** — Never downloads the same track twice, even across multiple playlists
+- **Reliable downloads** — Automatic retry on failures, safe to interrupt without losing progress
 - **Format options** — Native `opus` (best quality), or transcode to `mp3`/`m4a`
 - **Media server ready** — Tested with [Navidrome, Jellyfin and Gonic](#-media-servers-integration)
 
@@ -84,6 +85,7 @@ services:
     restart: unless-stopped
 ```
 
+> [!TIP]
 > **Volume permissions:** The container runs as UID:GID 1000:1000 by default. If your host user has a different UID, either:
 >
 > - Change `user:` to match your UID:GID (run `id` to check), or
@@ -119,7 +121,7 @@ docker compose up -d
 
 ## 🔌 Media Servers Integration
 
-yubal organizes downloads as `Artist/Year - Album/NN - Track.ext` and writes both slash-separated `ARTIST` and multi-value `ARTISTS` tags across all audio formats.
+yubal organizes downloads as `Artist/Year - Album/NN - Track.ext`. It writes both a slash-separated `ARTIST` tag and a multi-value `ARTISTS` tags for proper multi-artist support.
 
 Configure your server to read `ARTISTS` tags for proper multi-artist linking.
 
@@ -181,14 +183,20 @@ For age-restricted content, private playlists, or higher bitrate (Premium):
 
 ## 🗺️ Roadmap
 
-- [x] Cookies upload via Web UI
-- [x] Multi-arch Docker (amd64/arm64)
+- [x] Cookie import via Web UI
+- [x] Multi-arch Docker images
 - [x] Configurable audio format
 - [x] Playlist support with M3U generation
-- [ ] Flat folder structure mode (Do not organize into subfolders)
+      ([v0.2.0](https://github.com/guillevc/yubal/releases/tag/v0.2.0))
+- [x] Single track downloads
+      ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
+- [ ] Download lyrics
+- [ ] Flat folder mode
 - [ ] Browser extension
-- [ ] Batch import (multiple URLs)
-- [ ] Post-import webhooks (Navidrome/Jellyfin/Gonic)
+- [ ] Batch import
+- [ ] Post-download webhooks
+- [ ] Auto-sync playlists
+- [ ] New music automatic discovery
 
 ## 💜 Support
 
