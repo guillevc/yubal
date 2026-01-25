@@ -3,13 +3,11 @@
 import logging
 import mimetypes
 import shutil
-import signal
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib.metadata import version
-from types import FrameType
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -31,8 +29,7 @@ from yubal_api.services.log_buffer import (
 from yubal_api.services.shutdown import ShutdownCoordinator
 from yubal_api.settings import get_settings
 
-# Global reference for signal handler access
-_shutdown_coordinator: ShutdownCoordinator | None = None
+# Global reference for shutdown suppression
 _rich_console: Console | None = None
 
 
@@ -86,34 +83,16 @@ def suppress_logging() -> None:
         _rich_console.quiet = True
 
 
-def _handle_shutdown_signal(signum: int, frame: FrameType | None) -> None:
-    """Handle SIGINT/SIGTERM for graceful shutdown.
-
-    Only does signal-safe operations (setting threading.Event flags).
-    Logging suppression happens in the lifespan handler.
-    """
-    del signum, frame  # Unused but required by signal handler signature
-
-    if _shutdown_coordinator and not _shutdown_coordinator.is_shutting_down:
-        _shutdown_coordinator.begin_shutdown()
-
-    # Let uvicorn handle the actual shutdown
-    raise KeyboardInterrupt
-
-
 setup_logging()
 logger = logging.getLogger(__name__)
 
 
 def create_services() -> Services:
     """Create all application services with proper dependency wiring."""
-    global _shutdown_coordinator
-
     settings = get_settings()
 
-    # Create shutdown coordinator first
+    # Create shutdown coordinator
     shutdown_coordinator = ShutdownCoordinator()
-    _shutdown_coordinator = shutdown_coordinator  # Store for signal handler
 
     # Create job management services
     job_store = JobStore(
@@ -154,22 +133,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting application...")
     services = create_services()
     app.state.services = services
-
-    # Install signal handlers for graceful shutdown
-    signal.signal(signal.SIGINT, _handle_shutdown_signal)
-    signal.signal(signal.SIGTERM, _handle_shutdown_signal)
-
     logger.info("Services initialized")
 
     yield
 
     # Shutdown sequence
     settings = get_settings()
-    coordinator = services.shutdown_coordinator
 
-    # Cancel any remaining jobs (signal handler may have already done this)
-    if not coordinator.is_shutting_down:
-        coordinator.begin_shutdown()
+    # Cancel any running jobs
+    services.shutdown_coordinator.begin_shutdown()
 
     # Suppress logging to prevent post-prompt messages
     suppress_logging()
