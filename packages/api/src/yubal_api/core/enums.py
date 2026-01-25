@@ -5,7 +5,7 @@ class JobStatus(StrEnum):
     """Status of a background job."""
 
     PENDING = "pending"  # Waiting to start
-    FETCHING_INFO = "fetching_info"  # Extracting album metadata
+    FETCHING_INFO = "fetching_info"  # Extracting content metadata
     DOWNLOADING = "downloading"  # Downloading tracks (0-80%)
     IMPORTING = "importing"  # Beets import (80-100%)
     COMPLETED = "completed"

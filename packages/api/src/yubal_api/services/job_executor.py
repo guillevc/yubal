@@ -192,12 +192,12 @@ class JobExecutor:
 
     @staticmethod
     def _parse_content_info(details: dict[str, Any]) -> ContentInfo | None:
-        """Extract album info from details dict."""
+        """Extract content info from details dict."""
         if data := details.get("content_info"):
             try:
                 return ContentInfo(**data)
             except (TypeError, ValueError) as e:
-                logger.warning("Failed to parse album info: %s", e)
+                logger.warning("Failed to parse content info: %s", e)
         return None
 
     def _start_next_pending(self) -> None:
