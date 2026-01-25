@@ -171,6 +171,7 @@ class PlaylistDownloadService:
             "Starting new download",
             extra={"header": "New Download"},
         )
+        logger.info("URL: %s", url)
 
         # Phase 1: Extract metadata (handles all URL types: track, album, playlist)
         yield from self._execute_extraction_phase(url, cancel_token)
@@ -473,9 +474,11 @@ class PlaylistDownloadService:
         self._check_cancellation(cancel_token)
 
         # Determine what we're actually generating
+        # Skip M3U for albums (if configured) and always skip for single tracks
         is_album = playlist_info.kind == ContentKind.ALBUM
+        is_track = playlist_info.kind == ContentKind.TRACK
         will_generate_m3u = self._config.generate_m3u and not (
-            self._config.skip_album_m3u and is_album
+            is_track or (self._config.skip_album_m3u and is_album)
         )
         will_save_cover = self._config.save_cover
 

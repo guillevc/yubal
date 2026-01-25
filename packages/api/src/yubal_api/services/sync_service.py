@@ -223,9 +223,10 @@ class SyncService:
                         album_info = album_info_from_yubal(
                             playlist_info, tracks, url, self._audio_format
                         )
+                        track_word = "track" if len(tracks) == 1 else "tracks"
                         emit(
                             step,
-                            f"Found {len(tracks)} tracks: {album_info.title}",
+                            f"Found {len(tracks)} {track_word}: {album_info.title}",
                             pct,
                             {"album_info": album_info.model_dump()},
                         )

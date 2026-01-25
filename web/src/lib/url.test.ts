@@ -21,9 +21,9 @@ describe("isValidUrl", () => {
       );
     });
 
-    test("rejects watch URLs (single tracks not supported)", () => {
+    test("accepts watch URLs (single tracks)", () => {
       expect(isValidUrl("https://music.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
-        false,
+        true,
       );
     });
   });

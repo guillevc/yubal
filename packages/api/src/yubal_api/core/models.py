@@ -3,7 +3,7 @@
 from datetime import UTC, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
-from yubal import AudioCodec, PhaseStats
+from yubal import AudioCodec, ContentKind, PhaseStats
 
 from yubal_api.core.enums import JobStatus
 
@@ -20,7 +20,7 @@ class AlbumInfo(BaseModel):
     thumbnail_url: str | None = None
     audio_codec: str | None = None  # e.g. "opus", "mp3"
     audio_bitrate: int | None = None  # kbps, e.g. 128
-    kind: str = "playlist"  # "album" or "playlist"
+    kind: ContentKind = ContentKind.PLAYLIST
 
 
 class Job(BaseModel):

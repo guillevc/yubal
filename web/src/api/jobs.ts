@@ -3,6 +3,7 @@ import type { components } from "./schema";
 
 // Re-export types from schema
 export type AlbumInfo = components["schemas"]["AlbumInfo"];
+export type ContentKind = components["schemas"]["ContentKind"];
 
 export type JobStatus =
   | "pending"

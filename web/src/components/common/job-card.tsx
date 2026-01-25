@@ -172,7 +172,11 @@ function AlbumInfo({
       </p>
       <div className="flex items-center gap-1">
         {kind && <MetadataChip className="capitalize">{kind}</MetadataChip>}
-        {trackCount && <MetadataChip>{trackCount} tracks</MetadataChip>}
+        {trackCount && kind !== "track" && (
+          <MetadataChip>
+            {trackCount} {trackCount === 1 ? "track" : "tracks"}
+          </MetadataChip>
+        )}
         {audioCodec && (
           <MetadataChip>
             <span className="uppercase">{audioCodec}</span>

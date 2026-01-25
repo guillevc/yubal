@@ -215,11 +215,8 @@ export interface components {
             audio_codec?: string | null;
             /** Audio Bitrate */
             audio_bitrate?: number | null;
-            /**
-             * Kind
-             * @default playlist
-             */
-            kind: string;
+            /** @default playlist */
+            kind: components["schemas"]["ContentKind"];
         };
         /**
          * AudioCodec
@@ -247,6 +244,12 @@ export interface components {
             /** Cleared */
             cleared: number;
         };
+        /**
+         * ContentKind
+         * @description Type of music content (album vs playlist vs track).
+         * @enum {string}
+         */
+        ContentKind: "album" | "playlist" | "track";
         /**
          * CookiesStatusResponse
          * @description Cookies status response model.
@@ -281,8 +284,9 @@ export interface components {
         CreateJobRequest: {
             /**
              * Url
-             * @description YouTube Music playlist or album URL
+             * @description YouTube Music playlist, album, or single track URL
              * @example https://music.youtube.com/playlist?list=OLAK5uy_...
+             * @example https://music.youtube.com/watch?v=VIDEO_ID
              */
             url: string;
             /** @description Audio format for downloads. Uses server default if not set. */
@@ -574,11 +578,8 @@ export interface components {
              * @default 0
              */
             failed: number;
-            /**
-             * Skipped By Reason
-             * @default {}
-             */
-            skipped_by_reason: {
+            /** Skipped By Reason */
+            skipped_by_reason?: {
                 [key: string]: number;
             };
         };
@@ -587,11 +588,11 @@ export interface components {
          * @description Reason why a track was skipped.
          *
          *     Used in both extraction and download phases:
-         *     - Extraction: UNSUPPORTED_VIDEO_TYPE, NO_VIDEO_ID
+         *     - Extraction: UNSUPPORTED_VIDEO_TYPE, NO_VIDEO_ID, REGION_UNAVAILABLE, NO_ALBUM_MATCH
          *     - Download: FILE_EXISTS
          * @enum {string}
          */
-        SkipReason: "file_exists" | "unsupported_video_type" | "no_video_id";
+        SkipReason: "file_exists" | "unsupported_video_type" | "no_video_id" | "region_unavailable" | "no_album_match";
         /** ValidationError */
         ValidationError: {
             /** Location */
