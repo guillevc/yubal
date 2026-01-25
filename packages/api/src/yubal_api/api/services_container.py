@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 if TYPE_CHECKING:
     from yubal_api.services.job_executor import JobExecutor
     from yubal_api.services.job_store import JobStore
+    from yubal_api.services.shutdown import ShutdownCoordinator
 
 
 @dataclass
@@ -27,6 +28,7 @@ class Services:
 
     job_store: "JobStore"
     job_executor: "JobExecutor"
+    shutdown_coordinator: "ShutdownCoordinator"
 
     def close(self) -> None:
         """Clean up resources. Called at application shutdown."""

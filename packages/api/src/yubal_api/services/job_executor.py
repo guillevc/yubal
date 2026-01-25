@@ -98,6 +98,17 @@ class JobExecutor:
         logger.info("Job cancellation requested: %s", job_id[:8])
         return True
 
+    def cancel_all_jobs(self) -> int:
+        """Cancel all running jobs. Used during shutdown.
+
+        Returns:
+            Number of jobs that were signalled for cancellation.
+        """
+        tokens = list(self._cancel_tokens.values())
+        for token in tokens:
+            token.cancel()
+        return len(tokens)
+
     async def _run_job(
         self, job_id: str, url: str, max_items: int | None = None
     ) -> None:

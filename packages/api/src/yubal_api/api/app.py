@@ -3,11 +3,13 @@
 import logging
 import mimetypes
 import shutil
+import signal
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib.metadata import version
+from types import FrameType
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,13 +27,22 @@ from yubal_api.services.log_buffer import (
     clear_log_buffer,
     get_log_buffer,
 )
+from yubal_api.services.shutdown import ShutdownCoordinator
 from yubal_api.settings import get_settings
+
+# Global reference for signal handler access
+_shutdown_coordinator: ShutdownCoordinator | None = None
+_rich_console: Console | None = None
 
 
 def setup_logging() -> None:
     """Configure logging with Rich handler for all loggers including uvicorn."""
+    global _rich_console
+
     settings = get_settings()
     console = Console(force_terminal=True)
+    _rich_console = console  # Store for shutdown suppression
+
     handler = RichHandler(
         console=console, rich_tracebacks=True, show_path=False, markup=True
     )
@@ -54,13 +65,54 @@ def setup_logging() -> None:
     logging.getLogger("yubal_api").addHandler(buffer_handler)
 
 
+def suppress_logging() -> None:
+    """Suppress most logging output during shutdown.
+
+    Keeps ERROR level visible but suppresses INFO/WARNING to prevent
+    routine messages from appearing after the shell prompt returns.
+    """
+    # Keep errors visible, suppress INFO/WARNING
+    for handler in logging.root.handlers:
+        handler.setLevel(logging.ERROR)
+
+    # Also suppress uvicorn loggers
+    for name in ("uvicorn", "uvicorn.error", "uvicorn.access"):
+        for handler in logging.getLogger(name).handlers:
+            handler.setLevel(logging.ERROR)
+
+    # Quiet the Rich console
+    if _rich_console:
+        _rich_console.quiet = True
+
+
+def _handle_shutdown_signal(signum: int, frame: FrameType | None) -> None:
+    """Handle SIGINT/SIGTERM for graceful shutdown.
+
+    Cancels all jobs and suppresses logging before uvicorn's handler runs.
+    """
+    del signum, frame  # Unused but required by signal handler signature
+
+    if _shutdown_coordinator and not _shutdown_coordinator.is_shutting_down:
+        _shutdown_coordinator.begin_shutdown()
+        suppress_logging()
+
+    # Let uvicorn handle the actual shutdown
+    raise KeyboardInterrupt
+
+
 setup_logging()
 logger = logging.getLogger(__name__)
 
 
 def create_services() -> Services:
     """Create all application services with proper dependency wiring."""
+    global _shutdown_coordinator
+
     settings = get_settings()
+
+    # Create shutdown coordinator first
+    shutdown_coordinator = ShutdownCoordinator()
+    _shutdown_coordinator = shutdown_coordinator  # Store for signal handler
 
     # Create job management services
     job_store = JobStore(
@@ -75,9 +127,13 @@ def create_services() -> Services:
         cookies_path=settings.cookies_file,
     )
 
+    # Wire up coordinator with executor
+    shutdown_coordinator.set_job_executor(job_executor)
+
     return Services(
         job_store=job_store,
         job_executor=job_executor,
+        shutdown_coordinator=shutdown_coordinator,
     )
 
 
@@ -97,20 +153,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting application...")
     services = create_services()
     app.state.services = services
+
+    # Install signal handlers for graceful shutdown
+    signal.signal(signal.SIGINT, _handle_shutdown_signal)
+    signal.signal(signal.SIGTERM, _handle_shutdown_signal)
+
     logger.info("Services initialized")
 
     yield
 
-    logger.info("Shutting down...")
-    services.close()
+    # Shutdown sequence
+    settings = get_settings()
+    coordinator = services.shutdown_coordinator
+
+    # Cancel any remaining jobs (signal handler may have already done this)
+    if not coordinator.is_shutting_down:
+        coordinator.begin_shutdown()
+
+    # Suppress logging to prevent post-prompt messages
+    suppress_logging()
+
+    # Clean up .part files from incomplete downloads
+    coordinator.cleanup_part_files(settings.data)
+
+    # Clean up log buffer
     clear_log_buffer()
 
-    temp = get_settings().temp
-    if temp.exists():
-        logger.info("Cleaning up temp directory: %s", temp)
-        shutil.rmtree(temp, ignore_errors=True)
+    # Clean temp directory
+    if settings.temp.exists():
+        shutil.rmtree(settings.temp, ignore_errors=True)
 
-    logger.info("Shutdown complete")
+    services.close()
 
 
 def create_app() -> FastAPI:
