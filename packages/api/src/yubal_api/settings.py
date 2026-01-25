@@ -4,12 +4,30 @@ import tempfile
 from datetime import tzinfo
 from functools import cache
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo
 
-from pydantic import Field, model_validator
+from pydantic import BeforeValidator, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from yubal import AudioCodec
+
+LogLevel = Annotated[
+    Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+    BeforeValidator(lambda v: v.upper() if isinstance(v, str) else v),
+]
+
+
+def _validate_timezone(v: str) -> str:
+    """Validate timezone string by attempting to create ZoneInfo."""
+    if isinstance(v, str):
+        try:
+            ZoneInfo(v)
+        except KeyError as e:
+            raise ValueError(f"Invalid timezone: {v}") from e
+    return v
+
+
+Timezone = Annotated[str, BeforeValidator(_validate_timezone)]
 
 
 class Settings(BaseSettings):
@@ -32,7 +50,7 @@ class Settings(BaseSettings):
     port: int = Field(default=8000, description="Server port")
     reload: bool = Field(default=False, description="Enable auto-reload")
     debug: bool = Field(default=False, description="Enable debug mode")
-    log_level: str = Field(default="INFO", description="Log level")
+    log_level: LogLevel = Field(default="INFO", description="Log level")
 
     # Audio settings
     audio_format: AudioCodec = Field(
@@ -50,7 +68,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default=["*"], description="Allowed CORS origins")
 
     # Timezone
-    tz: str = Field(default="UTC", description="Timezone for timestamps")
+    tz: Timezone = Field(default="UTC", description="Timezone for timestamps")
 
     @model_validator(mode="before")
     @classmethod
