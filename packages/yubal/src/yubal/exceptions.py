@@ -28,6 +28,25 @@ class PlaylistParseError(YTMetaError):
     status_code: int = 400  # Bad Request
 
 
+class SongParseError(YTMetaError):
+    """Failed to parse song URL.
+
+    Raised when the provided URL doesn't contain a valid video ID.
+    """
+
+    status_code: int = 400  # Bad Request
+
+
+class UnsupportedVideoTypeError(YTMetaError):
+    """Video type is not supported for download.
+
+    Raised when trying to download a video that is not an ATV (Audio Track Video)
+    or OMV (Official Music Video), such as UGC (User Generated Content).
+    """
+
+    status_code: int = 400  # Bad Request
+
+
 class PlaylistNotFoundError(YTMetaError):
     """Playlist not found or inaccessible.
 

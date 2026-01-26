@@ -9,7 +9,9 @@ from yubal.models.ytmusic import (
     Playlist,
     PlaylistTrack,
     SearchResult,
+    SongDetails,
     Thumbnail,
+    VideoDetails,
 )
 
 
@@ -162,6 +164,41 @@ def sample_search_result(sample_album_ref: AlbumRef) -> SearchResult:
     )
 
 
+@pytest.fixture
+def sample_video_details(sample_thumbnail: Thumbnail) -> VideoDetails:
+    """Create sample video details."""
+    return VideoDetails.model_validate(
+        {
+            "videoId": "song123",
+            "title": "Test Song",
+            "author": "Test Artist",
+            "musicVideoType": "MUSIC_VIDEO_TYPE_ATV",
+            "thumbnails": [
+                {
+                    "url": sample_thumbnail.url,
+                    "width": sample_thumbnail.width,
+                    "height": sample_thumbnail.height,
+                }
+            ],
+        }
+    )
+
+
+@pytest.fixture
+def sample_song_details(sample_video_details: VideoDetails) -> SongDetails:
+    """Create sample song details."""
+    return SongDetails.model_validate(
+        {
+            "videoDetails": {
+                "videoId": sample_video_details.video_id,
+                "title": sample_video_details.title,
+                "author": sample_video_details.author,
+                "musicVideoType": sample_video_details.music_video_type,
+            }
+        }
+    )
+
+
 class MockYTMusicClient:
     """Mock YouTube Music client for testing."""
 
@@ -170,13 +207,16 @@ class MockYTMusicClient:
         playlist: Playlist | None = None,
         album: Album | None = None,
         search_results: list[SearchResult] | None = None,
+        song_details: SongDetails | None = None,
     ) -> None:
         self._playlist = playlist
         self._album = album
         self._search_results = search_results or []
+        self._song_details = song_details
         self.get_playlist_calls: list[str] = []
         self.get_album_calls: list[str] = []
         self.search_songs_calls: list[str] = []
+        self.get_song_calls: list[str] = []
 
     def get_playlist(self, playlist_id: str) -> Playlist:
         """Mock get_playlist."""
@@ -192,6 +232,13 @@ class MockYTMusicClient:
             raise ValueError("No album configured")
         return self._album
 
+    def get_song(self, video_id: str) -> SongDetails:
+        """Mock get_song."""
+        self.get_song_calls.append(video_id)
+        if self._song_details is None:
+            raise ValueError("No song details configured")
+        return self._song_details
+
     def search_songs(self, query: str) -> list[SearchResult]:
         """Mock search_songs."""
         self.search_songs_calls.append(query)
@@ -203,10 +250,12 @@ def mock_client(
     sample_playlist: Playlist,
     sample_album: Album,
     sample_search_result: SearchResult,
+    sample_song_details: SongDetails,
 ) -> MockYTMusicClient:
     """Create a mock client with sample data."""
     return MockYTMusicClient(
         playlist=sample_playlist,
         album=sample_album,
         search_results=[sample_search_result],
+        song_details=sample_song_details,
     )

@@ -9,14 +9,17 @@ from yubal.config import PlaylistDownloadConfig
 from yubal.exceptions import CancellationError
 from yubal.models.domain import (
     CancelToken,
+    ContentKind,
     DownloadResult,
     DownloadStatus,
     PlaylistDownloadResult,
     PlaylistInfo,
     PlaylistProgress,
+    SongDownloadResult,
     TrackMetadata,
     aggregate_skip_reasons,
 )
+from yubal.utils.url import URLType, detect_url_type, parse_video_id
 from yubal.services.composer import PlaylistComposerService
 from yubal.services.downloader import DownloadService
 from yubal.services.extractor import MetadataExtractorService
@@ -259,6 +262,70 @@ class PlaylistDownloadService:
         """
         return self._last_result
 
+    def download_song(
+        self,
+        url: str,
+        cancel_token: CancelToken | None = None,
+    ) -> SongDownloadResult:
+        """Download a single song by URL (simplified pipeline, no M3U).
+
+        This is a simplified download pipeline for individual songs:
+        1. Parse video ID from URL
+        2. Extract song metadata via extractor.extract_song()
+        3. Download track via downloader.download_track()
+        4. Return SongDownloadResult
+
+        Args:
+            url: YouTube Music watch URL (e.g., https://music.youtube.com/watch?v=VIDEO_ID).
+            cancel_token: Optional token for cancellation support.
+
+        Returns:
+            SongDownloadResult with track metadata and download result.
+
+        Raises:
+            CancellationError: If cancel_token.is_cancelled becomes True.
+            SongParseError: If URL is invalid.
+            UnsupportedVideoTypeError: If video is not ATV/OMV.
+            APIError: If API requests fail.
+
+        Example:
+            >>> result = service.download_song("https://music.youtube.com/watch?v=abc123")
+            >>> print(f"Downloaded: {result.track.title}")
+        """
+        self._check_cancellation(cancel_token)
+
+        # Step 1: Parse video ID from URL
+        video_id = parse_video_id(url)
+        logger.info(
+            "Starting single song download",
+            extra={"header": "New Download"},
+        )
+
+        # Step 2: Extract song metadata
+        logger.info(
+            "Fetching song metadata",
+            extra={"phase": "extracting", "phase_num": 1},
+        )
+        track = self._extractor.extract_song(video_id)
+        logger.info("Song: %s by %s", track.title, track.artist)
+
+        # Step 3: Download the track
+        self._check_cancellation(cancel_token)
+        logger.info(
+            "Downloading song",
+            extra={"phase": "downloading", "phase_num": 2},
+        )
+        download_result = self._downloader.download_track(track)
+
+        logger.info(
+            "Song download complete",
+            extra={
+                "status": "success" if download_result.status == DownloadStatus.SUCCESS else "failed"
+            },
+        )
+
+        return SongDownloadResult(track=track, download_result=download_result)
+
     # ============================================================================
     # CANCELLATION SUPPORT - Check and handle cancellation requests
     # ============================================================================
@@ -466,8 +533,6 @@ class PlaylistDownloadService:
         self._check_cancellation(cancel_token)
 
         # Determine what we're actually generating
-        from yubal.models.domain import ContentKind
-
         is_album = playlist_info.kind == ContentKind.ALBUM
         will_generate_m3u = self._config.generate_m3u and not (
             self._config.skip_album_m3u and is_album

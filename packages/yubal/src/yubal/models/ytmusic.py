@@ -16,7 +16,9 @@ __all__ = [
     "Playlist",
     "PlaylistTrack",
     "SearchResult",
+    "SongDetails",
     "Thumbnail",
+    "VideoDetails",
 ]
 
 
@@ -103,3 +105,25 @@ class SearchResult(YTMusicModel):
     video_id: str = Field(alias="videoId")
     video_type: str | None = Field(default=None, alias="videoType")
     album: AlbumRef | None = None
+
+
+class VideoDetails(YTMusicModel):
+    """Video details from get_song() response.
+
+    Contains core information about a video including its type (ATV, OMV, UGC, etc).
+    """
+
+    video_id: str = Field(alias="videoId")
+    title: str
+    author: str
+    music_video_type: str | None = Field(default=None, alias="musicVideoType")
+    thumbnails: list[Thumbnail] = Field(default_factory=list)
+
+
+class SongDetails(YTMusicModel):
+    """Song details from get_song() response.
+
+    Wraps the videoDetails field from ytmusicapi.get_song().
+    """
+
+    video_details: VideoDetails = Field(alias="videoDetails")

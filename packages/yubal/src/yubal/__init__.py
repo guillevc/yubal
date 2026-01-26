@@ -40,7 +40,9 @@ from yubal.exceptions import (
     DownloadError,
     PlaylistNotFoundError,
     PlaylistParseError,
+    SongParseError,
     UnsupportedPlaylistError,
+    UnsupportedVideoTypeError,
     YTMetaError,
 )
 from yubal.models.domain import (
@@ -55,9 +57,11 @@ from yubal.models.domain import (
     PlaylistInfo,
     PlaylistProgress,
     SkipReason,
+    SongDownloadResult,
     TrackMetadata,
     VideoType,
 )
+from yubal.utils.url import URLType, detect_url_type, parse_video_id
 from yubal.services import MetadataExtractorService, PlaylistDownloadService
 from yubal.services.downloader import DownloadService as _DownloadService
 from yubal.utils import clear_cover_cache, fetch_cover
@@ -197,13 +201,19 @@ __all__ = [
     "PlaylistParseError",
     "PlaylistProgress",
     "SkipReason",
+    "SongDownloadResult",
+    "SongParseError",
     "TrackMetadata",
+    "URLType",
     "UnsupportedPlaylistError",
+    "UnsupportedVideoTypeError",
     "VideoType",
     "YTMetaError",
     "clear_cover_cache",
     "create_downloader",
     "create_extractor",
     "create_playlist_downloader",
+    "detect_url_type",
     "fetch_cover",
+    "parse_video_id",
 ]

@@ -21,10 +21,11 @@ describe("isValidUrl", () => {
       );
     });
 
-    test("rejects watch URLs (single tracks not supported)", () => {
+    test("accepts watch URLs (individual songs)", () => {
       expect(isValidUrl("https://music.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
-        false,
+        true,
       );
+      expect(isValidUrl("http://music.youtube.com/watch?v=abc123")).toBe(true);
     });
   });
 
@@ -39,8 +40,9 @@ describe("isValidUrl", () => {
       );
     });
 
-    test("rejects watch URLs (single tracks not supported)", () => {
-      expect(isValidUrl("https://youtube.com/watch?v=dQw4w9WgXcQ")).toBe(false);
+    test("accepts watch URLs (individual songs)", () => {
+      expect(isValidUrl("https://youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
+      expect(isValidUrl("https://www.youtube.com/watch?v=abc123")).toBe(true);
     });
 
     test("rejects browse URLs (only music.youtube.com browse supported)", () => {

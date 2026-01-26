@@ -15,7 +15,8 @@ from yubal.models.domain import (
     UnavailableTrack,
     VideoType,
 )
-from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
+from yubal.exceptions import UnsupportedVideoTypeError
+from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack, VideoDetails
 from yubal.utils.artists import format_artists
 from yubal.utils.thumbnails import get_square_thumbnail
 from yubal.utils.url import parse_playlist_id
@@ -219,6 +220,55 @@ class MetadataExtractorService:
             APIError: If API requests fail.
         """
         return [p.track for p in self.extract(url, max_items=max_items)]
+
+    def extract_song(self, video_id: str) -> TrackMetadata:
+        """Extract metadata for a single song by video ID.
+
+        This is a simplified extraction pipeline for individual songs:
+        1. Fetch song details from YouTube Music API
+        2. Validate video type (ATV/OMV only, reject UGC)
+        3. Search for album using artist + title
+        4. Fetch album details if found
+        5. Build enriched metadata (or fallback if no album)
+
+        Args:
+            video_id: YouTube Music video ID.
+
+        Returns:
+            Extracted track metadata.
+
+        Raises:
+            UnsupportedVideoTypeError: If video is UGC or missing video type.
+            APIError: If API requests fail.
+        """
+        logger.debug("Extracting metadata for song: %s", video_id)
+
+        # Step 1: Fetch song details
+        song = self._client.get_song(video_id)
+        video_details = song.video_details
+
+        # Step 2: Validate video type
+        video_type = self._validate_song_video_type(video_details)
+
+        # Step 3: Search for album
+        album_id, search_atv_id = self._search_for_album_by_query(
+            video_details.author, video_details.title
+        )
+
+        # Step 4: Fetch album if found
+        album: Album | None = None
+        if album_id:
+            try:
+                album = self._client.get_album(album_id)
+            except Exception as e:
+                logger.debug("Failed to fetch album %s: %s", album_id, e)
+
+        # Step 5: Build metadata
+        if album:
+            return self._build_song_metadata_with_album(
+                video_details, album, video_type, search_atv_id
+            )
+        return self._create_song_fallback_metadata(video_details, video_type)
 
     # ============================================================================
     # CONTENT CLASSIFICATION - Distinguish albums from curated playlists
@@ -440,6 +490,193 @@ class MetadataExtractorService:
                 return result.album.id, atv_id
 
         return None, None
+
+    def _search_for_album_by_query(
+        self, artist: str, title: str
+    ) -> tuple[str | None, str | None]:
+        """Search YouTube Music to find album information using artist and title.
+
+        Similar to _search_for_album but takes string parameters directly,
+        useful for single song extraction where we don't have a PlaylistTrack.
+
+        Args:
+            artist: Artist name.
+            title: Track title.
+
+        Returns:
+            Tuple of (album_id, atv_video_id) if found, (None, None) otherwise.
+        """
+        query = f"{artist} {title}".strip()
+
+        if not query:
+            return None, None
+
+        try:
+            results = self._client.search_songs(query)
+        except Exception as e:
+            logger.debug("Search failed for '%s': %s", query, e)
+            return None, None
+
+        for result in results:
+            if result.album:
+                atv_id = result.video_id if result.video_type == VideoType.ATV else None
+                return result.album.id, atv_id
+
+        return None, None
+
+    # ============================================================================
+    # SONG EXTRACTION HELPERS - Support methods for individual song extraction
+    # ============================================================================
+
+    def _validate_song_video_type(self, video_details: VideoDetails) -> VideoType:
+        """Validate and determine the video type for a single song.
+
+        Args:
+            video_details: Video details from get_song() response.
+
+        Returns:
+            VideoType enum value if supported.
+
+        Raises:
+            UnsupportedVideoTypeError: If video type is missing or unsupported.
+        """
+        if not video_details.music_video_type:
+            raise UnsupportedVideoTypeError(
+                f"Cannot determine video type for '{video_details.title}'. "
+                "This may not be a valid YouTube Music track."
+            )
+
+        try:
+            video_type = VideoType(video_details.music_video_type)
+        except ValueError:
+            raise UnsupportedVideoTypeError(
+                f"Unknown video type '{video_details.music_video_type}' for "
+                f"'{video_details.title}'. Only official music tracks are supported."
+            )
+
+        if video_type not in SUPPORTED_VIDEO_TYPES:
+            raise UnsupportedVideoTypeError(
+                f"Video type '{video_type.name}' is not supported for "
+                f"'{video_details.title}'. Only official music tracks (ATV/OMV) "
+                "can be downloaded. User-generated content (UGC) is not supported."
+            )
+
+        return video_type
+
+    def _build_song_metadata_with_album(
+        self,
+        video_details: VideoDetails,
+        album: Album,
+        video_type: VideoType,
+        search_atv_id: str | None,
+    ) -> TrackMetadata:
+        """Build enriched track metadata for a single song using album information.
+
+        Args:
+            video_details: Video details from get_song() response.
+            album: Album containing the track.
+            video_type: Source video type (ATV or OMV).
+            search_atv_id: ATV video ID from search (if any).
+
+        Returns:
+            Complete track metadata with album information.
+        """
+        # Try to find the track in the album by title matching
+        album_track = self._find_track_in_album_by_title(album, video_details.title)
+
+        # Use album track info if found
+        track_title = album_track.title if album_track else video_details.title
+        track_artists = (
+            [a.name for a in album_track.artists]
+            if album_track
+            else [video_details.author]
+        )
+        track_number = album_track.track_number if album_track else None
+
+        # Resolve video IDs
+        album_video_id = album_track.video_id if album_track else None
+        if video_type == VideoType.ATV:
+            atv_id = video_details.video_id
+            omv_id = album_video_id if album_video_id != atv_id else None
+        else:
+            omv_id = album_video_id or video_details.video_id
+            atv_id = search_atv_id
+
+        return TrackMetadata(
+            omv_video_id=omv_id,
+            atv_video_id=atv_id,
+            title=track_title,
+            artists=track_artists,
+            album=album.title,
+            album_artists=[a.name for a in album.artists],
+            track_number=track_number,
+            total_tracks=len(album.tracks) if album.tracks else None,
+            year=album.year,
+            cover_url=get_square_thumbnail(album.thumbnails),
+            video_type=video_type,
+        )
+
+    def _find_track_in_album_by_title(
+        self, album: Album, title: str
+    ) -> AlbumTrack | None:
+        """Find a track in an album by title matching.
+
+        Uses exact case-insensitive match, then fuzzy match as fallback.
+
+        Args:
+            album: Album to search in.
+            title: Title to match against.
+
+        Returns:
+            Matching album track or None if not found.
+        """
+        target_title = title.lower().strip()
+
+        # Exact match first
+        for track in album.tracks:
+            if track.title.lower().strip() == target_title:
+                return track
+
+        # Fuzzy match fallback
+        return self._find_track_by_fuzzy_title(album, title)
+
+    def _create_song_fallback_metadata(
+        self,
+        video_details: VideoDetails,
+        video_type: VideoType,
+    ) -> TrackMetadata:
+        """Create basic metadata when album information is unavailable.
+
+        Args:
+            video_details: Video details from get_song() response.
+            video_type: The video type (ATV or OMV).
+
+        Returns:
+            Basic track metadata without album enrichment.
+        """
+        if video_type == VideoType.ATV:
+            omv_id = None
+            atv_id = video_details.video_id
+        else:
+            omv_id = video_details.video_id
+            atv_id = None
+
+        # Extract cover URL from thumbnails if available
+        cover_url = get_square_thumbnail(video_details.thumbnails)
+
+        return TrackMetadata(
+            omv_video_id=omv_id,
+            atv_video_id=atv_id,
+            title=video_details.title,
+            artists=[video_details.author],
+            album="",  # No album info available
+            album_artists=[video_details.author],
+            track_number=None,
+            total_tracks=None,
+            year=None,
+            cover_url=cover_url,
+            video_type=video_type,
+        )
 
     # ============================================================================
     # TRACK MATCHING - Four-tier strategy to match playlist tracks to album tracks

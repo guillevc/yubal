@@ -15,7 +15,7 @@ from yubal.exceptions import (
     YTMetaError,
 )
 from yubal.models.domain import SkipReason
-from yubal.models.ytmusic import Album, Playlist, SearchResult
+from yubal.models.ytmusic import Album, Playlist, SearchResult, SongDetails
 from yubal.utils.cookies import cookies_to_ytmusic_auth
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,10 @@ class YTMusicProtocol(Protocol):
 
     def get_album(self, album_id: str) -> Album:
         """Fetch an album by ID."""
+        ...
+
+    def get_song(self, video_id: str) -> SongDetails:
+        """Fetch song details by video ID."""
         ...
 
     def search_songs(self, query: str) -> list[SearchResult]:
@@ -234,6 +238,31 @@ class YTMusicClient:
             raise APIError(f"Search failed: {e}") from e
 
         return [SearchResult.model_validate(r) for r in data]
+
+    def get_song(self, video_id: str) -> SongDetails:
+        """Fetch song details by video ID.
+
+        Args:
+            video_id: YouTube Music video ID.
+
+        Returns:
+            Parsed SongDetails model.
+
+        Raises:
+            ValueError: If video_id is empty.
+            APIError: If API request fails.
+        """
+        if not video_id or not video_id.strip():
+            raise ValueError("video_id cannot be empty")
+
+        logger.debug("Fetching song: %s", video_id)
+        try:
+            data = self._ytm.get_song(video_id)
+        except Exception as e:
+            logger.exception("Failed to fetch song %s: %s", video_id, e)
+            raise APIError(f"Failed to fetch song: {e}") from e
+
+        return SongDetails.model_validate(data)
 
     def clear_album_cache(self) -> None:
         """Clear the album cache."""

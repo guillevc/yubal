@@ -1,9 +1,16 @@
 """Tests for utility functions."""
 
 import pytest
-from yubal.exceptions import PlaylistParseError
+from yubal.exceptions import PlaylistParseError, SongParseError
 from yubal.models.ytmusic import Artist, Thumbnail
-from yubal.utils import format_artists, get_square_thumbnail, parse_playlist_id
+from yubal.utils import (
+    URLType,
+    detect_url_type,
+    format_artists,
+    get_square_thumbnail,
+    parse_playlist_id,
+    parse_video_id,
+)
 
 
 class TestParsePlaylistId:
@@ -38,6 +45,60 @@ class TestParsePlaylistId:
         """Should raise PlaylistParseError when list param is empty."""
         with pytest.raises(PlaylistParseError, match="Could not extract"):
             parse_playlist_id("https://music.youtube.com/playlist?list=")
+
+
+class TestParseVideoId:
+    """Tests for parse_video_id function."""
+
+    def test_extracts_from_watch_url(self) -> None:
+        """Should extract video ID from a watch URL."""
+        url = "https://music.youtube.com/watch?v=dQw4w9WgXcQ"
+        assert parse_video_id(url) == "dQw4w9WgXcQ"
+
+    def test_extracts_from_url_with_extra_params(self) -> None:
+        """Should extract video ID when URL has extra parameters."""
+        url = "https://music.youtube.com/watch?v=abc123&list=PLxyz"
+        assert parse_video_id(url) == "abc123"
+
+    def test_extracts_from_url_with_special_chars(self) -> None:
+        """Should handle video IDs with underscores and hyphens."""
+        url = "https://music.youtube.com/watch?v=a_b-c123"
+        assert parse_video_id(url) == "a_b-c123"
+
+    def test_extracts_from_regular_youtube_url(self) -> None:
+        """Should extract from regular YouTube URLs."""
+        url = "https://www.youtube.com/watch?v=xyz789"
+        assert parse_video_id(url) == "xyz789"
+
+    def test_raises_for_playlist_url(self) -> None:
+        """Should raise SongParseError for playlist URLs."""
+        with pytest.raises(SongParseError, match="Could not extract"):
+            parse_video_id("https://music.youtube.com/playlist?list=PLxyz")
+
+    def test_raises_for_empty_url(self) -> None:
+        """Should raise SongParseError for empty URLs."""
+        with pytest.raises(SongParseError, match="Could not extract"):
+            parse_video_id("")
+
+
+class TestDetectUrlType:
+    """Tests for detect_url_type function."""
+
+    def test_detects_playlist_url(self) -> None:
+        """Should detect playlist URLs."""
+        assert detect_url_type("https://music.youtube.com/playlist?list=PLxyz") == URLType.PLAYLIST
+        assert detect_url_type("https://youtube.com/playlist?list=PLxyz") == URLType.PLAYLIST
+        assert detect_url_type("https://music.youtube.com/browse/VLPLxyz") == URLType.PLAYLIST
+
+    def test_detects_song_url(self) -> None:
+        """Should detect watch URLs as songs."""
+        assert detect_url_type("https://music.youtube.com/watch?v=abc123") == URLType.SONG
+        assert detect_url_type("https://youtube.com/watch?v=xyz789") == URLType.SONG
+        assert detect_url_type("https://www.youtube.com/watch?v=def456") == URLType.SONG
+
+    def test_defaults_to_playlist_for_unknown(self) -> None:
+        """Should default to playlist for unrecognized URLs."""
+        assert detect_url_type("https://music.youtube.com/browse/MPREb_abc") == URLType.PLAYLIST
 
 
 class TestFormatArtists:

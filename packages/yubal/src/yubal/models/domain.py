@@ -180,10 +180,11 @@ def aggregate_skip_reasons(
 
 
 class ContentKind(StrEnum):
-    """Type of music content (album vs playlist)."""
+    """Type of music content (album, playlist, or song)."""
 
     ALBUM = "album"
     PLAYLIST = "playlist"
+    SONG = "song"
 
 
 class TrackMetadata(BaseModel):
@@ -404,3 +405,20 @@ class PlaylistDownloadResult(BaseModel):
             failed=self.failed_count,
             skipped_by_reason=aggregate_skip_reasons(self.download_results),
         )
+
+
+class SongDownloadResult(BaseModel):
+    """Result of a single song download operation.
+
+    Returned by PlaylistDownloadService.download_song() after downloading
+    an individual song (not a playlist).
+
+    Attributes:
+        track: The track metadata that was downloaded.
+        download_result: The download result for the track.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    track: TrackMetadata
+    download_result: DownloadResult

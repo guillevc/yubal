@@ -13,17 +13,21 @@ _YOUTUBE_MUSIC_PATTERNS = [
     r"^https?://music\.youtube\.com/playlist\?list=[\w-]+",
     r"^https?://music\.youtube\.com/browse/[\w-]+",
     r"^https?://(?:www\.)?youtube\.com/playlist\?list=[\w-]+",
+    # Individual song URLs (watch URLs)
+    r"^https?://music\.youtube\.com/watch\?v=[\w-]+",
+    r"^https?://(?:www\.)?youtube\.com/watch\?v=[\w-]+",
 ]
 _YOUTUBE_MUSIC_REGEX = re.compile("|".join(_YOUTUBE_MUSIC_PATTERNS))
 
 
 def validate_youtube_music_url(url: str) -> str:
-    """Validate that the URL is a YouTube Music or YouTube playlist URL."""
+    """Validate that the URL is a YouTube Music or YouTube playlist/song URL."""
     url = url.strip()
     if not _YOUTUBE_MUSIC_REGEX.match(url):
         raise ValueError(
-            "Invalid URL. Expected a YouTube Music playlist URL "
-            "(e.g., https://music.youtube.com/playlist?list=...)"
+            "Invalid URL. Expected a YouTube Music playlist or song URL "
+            "(e.g., https://music.youtube.com/playlist?list=... or "
+            "https://music.youtube.com/watch?v=...)"
         )
     return url
 
@@ -35,8 +39,11 @@ class CreateJobRequest(BaseModel):
     """Request to create a new sync job."""
 
     url: YouTubeMusicUrl = Field(
-        description="YouTube Music playlist or album URL",
-        examples=["https://music.youtube.com/playlist?list=OLAK5uy_..."],
+        description="YouTube Music playlist, album, or song URL",
+        examples=[
+            "https://music.youtube.com/playlist?list=OLAK5uy_...",
+            "https://music.youtube.com/watch?v=dQw4w9WgXcQ",
+        ],
     )
     audio_format: AudioCodec | None = Field(
         default=None,

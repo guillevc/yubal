@@ -4,8 +4,9 @@ import logging
 
 import pytest
 from pydantic import ValidationError
+from yubal.exceptions import UnsupportedVideoTypeError
 from yubal.models.domain import VideoType
-from yubal.models.ytmusic import Album, Playlist, SearchResult
+from yubal.models.ytmusic import Album, Playlist, SearchResult, SongDetails
 from yubal.services import MetadataExtractorService
 
 from tests.conftest import MockYTMusicClient
@@ -1324,3 +1325,166 @@ class TestMetadataExtractorService:
         assert tracks[0].video_type == VideoType.ATV
         assert tracks[1].video_type == VideoType.OMV
         assert "Unsupported video type 'UGC'" in caplog.text
+
+
+class TestMetadataExtractorServiceSong:
+    """Tests for MetadataExtractorService.extract_song()."""
+
+    def test_extract_song_basic(
+        self,
+        mock_client: MockYTMusicClient,
+    ) -> None:
+        """Should extract metadata for a single song."""
+        service = MetadataExtractorService(mock_client)
+        track = service.extract_song("song123")
+
+        assert track.title == "Test Song"
+        assert mock_client.get_song_calls == ["song123"]
+
+    def test_extract_song_with_album_enrichment(
+        self,
+        sample_song_details: SongDetails,
+        sample_search_result: SearchResult,
+        sample_album: Album,
+    ) -> None:
+        """Should enrich song with album information from search."""
+        mock = MockYTMusicClient(
+            playlist=None,
+            album=sample_album,
+            search_results=[sample_search_result],
+            song_details=sample_song_details,
+        )
+
+        service = MetadataExtractorService(mock)
+        track = service.extract_song("song123")
+
+        # Should have searched for album
+        assert len(mock.search_songs_calls) == 1
+        assert len(mock.get_album_calls) == 1
+
+        # Should have album metadata
+        assert track.album == "Test Album"
+        assert track.year == "2024"
+
+    def test_extract_song_fallback_without_album(
+        self,
+        sample_song_details: SongDetails,
+    ) -> None:
+        """Should create fallback metadata when album not found."""
+        mock = MockYTMusicClient(
+            playlist=None,
+            album=None,
+            search_results=[],  # No search results
+            song_details=sample_song_details,
+        )
+
+        service = MetadataExtractorService(mock)
+        track = service.extract_song("song123")
+
+        # Should still have basic metadata
+        assert track.title == "Test Song"
+        assert track.artists == ["Test Artist"]
+        assert track.album == ""  # No album found
+        assert track.track_number is None
+
+    def test_extract_song_rejects_ugc(self) -> None:
+        """Should raise UnsupportedVideoTypeError for UGC videos."""
+        ugc_song = SongDetails.model_validate(
+            {
+                "videoDetails": {
+                    "videoId": "ugc123",
+                    "title": "User Upload",
+                    "author": "Some User",
+                    "musicVideoType": "MUSIC_VIDEO_TYPE_UGC",
+                }
+            }
+        )
+
+        mock = MockYTMusicClient(
+            playlist=None,
+            album=None,
+            search_results=[],
+            song_details=ugc_song,
+        )
+
+        service = MetadataExtractorService(mock)
+
+        with pytest.raises(UnsupportedVideoTypeError, match="UGC"):
+            service.extract_song("ugc123")
+
+    def test_extract_song_rejects_missing_video_type(self) -> None:
+        """Should raise UnsupportedVideoTypeError when video type is missing."""
+        song_no_type = SongDetails.model_validate(
+            {
+                "videoDetails": {
+                    "videoId": "v123",
+                    "title": "No Type",
+                    "author": "Artist",
+                    # No musicVideoType
+                }
+            }
+        )
+
+        mock = MockYTMusicClient(
+            playlist=None,
+            album=None,
+            search_results=[],
+            song_details=song_no_type,
+        )
+
+        service = MetadataExtractorService(mock)
+
+        with pytest.raises(UnsupportedVideoTypeError, match="Cannot determine"):
+            service.extract_song("v123")
+
+    def test_extract_song_accepts_omv(self) -> None:
+        """Should accept OMV (Official Music Video) type."""
+        omv_song = SongDetails.model_validate(
+            {
+                "videoDetails": {
+                    "videoId": "omv123",
+                    "title": "Music Video",
+                    "author": "Artist",
+                    "musicVideoType": "MUSIC_VIDEO_TYPE_OMV",
+                }
+            }
+        )
+
+        mock = MockYTMusicClient(
+            playlist=None,
+            album=None,
+            search_results=[],
+            song_details=omv_song,
+        )
+
+        service = MetadataExtractorService(mock)
+        track = service.extract_song("omv123")
+
+        assert track.video_type == VideoType.OMV
+        assert track.omv_video_id == "omv123"
+
+    def test_extract_song_accepts_atv(self) -> None:
+        """Should accept ATV (Audio Track Video) type."""
+        atv_song = SongDetails.model_validate(
+            {
+                "videoDetails": {
+                    "videoId": "atv123",
+                    "title": "Audio Track",
+                    "author": "Artist",
+                    "musicVideoType": "MUSIC_VIDEO_TYPE_ATV",
+                }
+            }
+        )
+
+        mock = MockYTMusicClient(
+            playlist=None,
+            album=None,
+            search_results=[],
+            song_details=atv_song,
+        )
+
+        service = MetadataExtractorService(mock)
+        track = service.extract_song("atv123")
+
+        assert track.video_type == VideoType.ATV
+        assert track.atv_video_id == "atv123"

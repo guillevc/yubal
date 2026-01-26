@@ -15,7 +15,9 @@ from yubal import (
     PlaylistDownloadConfig,
     PlaylistProgress,
     TrackMetadata,
+    URLType,
     create_playlist_downloader,
+    detect_url_type,
 )
 from yubal.models.domain import ContentKind, PlaylistInfo
 
@@ -200,7 +202,14 @@ class SyncService:
 
             emit(ProgressStep.FETCHING_INFO, "Starting...", 0.0)
 
-            # Iterate through all phases
+            # Check if this is a single song URL
+            url_type = detect_url_type(url)
+            if url_type == URLType.SONG:
+                return self._execute_song_download(
+                    service, url, cancel_token, emit
+                )
+
+            # Iterate through all phases for playlist/album
             for progress in service.download_playlist(url, cancel_token):
                 step = _map_phase(progress.phase)
 
@@ -313,3 +322,83 @@ class SyncService:
                 status_msg = result.status.value
             return f"[{dp.current}/{dp.total}] {result.track.title}: {status_msg}"
         return f"Downloading {progress.current}/{progress.total}..."
+
+    def _execute_song_download(
+        self,
+        service: Any,
+        url: str,
+        cancel_token: CancelToken,
+        emit: Callable[[ProgressStep, str, float | None, dict[str, Any] | None], None],
+    ) -> SyncResult:
+        """Execute download for a single song URL.
+
+        Simplified pipeline without M3U generation.
+
+        Args:
+            service: The playlist download service instance.
+            url: YouTube Music watch URL.
+            cancel_token: Token for cancellation.
+            emit: Progress callback function.
+
+        Returns:
+            SyncResult with success status and details.
+        """
+        emit(ProgressStep.FETCHING_INFO, "Fetching song info...", 5.0)
+
+        # Download the song
+        song_result = service.download_song(url, cancel_token)
+        track = song_result.track
+        dl_result = song_result.download_result
+
+        # Build album info for UI display
+        album_info = AlbumInfo(
+            title=track.album or track.title,
+            artist=track.artist,
+            year=int(track.year) if track.year else None,
+            track_count=1,
+            playlist_id=dl_result.video_id_used or "",
+            url=url,
+            thumbnail_url=track.cover_url,
+            audio_codec=self._audio_format.upper(),
+            audio_bitrate=dl_result.bitrate,
+            kind=ContentKind.SONG.value,
+        )
+
+        emit(
+            ProgressStep.FETCHING_INFO,
+            f"Found: {track.title} by {track.artist}",
+            10.0,
+            {"album_info": album_info.model_dump()},
+        )
+
+        # Report download result
+        if dl_result.status == DownloadStatus.SUCCESS:
+            emit(ProgressStep.DOWNLOADING, f"Downloaded: {track.title}", 90.0)
+            destination = str(dl_result.output_path.parent) if dl_result.output_path else None
+            emit(ProgressStep.COMPLETED, f"Song download complete: {destination}", 100.0)
+            return SyncResult(
+                success=True,
+                album_info=album_info,
+                download_stats=PhaseStats(success=1),
+                destination=destination,
+            )
+        elif dl_result.status == DownloadStatus.SKIPPED:
+            reason = dl_result.skip_reason.value if dl_result.skip_reason else "unknown"
+            emit(ProgressStep.DOWNLOADING, f"Skipped: {track.title} ({reason})", 90.0)
+            destination = str(dl_result.output_path.parent) if dl_result.output_path else None
+            emit(ProgressStep.COMPLETED, "Song already exists", 100.0)
+            return SyncResult(
+                success=True,
+                album_info=album_info,
+                download_stats=PhaseStats(skipped_by_reason={dl_result.skip_reason: 1} if dl_result.skip_reason else {}),
+                destination=destination,
+            )
+        else:
+            error_msg = dl_result.error or "Download failed"
+            emit(ProgressStep.FAILED, error_msg)
+            return SyncResult(
+                success=False,
+                album_info=album_info,
+                download_stats=PhaseStats(failed=1),
+                error=error_msg,
+            )
