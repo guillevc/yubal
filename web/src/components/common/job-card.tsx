@@ -3,6 +3,7 @@ import {
   CheckCircle,
   CircleAlert,
   Clock,
+  ExternalLink,
   Loader2,
   Trash2,
   X,
@@ -229,6 +230,28 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
             <p className="text-foreground-500 truncate text-xs">{job.url}</p>
           )}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{
+            opacity: isHovered ? 1 : 0,
+            scale: isHovered ? 1 : 0.8,
+          }}
+          transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        >
+          <Button
+            as="a"
+            href={job.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="light"
+            size="sm"
+            isIconOnly
+            className="text-foreground-500 hover:text-primary h-7 w-7 shrink-0"
+          >
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+        </motion.div>
 
         {isRunning && onCancel && (
           <Button
