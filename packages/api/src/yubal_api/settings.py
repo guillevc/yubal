@@ -70,6 +70,17 @@ class Settings(BaseSettings):
     # CORS settings
     cors_origins: list[str] = Field(default=["*"], description="Allowed CORS origins")
 
+    # Scheduler settings
+    sync_enabled: bool = Field(
+        default=True, description="Enable playlist sync scheduler"
+    )
+    sync_interval_minutes: int = Field(
+        default=60,
+        ge=5,
+        le=10080,
+        description="Sync interval in minutes (5 min to 1 week)",
+    )
+
     # Timezone
     tz: Timezone = Field(default="UTC", description="Timezone for timestamps")
 
