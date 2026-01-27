@@ -17,17 +17,24 @@ export function SyncPage() {
   };
 
   return (
-    <BlurFade delay={0.05} direction="up">
-      <section className="mb-6">
-        <SyncPanel
-          playlists={playlists}
-          onAddPlaylist={addPlaylist}
-          onToggleEnabled={handleToggleEnabled}
-          onSync={syncPlaylist}
-          onSyncAll={syncAll}
-          onDelete={deletePlaylist}
-        />
-      </section>
-    </BlurFade>
+    <>
+      {/* Page Title */}
+      <BlurFade delay={0.025} direction="up">
+        <h1 className="text-foreground mb-6 text-2xl font-bold">Playlists</h1>
+      </BlurFade>
+
+      <BlurFade delay={0.05} direction="up">
+        <section className="mb-6">
+          <SyncPanel
+            playlists={playlists}
+            onAddPlaylist={addPlaylist}
+            onToggleEnabled={handleToggleEnabled}
+            onSync={syncPlaylist}
+            onSyncAll={syncAll}
+            onDelete={deletePlaylist}
+          />
+        </section>
+      </BlurFade>
+    </>
   );
 }

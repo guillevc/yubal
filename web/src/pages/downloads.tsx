@@ -30,6 +30,11 @@ export function DownloadsPage() {
 
   return (
     <>
+      {/* Page Title */}
+      <BlurFade delay={0.025} direction="up">
+        <h1 className="text-foreground mb-6 text-2xl font-bold">Downloads</h1>
+      </BlurFade>
+
       {/* URL Input Section */}
       <BlurFade delay={0.05} direction="up">
         <section className="mb-6 flex gap-2">

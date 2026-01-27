@@ -1,3 +1,5 @@
+/* eslint-disable react-refresh/only-export-components */
+
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import {
   createRootRoute,

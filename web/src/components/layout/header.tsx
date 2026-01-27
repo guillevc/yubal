@@ -53,8 +53,8 @@ export function Header() {
 
       <NavbarBrand className="mr-4">
         <Link href="/" className="flex items-center">
-          <Disc3 className="text-primary h-8 w-8" />
-          <p className="text-foreground ml-2 text-xl font-extrabold">yubal</p>
+          <Disc3 className="text-primary h-7 w-7" />
+          <p className="text-foreground ml-2 text-xl font-bold">yubal</p>
         </Link>
       </NavbarBrand>
 
@@ -70,7 +70,7 @@ export function Header() {
               isBlock
               href={item.href}
               color="foreground"
-              className="text-foreground-400 group-data-[active=true]:text-foreground px-3 py-2 font-normal"
+              className="text-foreground-400 text-medium group-data-[active=true]:text-foreground px-3 py-2 font-medium"
             >
               {item.label}
             </Link>
