@@ -5,6 +5,8 @@ from pathlib import Path
 from sqlalchemy import Engine
 from sqlmodel import SQLModel, create_engine
 
+DB_FILE = "yubal.db"
+
 
 def create_db_engine(db_path: Path) -> Engine:
     """Create SQLite engine.

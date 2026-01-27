@@ -19,7 +19,7 @@ from yubal import cleanup_part_files
 from yubal_api.api.exceptions import register_exception_handlers
 from yubal_api.api.routes import cookies, health, jobs, logs, sync
 from yubal_api.api.services_container import Services
-from yubal_api.db import SyncRepository, create_db_engine, init_db
+from yubal_api.db import DB_FILE, SyncRepository, create_db_engine, init_db
 from yubal_api.services.job_executor import JobExecutor
 from yubal_api.services.job_store import JobStore
 from yubal_api.services.log_buffer import (
@@ -153,7 +153,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Starting application...")
 
     # Initialize database
-    db_path = settings.config / "sync.db"
+    db_path = settings.config / DB_FILE
     engine = create_db_engine(db_path)
     init_db(engine)
     logger.info("Database initialized at %s", db_path)
