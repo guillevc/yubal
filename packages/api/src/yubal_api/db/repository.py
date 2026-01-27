@@ -1,157 +1,90 @@
-"""Repository for sync-related database operations."""
+"""Database repository for subscriptions."""
 
-from datetime import datetime
+from uuid import UUID
 
-from sqlalchemy import Engine
-from sqlmodel import Session, col, select
+from sqlmodel import Session, col, create_engine, select
 
-from yubal_api.db.models import SyncConfig, SyncedPlaylist
+from yubal_api.db.models import Subscription, SubscriptionType
 
 
-class SyncRepository:
-    """Repository for sync-related database operations."""
+class SubscriptionRepository:
+    """Repository for subscription database operations."""
 
-    def __init__(self, engine: Engine) -> None:
+    def __init__(self, engine: create_engine) -> None:
+        """Initialize repository with database engine."""
         self._engine = engine
 
-    # --- Playlists ---
-
-    def add_playlist(self, playlist: SyncedPlaylist) -> SyncedPlaylist:
-        """Add a new synced playlist.
-
-        Args:
-            playlist: The playlist to add.
-
-        Returns:
-            The added playlist with any database-generated fields.
-        """
+    def list(
+        self,
+        *,
+        enabled: bool | None = None,
+        type: SubscriptionType | None = None,
+    ) -> list[Subscription]:
+        """List subscriptions with optional filters."""
         with Session(self._engine) as session:
-            session.add(playlist)
+            stmt = select(Subscription).order_by(col(Subscription.created_at).desc())
+            if enabled is not None:
+                stmt = stmt.where(Subscription.enabled == enabled)
+            if type is not None:
+                stmt = stmt.where(Subscription.type == type)
+            return list(session.exec(stmt).all())
+
+    def get(self, id: UUID) -> Subscription | None:
+        """Get subscription by ID."""
+        with Session(self._engine) as session:
+            return session.get(Subscription, id)
+
+    def get_by_url(self, url: str) -> Subscription | None:
+        """Get subscription by URL."""
+        with Session(self._engine) as session:
+            stmt = select(Subscription).where(Subscription.url == url)
+            return session.exec(stmt).first()
+
+    def create(self, subscription: Subscription) -> Subscription:
+        """Create a new subscription."""
+        with Session(self._engine) as session:
+            session.add(subscription)
             session.commit()
-            session.refresh(playlist)
-            return playlist
+            session.refresh(subscription)
+            return subscription
 
-    def get_playlist(self, playlist_id: str) -> SyncedPlaylist | None:
-        """Get a playlist by ID.
-
-        Args:
-            playlist_id: The playlist ID.
-
-        Returns:
-            The playlist if found, None otherwise.
-        """
+    def update(self, subscription: Subscription, **kwargs: object) -> Subscription:
+        """Update subscription fields."""
         with Session(self._engine) as session:
-            return session.get(SyncedPlaylist, playlist_id)
+            # Re-fetch within this session
+            db_subscription = session.get(Subscription, subscription.id)
+            if db_subscription is None:
+                msg = f"Subscription {subscription.id} not found"
+                raise ValueError(msg)
+            for key, value in kwargs.items():
+                setattr(db_subscription, key, value)
+            session.commit()
+            session.refresh(db_subscription)
+            return db_subscription
 
-    def get_playlist_by_url(self, url: str) -> SyncedPlaylist | None:
-        """Get a playlist by URL.
-
-        Args:
-            url: The playlist URL.
-
-        Returns:
-            The playlist if found, None otherwise.
-        """
+    def delete(self, id: UUID) -> Subscription | None:
+        """Delete subscription by ID. Returns deleted subscription or None."""
         with Session(self._engine) as session:
-            statement = select(SyncedPlaylist).where(SyncedPlaylist.url == url)
-            return session.exec(statement).first()
-
-    def list_playlists(self) -> list[SyncedPlaylist]:
-        """List all synced playlists.
-
-        Returns:
-            List of all playlists ordered by creation time.
-        """
-        with Session(self._engine) as session:
-            statement = select(SyncedPlaylist).order_by(
-                col(SyncedPlaylist.created_at).desc()
-            )
-            return list(session.exec(statement).all())
-
-    def list_enabled_playlists(self) -> list[SyncedPlaylist]:
-        """List all enabled synced playlists.
-
-        Returns:
-            List of enabled playlists.
-        """
-        with Session(self._engine) as session:
-            statement = select(SyncedPlaylist).where(SyncedPlaylist.enabled == True)  # noqa: E712
-            return list(session.exec(statement).all())
-
-    def update_playlist(
-        self, playlist_id: str, **updates: str | bool | datetime | None
-    ) -> SyncedPlaylist | None:
-        """Update a playlist's fields.
-
-        Args:
-            playlist_id: The playlist ID.
-            **updates: Fields to update.
-
-        Returns:
-            The updated playlist if found, None otherwise.
-        """
-        with Session(self._engine) as session:
-            playlist = session.get(SyncedPlaylist, playlist_id)
-            if not playlist:
+            subscription = session.get(Subscription, id)
+            if subscription is None:
                 return None
-            for key, value in updates.items():
-                setattr(playlist, key, value)
-            session.add(playlist)
+            session.delete(subscription)
             session.commit()
-            session.refresh(playlist)
-            return playlist
+            return subscription
 
-    def delete_playlist(self, playlist_id: str) -> bool:
-        """Delete a playlist.
+    def count(
+        self,
+        *,
+        enabled: bool | None = None,
+        type: SubscriptionType | None = None,
+    ) -> int:
+        """Count subscriptions with optional filters."""
+        from sqlmodel import func
 
-        Args:
-            playlist_id: The playlist ID.
-
-        Returns:
-            True if deleted, False if not found.
-        """
         with Session(self._engine) as session:
-            playlist = session.get(SyncedPlaylist, playlist_id)
-            if not playlist:
-                return False
-            session.delete(playlist)
-            session.commit()
-            return True
-
-    # --- Config ---
-
-    def get_config(self) -> SyncConfig:
-        """Get the sync configuration, creating default if needed.
-
-        Returns:
-            The sync configuration.
-        """
-        with Session(self._engine) as session:
-            config = session.get(SyncConfig, 1)
-            if not config:
-                config = SyncConfig(id=1)
-                session.add(config)
-                session.commit()
-                session.refresh(config)
-            return config
-
-    def update_config(self, **updates: bool | int) -> SyncConfig:
-        """Update the sync configuration.
-
-        Args:
-            **updates: Fields to update (enabled, interval_minutes).
-
-        Returns:
-            The updated configuration.
-        """
-        with Session(self._engine) as session:
-            config = session.get(SyncConfig, 1)
-            if not config:
-                config = SyncConfig(id=1)
-            for key, value in updates.items():
-                if key != "id":
-                    setattr(config, key, value)
-            session.add(config)
-            session.commit()
-            session.refresh(config)
-            return config
+            stmt = select(func.count()).select_from(Subscription)
+            if enabled is not None:
+                stmt = stmt.where(Subscription.enabled == enabled)
+            if type is not None:
+                stmt = stmt.where(Subscription.type == type)
+            return session.exec(stmt).one()
