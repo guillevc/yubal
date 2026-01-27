@@ -5,6 +5,9 @@ import {
   NavbarBrand,
   NavbarContent,
   NavbarItem,
+  NavbarMenu,
+  NavbarMenuItem,
+  NavbarMenuToggle,
 } from "@heroui/react";
 import { useRouterState } from "@tanstack/react-router";
 import { Disc3, Star } from "lucide-react";
@@ -12,6 +15,11 @@ import { useState } from "react";
 import { useCookies } from "../../hooks/use-cookies";
 import { CookieDropdown } from "../common/cookie-dropdown";
 import { AnimatedThemeToggler } from "../magicui/animated-theme-toggler";
+
+const navItems = [
+  { label: "Downloads", href: "/" },
+  { label: "Playlists", href: "/sync" },
+];
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -31,40 +39,48 @@ export function Header() {
     <Navbar
       isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
-      maxWidth="lg"
       classNames={{
+        wrapper: "max-w-4xl",
         brand: "grow-0",
       }}
     >
-      <NavbarBrand className="mr-4">
-        <Disc3 className="text-primary h-8 w-8" />
-        <p className="ml-2 hidden text-xl font-extrabold sm:block">yubal</p>
-      </NavbarBrand>
-      <NavbarContent justify="start" className="gap-2">
-        <NavbarItem className="group" isActive={currentPath === "/"}>
-          <Link
-            isBlock
-            href="/"
-            color="foreground"
-            className="px-3 py-2 font-normal text-foreground-400 group-data-[active=true]:text-foreground"
-          >
-            Downloads
-          </Link>
-        </NavbarItem>
-        <NavbarItem className="group" isActive={currentPath === "/sync"}>
-          <Link
-            isBlock
-            href="/sync"
-            color="foreground"
-            className="px-3 py-2 font-normal text-foreground-400 group-data-[active=true]:text-foreground"
-          >
-            Playlists
-          </Link>
-        </NavbarItem>
+      {/* Mobile menu toggle + Brand */}
+      <NavbarContent className="sm:hidden" justify="start">
+        <NavbarMenuToggle
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+        />
       </NavbarContent>
 
+      <NavbarBrand className="mr-4">
+        <Link href="/" className="flex items-center">
+          <Disc3 className="text-primary h-8 w-8" />
+          <p className="text-foreground ml-2 text-xl font-extrabold">yubal</p>
+        </Link>
+      </NavbarBrand>
+
+      {/* Desktop navigation */}
+      <NavbarContent justify="start" className="hidden gap-2 sm:flex">
+        {navItems.map((item) => (
+          <NavbarItem
+            key={item.href}
+            className="group"
+            isActive={currentPath === item.href}
+          >
+            <Link
+              isBlock
+              href={item.href}
+              color="foreground"
+              className="text-foreground-400 group-data-[active=true]:text-foreground px-3 py-2 font-normal"
+            >
+              {item.label}
+            </Link>
+          </NavbarItem>
+        ))}
+      </NavbarContent>
+
+      {/* Actions */}
       <NavbarContent className="items-center gap-2" justify="end">
-        <NavbarItem>
+        <NavbarItem className="hidden sm:flex">
           <Button
             as="a"
             href="https://github.com/guillevc/yubal"
@@ -81,7 +97,7 @@ export function Header() {
             Star on GitHub
           </Button>
         </NavbarItem>
-        <NavbarItem>
+        <NavbarItem className="hidden sm:flex">
           <CookieDropdown
             variant="desktop"
             cookiesConfigured={cookiesConfigured}
@@ -95,6 +111,35 @@ export function Header() {
           <AnimatedThemeToggler />
         </NavbarItem>
       </NavbarContent>
+
+      {/* Mobile menu */}
+      <NavbarMenu>
+        {navItems.map((item) => (
+          <NavbarMenuItem key={item.href} isActive={currentPath === item.href}>
+            <Link
+              href={item.href}
+              color={currentPath === item.href ? "primary" : "foreground"}
+              className="w-full"
+              size="lg"
+              onPress={() => setIsMenuOpen(false)}
+            >
+              {item.label}
+            </Link>
+          </NavbarMenuItem>
+        ))}
+        <NavbarMenuItem>
+          <Link
+            href="https://github.com/guillevc/yubal"
+            isExternal
+            showAnchorIcon
+            color="foreground"
+            className="w-full"
+            size="lg"
+          >
+            Star on GitHub
+          </Link>
+        </NavbarMenuItem>
+      </NavbarMenu>
 
       {/* Hidden file input for cookie upload */}
       <input
