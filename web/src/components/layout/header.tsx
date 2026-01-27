@@ -18,7 +18,7 @@ import { AnimatedThemeToggler } from "../magicui/animated-theme-toggler";
 
 const navItems = [
   { label: "Downloads", href: "/" },
-  { label: "Playlists", href: "/sync" },
+  { label: "My playlists", href: "/sync" },
 ];
 
 export function Header() {
