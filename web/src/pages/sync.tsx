@@ -20,7 +20,9 @@ export function SyncPage() {
     <>
       {/* Page Title */}
       <BlurFade delay={0.025} direction="up">
-        <h1 className="text-foreground mb-6 text-2xl font-bold">My playlists</h1>
+        <h1 className="text-foreground mb-6 text-2xl font-bold">
+          My playlists
+        </h1>
       </BlurFade>
 
       <BlurFade delay={0.05} direction="up">
