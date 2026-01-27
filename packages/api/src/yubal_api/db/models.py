@@ -1,30 +1,28 @@
-"""SQLModel table definitions for sync feature."""
+"""Database models."""
 
-from datetime import datetime
+from datetime import UTC, datetime
+from enum import StrEnum
+from uuid import UUID, uuid4
 
 from sqlmodel import Field, SQLModel
 
 
-class SyncedPlaylist(SQLModel, table=True):
-    """A playlist registered for automatic syncing."""
+class SubscriptionType(StrEnum):
+    """Type of content subscription."""
 
-    __tablename__ = "synced_playlist"
+    PLAYLIST = "playlist"
+    # ARTIST = "artist"  # future
 
-    id: str = Field(primary_key=True)
+
+class Subscription(SQLModel, table=True):
+    """A subscription to sync content from YouTube Music."""
+
+    __tablename__ = "subscriptions"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    type: SubscriptionType = Field(index=True)
     url: str = Field(unique=True, index=True)
-    name: str
-    thumbnail_url: str | None = None
+    name: str = Field(max_length=200)
     enabled: bool = Field(default=True)
-    created_at: datetime
-    last_job_id: str | None = None
-    last_sync_at: datetime | None = None
-
-
-class SyncConfig(SQLModel, table=True):
-    """Global sync configuration (singleton row)."""
-
-    __tablename__ = "sync_config"
-
-    id: int = Field(default=1, primary_key=True)
-    enabled: bool = Field(default=True)
-    interval_minutes: int = Field(default=60)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    last_synced_at: datetime | None = Field(default=None)
