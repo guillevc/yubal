@@ -25,9 +25,9 @@ function RootLayout() {
       useHref={(to) => router.buildLocation({ to }).href}
     >
       <ToastProvider />
-      <div>
+      <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="m-auto max-w-5xl px-4 py-8">
+        <main className="m-auto w-full max-w-4xl flex-1 px-4 py-8">
           <Outlet />
         </main>
         <BlurFade delay={0.15} direction="up">
