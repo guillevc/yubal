@@ -1,14 +1,14 @@
-"""Database module for sync feature."""
+"""Database module for subscriptions."""
 
 from yubal_api.db.engine import DB_FILE, create_db_engine, init_db
-from yubal_api.db.models import SyncConfig, SyncedPlaylist
-from yubal_api.db.repository import SyncRepository
+from yubal_api.db.models import Subscription, SubscriptionType
+from yubal_api.db.repository import SubscriptionRepository
 
 __all__ = [
     "DB_FILE",
-    "SyncConfig",
-    "SyncRepository",
-    "SyncedPlaylist",
+    "Subscription",
+    "SubscriptionRepository",
+    "SubscriptionType",
     "create_db_engine",
     "init_db",
 ]
