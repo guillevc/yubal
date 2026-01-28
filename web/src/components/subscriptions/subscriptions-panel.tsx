@@ -2,40 +2,40 @@ import { Button, Input, Tooltip } from "@heroui/react";
 import { Inbox, Link, Plus, RefreshCw, Type } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import type { SyncedPlaylist } from "../../api/subscriptions";
+import type { Subscription } from "../../api/subscriptions";
 import { isValidUrl } from "../../lib/url";
 import { EmptyState } from "../common/empty-state";
 import { Panel, PanelContent, PanelHeader } from "../common/panel";
-import { SyncedPlaylistCard } from "./synced-playlist-card";
+import { SubscriptionCard } from "./subscription-card";
 
-interface SyncPanelProps {
-  playlists: SyncedPlaylist[];
-  onAddPlaylist: (url: string, name: string) => Promise<boolean>;
+interface SubscriptionsPanelProps {
+  subscriptions: Subscription[];
+  onAddSubscription: (url: string, name: string) => Promise<boolean>;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onSync: (id: string) => void;
   onSyncAll: () => void;
   onDelete: (id: string) => void;
 }
 
-export function SyncPanel({
-  playlists,
-  onAddPlaylist,
+export function SubscriptionsPanel({
+  subscriptions,
+  onAddSubscription,
   onToggleEnabled,
   onSync,
   onSyncAll,
   onDelete,
-}: SyncPanelProps) {
+}: SubscriptionsPanelProps) {
   const [url, setUrl] = useState("");
   const [name, setName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
   const canAdd = isValidUrl(url) && name.trim().length > 0;
-  const enabledCount = playlists.filter((p) => p.enabled).length;
+  const enabledCount = subscriptions.filter((s) => s.enabled).length;
 
   const handleAdd = async () => {
     if (!canAdd) return;
     setIsAdding(true);
-    const success = await onAddPlaylist(url.trim(), name.trim());
+    const success = await onAddSubscription(url.trim(), name.trim());
     if (success) {
       setUrl("");
       setName("");
@@ -48,15 +48,15 @@ export function SyncPanel({
       <PanelHeader
         leadingIcon={<RefreshCw size={18} />}
         badge={
-          playlists.length > 0 && (
+          subscriptions.length > 0 && (
             <span className="text-foreground-400 font-mono text-xs">
-              ({enabledCount}/{playlists.length})
+              ({enabledCount}/{subscriptions.length})
             </span>
           )
         }
         trailingIcon={
-          playlists.length > 0 && (
-            <Tooltip content="Sync all enabled playlists">
+          subscriptions.length > 0 && (
+            <Tooltip content="Sync all enabled subscriptions">
               <Button
                 variant="light"
                 size="sm"
@@ -73,7 +73,7 @@ export function SyncPanel({
         Synced Playlists
       </PanelHeader>
 
-      {/* Add playlist form */}
+      {/* Add subscription form */}
       <div className="border-divider flex gap-2 border-b px-3 pb-3">
         <Input
           placeholder="Playlist URL"
@@ -111,20 +111,20 @@ export function SyncPanel({
       </div>
 
       <PanelContent height="h-[340px]" className="space-y-2">
-        {playlists.length === 0 ? (
+        {subscriptions.length === 0 ? (
           <EmptyState icon={Inbox} title="No playlists registered" />
         ) : (
           <AnimatePresence initial={false}>
-            {playlists.map((playlist) => (
+            {subscriptions.map((subscription) => (
               <motion.div
-                key={playlist.id}
+                key={subscription.id}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, height: 0, marginBottom: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                <SyncedPlaylistCard
-                  playlist={playlist}
+                <SubscriptionCard
+                  subscription={subscription}
                   onToggleEnabled={onToggleEnabled}
                   onSync={onSync}
                   onDelete={onDelete}

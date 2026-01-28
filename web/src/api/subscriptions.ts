@@ -1,11 +1,10 @@
 import { api } from "./client";
 import type { components } from "./schema";
 
-// Type aliases for UI (uses "playlist" terminology) → API (uses "subscription")
-export type SyncedPlaylist = components["schemas"]["SubscriptionResponse"];
+export type Subscription = components["schemas"]["SubscriptionResponse"];
 export type SchedulerStatus = components["schemas"]["SchedulerStatus"];
 
-export type AddPlaylistResult =
+export type AddSubscriptionResult =
   | { success: true; id: string }
   | { success: false; error: string };
 
@@ -13,25 +12,25 @@ export type SyncResult =
   | { success: true; jobIds: string[] }
   | { success: false; error: string };
 
-// --- Playlists (Subscriptions) ---
+// --- Subscriptions ---
 
-export async function listPlaylists(): Promise<SyncedPlaylist[]> {
+export async function listSubscriptions(): Promise<Subscription[]> {
   const { data, error } = await api.GET("/subscriptions");
   if (error) return [];
   return data.items;
 }
 
-export async function addPlaylist(
+export async function addSubscription(
   url: string,
   name: string,
-): Promise<AddPlaylistResult> {
+): Promise<AddSubscriptionResult> {
   const { data, error, response } = await api.POST("/subscriptions", {
     body: { url, name, type: "playlist", enabled: true },
   });
 
   if (error) {
     if (response.status === 409) {
-      return { success: false, error: "Playlist already exists" };
+      return { success: false, error: "Subscription already exists" };
     }
     if (response.status === 422) {
       const validation = error as unknown as {
@@ -42,13 +41,15 @@ export async function addPlaylist(
         error: validation.detail?.[0]?.msg ?? "Invalid input",
       };
     }
-    return { success: false, error: "Failed to add playlist" };
+    return { success: false, error: "Failed to add subscription" };
   }
 
   return { success: true, id: data.id };
 }
 
-export async function getPlaylist(id: string): Promise<SyncedPlaylist | null> {
+export async function getSubscription(
+  id: string,
+): Promise<Subscription | null> {
   const { data, error } = await api.GET("/subscriptions/{subscription_id}", {
     params: { path: { subscription_id: id } },
   });
@@ -56,10 +57,10 @@ export async function getPlaylist(id: string): Promise<SyncedPlaylist | null> {
   return data;
 }
 
-export async function updatePlaylist(
+export async function updateSubscription(
   id: string,
   updates: { name?: string; enabled?: boolean },
-): Promise<SyncedPlaylist | null> {
+): Promise<Subscription | null> {
   const { data, error } = await api.PATCH("/subscriptions/{subscription_id}", {
     params: { path: { subscription_id: id } },
     body: updates,
@@ -68,7 +69,7 @@ export async function updatePlaylist(
   return data;
 }
 
-export async function deletePlaylist(id: string): Promise<boolean> {
+export async function deleteSubscription(id: string): Promise<boolean> {
   const { error } = await api.DELETE("/subscriptions/{subscription_id}", {
     params: { path: { subscription_id: id } },
   });
@@ -77,7 +78,7 @@ export async function deletePlaylist(id: string): Promise<boolean> {
 
 // --- Sync Jobs ---
 
-export async function syncPlaylist(id: string): Promise<SyncResult> {
+export async function syncSubscription(id: string): Promise<SyncResult> {
   const { data, error, response } = await api.POST(
     "/subscriptions/{subscription_id}/sync",
     {
@@ -87,7 +88,7 @@ export async function syncPlaylist(id: string): Promise<SyncResult> {
 
   if (error) {
     if (response.status === 404) {
-      return { success: false, error: "Playlist not found" };
+      return { success: false, error: "Subscription not found" };
     }
     if (response.status === 409) {
       return { success: false, error: "Job queue is full" };

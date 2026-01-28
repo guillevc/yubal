@@ -16,7 +16,7 @@ import { Footer } from "./components/layout/footer";
 import { Header } from "./components/layout/header";
 import { BlurFade } from "./components/magicui/blur-fade";
 import { DownloadsPage } from "./pages/downloads";
-import { SyncPage } from "./pages/sync";
+import { SubscriptionsPage } from "./pages/subscriptions";
 
 function RootLayout() {
   const router = useRouter();
@@ -59,13 +59,13 @@ const downloadsRoute = createRoute({
   component: DownloadsPage,
 });
 
-const syncRoute = createRoute({
+const subscriptionsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/sync",
-  component: SyncPage,
+  path: "/subscriptions",
+  component: SubscriptionsPage,
 });
 
-const routeTree = rootRoute.addChildren([downloadsRoute, syncRoute]);
+const routeTree = rootRoute.addChildren([downloadsRoute, subscriptionsRoute]);
 
 export const router = createRouter({ routeTree });
 

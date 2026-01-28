@@ -1,19 +1,19 @@
 import { BlurFade } from "../components/magicui/blur-fade";
-import { SyncPanel } from "../components/sync/sync-panel";
-import { useSync } from "../hooks/use-sync";
+import { SubscriptionsPanel } from "../components/subscriptions/subscriptions-panel";
+import { useSubscriptions } from "../hooks/use-subscriptions";
 
-export function SyncPage() {
+export function SubscriptionsPage() {
   const {
-    playlists,
-    addPlaylist,
-    updatePlaylist,
-    deletePlaylist,
-    syncPlaylist,
+    subscriptions,
+    addSubscription,
+    updateSubscription,
+    deleteSubscription,
+    syncSubscription,
     syncAll,
-  } = useSync();
+  } = useSubscriptions();
 
   const handleToggleEnabled = async (id: string, enabled: boolean) => {
-    await updatePlaylist(id, { enabled });
+    await updateSubscription(id, { enabled });
   };
 
   return (
@@ -27,13 +27,13 @@ export function SyncPage() {
 
       <BlurFade delay={0.05} direction="up">
         <section className="mb-6">
-          <SyncPanel
-            playlists={playlists}
-            onAddPlaylist={addPlaylist}
+          <SubscriptionsPanel
+            subscriptions={subscriptions}
+            onAddSubscription={addSubscription}
             onToggleEnabled={handleToggleEnabled}
-            onSync={syncPlaylist}
+            onSync={syncSubscription}
             onSyncAll={syncAll}
-            onDelete={deletePlaylist}
+            onDelete={deleteSubscription}
           />
         </section>
       </BlurFade>

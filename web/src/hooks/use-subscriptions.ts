@@ -1,46 +1,46 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  addPlaylist as addPlaylistApi,
-  deletePlaylist as deletePlaylistApi,
+  addSubscription as addSubscriptionApi,
+  deleteSubscription as deleteSubscriptionApi,
   getStatus,
-  listPlaylists,
+  listSubscriptions,
   syncAll as syncAllApi,
-  syncPlaylist as syncPlaylistApi,
-  updatePlaylist as updatePlaylistApi,
+  syncSubscription as syncSubscriptionApi,
+  updateSubscription as updateSubscriptionApi,
   type SchedulerStatus,
-  type SyncedPlaylist,
+  type Subscription,
 } from "../api/subscriptions";
 import { showErrorToast } from "../lib/toast";
 
-export type { SchedulerStatus, SyncedPlaylist } from "../api/subscriptions";
+export type { SchedulerStatus, Subscription } from "../api/subscriptions";
 
-export interface UseSyncResult {
-  playlists: SyncedPlaylist[];
+export interface UseSubscriptionsResult {
+  subscriptions: Subscription[];
   schedulerStatus: SchedulerStatus | null;
   isLoading: boolean;
-  addPlaylist: (url: string, name: string) => Promise<boolean>;
-  updatePlaylist: (
+  addSubscription: (url: string, name: string) => Promise<boolean>;
+  updateSubscription: (
     id: string,
     updates: { name?: string; enabled?: boolean },
   ) => Promise<void>;
-  deletePlaylist: (id: string) => Promise<void>;
-  syncPlaylist: (id: string) => Promise<void>;
+  deleteSubscription: (id: string) => Promise<void>;
+  syncSubscription: (id: string) => Promise<void>;
   syncAll: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
-export function useSync(): UseSyncResult {
-  const [playlists, setPlaylists] = useState<SyncedPlaylist[]>([]);
+export function useSubscriptions(): UseSubscriptionsResult {
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [schedulerStatus, setSchedulerStatus] =
     useState<SchedulerStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    const [playlistsData, statusData] = await Promise.all([
-      listPlaylists(),
+    const [subscriptionsData, statusData] = await Promise.all([
+      listSubscriptions(),
       getStatus(),
     ]);
-    setPlaylists(playlistsData);
+    setSubscriptions(subscriptionsData);
     setSchedulerStatus(statusData);
   }, []);
 
@@ -48,11 +48,11 @@ export function useSync(): UseSyncResult {
     await fetchData();
   }, [fetchData]);
 
-  const addPlaylist = useCallback(
+  const addSubscription = useCallback(
     async (url: string, name: string): Promise<boolean> => {
-      const result = await addPlaylistApi(url, name);
+      const result = await addSubscriptionApi(url, name);
       if (!result.success) {
-        showErrorToast("Failed to add playlist", result.error);
+        showErrorToast("Failed to add subscription", result.error);
         return false;
       }
       await fetchData();
@@ -61,25 +61,25 @@ export function useSync(): UseSyncResult {
     [fetchData],
   );
 
-  const updatePlaylist = useCallback(
+  const updateSubscription = useCallback(
     async (id: string, updates: { name?: string; enabled?: boolean }) => {
-      await updatePlaylistApi(id, updates);
+      await updateSubscriptionApi(id, updates);
       await fetchData();
     },
     [fetchData],
   );
 
-  const deletePlaylist = useCallback(
+  const deleteSubscription = useCallback(
     async (id: string) => {
-      await deletePlaylistApi(id);
+      await deleteSubscriptionApi(id);
       await fetchData();
     },
     [fetchData],
   );
 
-  const syncPlaylist = useCallback(
+  const syncSubscription = useCallback(
     async (id: string) => {
-      const result = await syncPlaylistApi(id);
+      const result = await syncSubscriptionApi(id);
       if (!result.success) {
         showErrorToast("Sync failed", result.error);
         return;
@@ -116,13 +116,13 @@ export function useSync(): UseSyncResult {
   }, [fetchData]);
 
   return {
-    playlists,
+    subscriptions,
     schedulerStatus,
     isLoading,
-    addPlaylist,
-    updatePlaylist,
-    deletePlaylist,
-    syncPlaylist,
+    addSubscription,
+    updateSubscription,
+    deleteSubscription,
+    syncSubscription,
     syncAll,
     refresh,
   };
