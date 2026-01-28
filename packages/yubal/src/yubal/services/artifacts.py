@@ -1,21 +1,17 @@
-"""Playlist composition service for generating M3U and cover files."""
+"""Playlist artifacts service for generating M3U and cover files."""
 
 import logging
 from pathlib import Path
 
-from yubal.models.domain import (
-    ContentKind,
-    DownloadResult,
-    DownloadStatus,
-    PlaylistInfo,
-    TrackMetadata,
-)
+from yubal.models.enums import ContentKind, DownloadStatus
+from yubal.models.results import DownloadResult
+from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.utils.m3u import write_m3u, write_playlist_cover
 
 logger = logging.getLogger(__name__)
 
 
-class PlaylistComposerService:
+class PlaylistArtifactsService:
     """Service for generating playlist artifacts (M3U files and covers).
 
     Pipeline Overview:
@@ -32,7 +28,7 @@ class PlaylistComposerService:
     downloads. It does not perform any downloads or API calls itself.
 
     Example:
-        >>> composer = PlaylistComposerService()
+        >>> composer = PlaylistArtifactsService()
         >>> m3u_path, cover_path = composer.compose(
         ...     base_path=Path("./music"),
         ...     playlist_info=playlist_info,

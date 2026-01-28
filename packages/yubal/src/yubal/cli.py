@@ -27,13 +27,9 @@ from rich.table import Table
 from yubal.client import YTMusicClient
 from yubal.config import AudioCodec, DownloadConfig, PlaylistDownloadConfig
 from yubal.exceptions import YTMetaError
-from yubal.models.domain import (
-    DownloadStatus,
-    ExtractProgress,
-    SkipReason,
-    TrackMetadata,
-    UnavailableTrack,
-)
+from yubal.models.enums import DownloadStatus, SkipReason
+from yubal.models.progress import ExtractProgress
+from yubal.models.track import TrackMetadata, UnavailableTrack
 from yubal.services import MetadataExtractorService, PlaylistDownloadService
 from yubal.utils.url import is_single_track_url
 

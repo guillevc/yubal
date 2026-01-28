@@ -12,14 +12,11 @@ import yt_dlp
 
 from yubal.config import DownloadConfig
 from yubal.exceptions import CancellationError, DownloadError
-from yubal.models.domain import (
-    CancelToken,
-    DownloadProgress,
-    DownloadResult,
-    DownloadStatus,
-    SkipReason,
-    TrackMetadata,
-)
+from yubal.models.cancel import CancelToken
+from yubal.models.enums import DownloadStatus, SkipReason
+from yubal.models.progress import DownloadProgress
+from yubal.models.results import DownloadResult
+from yubal.models.track import TrackMetadata
 from yubal.services.lyrics import LyricsService, LyricsServiceProtocol
 from yubal.services.tagger import tag_track
 from yubal.utils.cover import fetch_cover

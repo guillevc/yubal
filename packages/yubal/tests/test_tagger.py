@@ -4,7 +4,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from yubal.models.domain import TrackMetadata, VideoType
+from yubal.models.enums import VideoType
+from yubal.models.track import TrackMetadata
 from yubal.services.tagger import tag_track
 
 

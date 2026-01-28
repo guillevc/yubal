@@ -5,17 +5,11 @@ from unittest.mock import MagicMock
 
 import pytest
 from yubal.config import DownloadConfig, PlaylistDownloadConfig
-from yubal.models.domain import (
-    ContentKind,
-    DownloadProgress,
-    DownloadResult,
-    DownloadStatus,
-    ExtractProgress,
-    PlaylistInfo,
-    TrackMetadata,
-    VideoType,
-)
-from yubal.services.playlist import PlaylistDownloadService
+from yubal.models.enums import ContentKind, DownloadStatus, VideoType
+from yubal.models.progress import DownloadProgress, ExtractProgress
+from yubal.models.results import DownloadResult
+from yubal.models.track import PlaylistInfo, TrackMetadata
+from yubal.services.pipeline import PlaylistDownloadService
 
 
 @pytest.fixture

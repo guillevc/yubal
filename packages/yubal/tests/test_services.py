@@ -7,7 +7,7 @@ import logging
 import pytest
 from conftest import MockYTMusicClient
 from pydantic import ValidationError
-from yubal.models.domain import VideoType
+from yubal.models.enums import VideoType
 from yubal.models.ytmusic import Album, Playlist, SearchResult
 from yubal.services import MetadataExtractorService
 

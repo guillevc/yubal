@@ -71,7 +71,7 @@ class TestPublicAPI:
 
         # Internal services (use PlaylistDownloadService instead)
         assert not hasattr(yubal, "DownloadService")
-        assert not hasattr(yubal, "PlaylistComposerService")
+        assert not hasattr(yubal, "PlaylistArtifactsService")
 
         # Downloader backend is internal
         assert not hasattr(yubal, "YTDLPDownloader")

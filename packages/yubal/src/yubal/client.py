@@ -17,7 +17,7 @@ from yubal.exceptions import (
     UnsupportedPlaylistError,
     YTMetaError,
 )
-from yubal.models.domain import SkipReason
+from yubal.models.enums import SkipReason
 from yubal.models.ytmusic import Album, Playlist, PlaylistTrack, SearchResult
 from yubal.utils.cookies import cookies_to_ytmusic_auth
 

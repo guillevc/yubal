@@ -7,7 +7,7 @@ from pathlib import Path
 
 from mediafile import Image, MediaFile
 
-from yubal.models.domain import TrackMetadata
+from yubal.models.track import TrackMetadata
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,7 @@
 
 import pytest
 from yubal.exceptions import TrackParseError
-from yubal.models.domain import ContentKind, VideoType
+from yubal.models.enums import ContentKind, VideoType
 from yubal.models.ytmusic import Album, Playlist, PlaylistTrack, SearchResult
 from yubal.services.extractor import MetadataExtractorService
 

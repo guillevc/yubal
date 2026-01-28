@@ -5,16 +5,10 @@ from collections.abc import Iterator
 
 from yubal.client import YTMusicProtocol
 from yubal.exceptions import TrackParseError
-from yubal.models.domain import (
-    ContentKind,
-    ExtractProgress,
-    PlaylistInfo,
-    SingleTrackResult,
-    SkipReason,
-    TrackMetadata,
-    UnavailableTrack,
-    VideoType,
-)
+from yubal.models.enums import ContentKind, SkipReason, VideoType
+from yubal.models.progress import ExtractProgress
+from yubal.models.results import SingleTrackResult
+from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
 from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
 from yubal.utils.artists import format_artists
 from yubal.utils.matching import find_best_album_match, find_track_by_fuzzy_title

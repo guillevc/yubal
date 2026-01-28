@@ -8,7 +8,7 @@ import logging
 from os.path import relpath
 from pathlib import Path
 
-from yubal.models.domain import TrackMetadata
+from yubal.models.track import TrackMetadata
 from yubal.utils.cover import fetch_cover
 from yubal.utils.filename import clean_filename
 
