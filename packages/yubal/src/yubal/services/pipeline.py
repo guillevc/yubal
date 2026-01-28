@@ -1,4 +1,4 @@
-"""High-level playlist download service."""
+"""High-level playlist download pipeline."""
 
 import logging
 from collections.abc import Iterator
@@ -7,20 +7,16 @@ from pathlib import Path
 from yubal.client import YTMusicClient, YTMusicProtocol
 from yubal.config import PlaylistDownloadConfig
 from yubal.exceptions import CancellationError
-from yubal.models.domain import (
-    CancelToken,
-    ContentKind,
+from yubal.models.cancel import CancelToken
+from yubal.models.enums import ContentKind, DownloadStatus, SkipReason
+from yubal.models.progress import PlaylistProgress
+from yubal.models.results import (
     DownloadResult,
-    DownloadStatus,
     PlaylistDownloadResult,
-    PlaylistInfo,
-    PlaylistProgress,
-    SkipReason,
-    TrackMetadata,
-    UnavailableTrack,
     aggregate_skip_reasons,
 )
-from yubal.services.composer import PlaylistComposerService
+from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
+from yubal.services.artifacts import PlaylistArtifactsService
 from yubal.services.downloader import DownloadService
 from yubal.services.extractor import MetadataExtractorService
 
@@ -70,7 +66,7 @@ class PlaylistDownloadService:
     playlist download experience.
 
     For lower-level control, use the individual services directly
-    (MetadataExtractorService, DownloadService, PlaylistComposerService).
+    (MetadataExtractorService, DownloadService, PlaylistArtifactsService).
 
     Example:
         >>> from yubal import create_playlist_downloader
@@ -98,7 +94,7 @@ class PlaylistDownloadService:
         client: YTMusicProtocol | None = None,
         extractor: MetadataExtractorService | None = None,
         downloader: DownloadService | None = None,
-        composer: PlaylistComposerService | None = None,
+        composer: PlaylistArtifactsService | None = None,
         cookies_path: Path | None = None,
     ) -> None:
         """Initialize the service.
@@ -122,7 +118,7 @@ class PlaylistDownloadService:
         self._downloader = downloader or DownloadService(
             config.download, cookies_path=cookies_path
         )
-        self._composer = composer or PlaylistComposerService()
+        self._composer = composer or PlaylistArtifactsService()
 
         # Store last result for retrieval after iteration
         self._last_result: PlaylistDownloadResult | None = None

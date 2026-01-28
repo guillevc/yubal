@@ -9,7 +9,8 @@ Internal (not exported):
     ytmusic.py - Models for parsing ytmusicapi responses
 """
 
-from yubal.models.domain import ContentKind, TrackMetadata, VideoType
+from yubal.models.enums import ContentKind, VideoType
+from yubal.models.track import TrackMetadata
 
 __all__ = [
     "ContentKind",

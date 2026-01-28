@@ -25,13 +25,14 @@ from yubal import (
     TrackMetadata,
     create_playlist_downloader,
 )
-from yubal.models.domain import ContentKind, PlaylistInfo
+from yubal.models.enums import ContentKind
+from yubal.models.track import PlaylistInfo
 
 from yubal_api.core.enums import ProgressStep
 from yubal_api.core.models import ContentInfo
 
 if TYPE_CHECKING:
-    from yubal.services.playlist import PlaylistDownloadService
+    from yubal.services.pipeline import PlaylistDownloadService
 
 logger = logging.getLogger(__name__)
 

@@ -1,24 +1,19 @@
-"""Tests for PlaylistComposerService."""
+"""Tests for PlaylistArtifactsService."""
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from yubal.models.domain import (
-    ContentKind,
-    DownloadResult,
-    DownloadStatus,
-    PlaylistInfo,
-    TrackMetadata,
-    VideoType,
-)
-from yubal.services.composer import PlaylistComposerService
+from yubal.models.enums import ContentKind, DownloadStatus, VideoType
+from yubal.models.results import DownloadResult
+from yubal.models.track import PlaylistInfo, TrackMetadata
+from yubal.services.artifacts import PlaylistArtifactsService
 
 
 @pytest.fixture
-def composer() -> PlaylistComposerService:
+def composer() -> PlaylistArtifactsService:
     """Create a composer service instance."""
-    return PlaylistComposerService()
+    return PlaylistArtifactsService()
 
 
 @pytest.fixture
@@ -80,16 +75,16 @@ def download_results(
     ]
 
 
-class TestPlaylistComposerService:
-    """Tests for PlaylistComposerService."""
+class TestPlaylistArtifactsService:
+    """Tests for PlaylistArtifactsService."""
 
-    @patch("yubal.services.composer.write_m3u")
-    @patch("yubal.services.composer.write_playlist_cover")
+    @patch("yubal.services.artifacts.write_m3u")
+    @patch("yubal.services.artifacts.write_playlist_cover")
     def test_compose_generates_m3u_and_cover(
         self,
         mock_cover: MagicMock,
         mock_m3u: MagicMock,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         playlist_info: PlaylistInfo,
         download_results: list[DownloadResult],
         tmp_path: Path,
@@ -107,13 +102,13 @@ class TestPlaylistComposerService:
         mock_m3u.assert_called_once()
         mock_cover.assert_called_once()
 
-    @patch("yubal.services.composer.write_m3u")
-    @patch("yubal.services.composer.write_playlist_cover")
+    @patch("yubal.services.artifacts.write_m3u")
+    @patch("yubal.services.artifacts.write_playlist_cover")
     def test_compose_skips_m3u_when_disabled(
         self,
         mock_cover: MagicMock,
         mock_m3u: MagicMock,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         playlist_info: PlaylistInfo,
         download_results: list[DownloadResult],
         tmp_path: Path,
@@ -130,13 +125,13 @@ class TestPlaylistComposerService:
         mock_m3u.assert_not_called()
         mock_cover.assert_called_once()
 
-    @patch("yubal.services.composer.write_m3u")
-    @patch("yubal.services.composer.write_playlist_cover")
+    @patch("yubal.services.artifacts.write_m3u")
+    @patch("yubal.services.artifacts.write_playlist_cover")
     def test_compose_skips_cover_when_disabled(
         self,
         mock_cover: MagicMock,
         mock_m3u: MagicMock,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         playlist_info: PlaylistInfo,
         download_results: list[DownloadResult],
         tmp_path: Path,
@@ -153,13 +148,13 @@ class TestPlaylistComposerService:
         mock_m3u.assert_called_once()
         mock_cover.assert_not_called()
 
-    @patch("yubal.services.composer.write_m3u")
-    @patch("yubal.services.composer.write_playlist_cover")
+    @patch("yubal.services.artifacts.write_m3u")
+    @patch("yubal.services.artifacts.write_playlist_cover")
     def test_compose_skips_m3u_for_album_playlist(
         self,
         mock_cover: MagicMock,
         mock_m3u: MagicMock,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         album_playlist_info: PlaylistInfo,
         download_results: list[DownloadResult],
         tmp_path: Path,
@@ -175,13 +170,13 @@ class TestPlaylistComposerService:
         assert cover_path is not None
         mock_m3u.assert_not_called()
 
-    @patch("yubal.services.composer.write_m3u")
-    @patch("yubal.services.composer.write_playlist_cover")
+    @patch("yubal.services.artifacts.write_m3u")
+    @patch("yubal.services.artifacts.write_playlist_cover")
     def test_compose_generates_m3u_for_album_when_not_skipping(
         self,
         mock_cover: MagicMock,
         mock_m3u: MagicMock,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         album_playlist_info: PlaylistInfo,
         download_results: list[DownloadResult],
         tmp_path: Path,
@@ -199,7 +194,7 @@ class TestPlaylistComposerService:
 
     def test_collect_tracks_filters_successful(
         self,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         sample_track: TrackMetadata,
         tmp_path: Path,
     ) -> None:
@@ -232,7 +227,7 @@ class TestPlaylistComposerService:
 
     def test_collect_tracks_excludes_missing_paths(
         self,
-        composer: PlaylistComposerService,
+        composer: PlaylistArtifactsService,
         sample_track: TrackMetadata,
     ) -> None:
         """Should exclude results without output paths."""

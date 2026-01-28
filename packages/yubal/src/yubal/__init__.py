@@ -45,22 +45,16 @@ from yubal.exceptions import (
     UnsupportedPlaylistError,
     YTMetaError,
 )
-from yubal.models.domain import (
-    CancelToken,
-    ContentKind,
-    DownloadProgress,
+from yubal.models.cancel import CancelToken
+from yubal.models.enums import ContentKind, DownloadStatus, SkipReason, VideoType
+from yubal.models.progress import DownloadProgress, ExtractProgress, PlaylistProgress
+from yubal.models.results import (
     DownloadResult,
-    DownloadStatus,
-    ExtractProgress,
     PhaseStats,
     PlaylistDownloadResult,
-    PlaylistInfo,
-    PlaylistProgress,
     SingleTrackResult,
-    SkipReason,
-    TrackMetadata,
-    VideoType,
 )
+from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.services import MetadataExtractorService, PlaylistDownloadService
 from yubal.services.downloader import DownloadService as _DownloadService
 from yubal.utils import cleanup_part_files, clear_cover_cache, fetch_cover

@@ -9,7 +9,8 @@ import pytest
 from pydantic import ValidationError
 from yubal.config import AudioCodec, DownloadConfig
 from yubal.exceptions import DownloadError
-from yubal.models.domain import TrackMetadata, VideoType
+from yubal.models.enums import VideoType
+from yubal.models.track import TrackMetadata
 from yubal.services.downloader import (
     DownloadResult,
     DownloadService,
