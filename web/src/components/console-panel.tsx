@@ -14,16 +14,8 @@ import { LogLine } from "./log-renderers";
 type LogEntry = components["schemas"]["LogEntry"];
 
 type ParsedLine =
-  | { type: "json"; entry: LogEntry }
-  | { type: "text"; text: string };
-
-function parseLine(line: string): ParsedLine {
-  try {
-    return { type: "json", entry: JSON.parse(line) };
-  } catch {
-    return { type: "text", text: line };
-  }
-}
+  | { type: "json"; entry: LogEntry; key: string }
+  | { type: "text"; text: string; key: string };
 
 interface ConsolePanelProps {
   jobs?: Job[];
@@ -40,7 +32,21 @@ export function ConsolePanel({ jobs = [] }: ConsolePanelProps) {
   const hasActiveJobs = jobs.some((job) => isActive(job.status));
 
   // Memoize parsed lines to avoid re-parsing on every render
-  const parsedLines = useMemo(() => lines.map(parseLine), [lines]);
+  const parsedLines = useMemo(
+    () =>
+      lines.map(({ id, content }): ParsedLine => {
+        try {
+          return {
+            type: "json",
+            entry: JSON.parse(content) as LogEntry,
+            key: id,
+          };
+        } catch {
+          return { type: "text", text: content, key: id };
+        }
+      }),
+    [lines],
+  );
 
   // Auto-scroll to bottom when new lines arrive
   useEffect(() => {
@@ -109,9 +115,9 @@ export function ConsolePanel({ jobs = [] }: ConsolePanelProps) {
                 <EmptyState icon={Terminal} title="No activity yet" mono />
               ) : (
                 <AnimatePresence initial={false}>
-                  {parsedLines.map((parsed, idx) => (
+                  {parsedLines.map((parsed) => (
                     <motion.div
-                      key={idx}
+                      key={parsed.key}
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
                     >

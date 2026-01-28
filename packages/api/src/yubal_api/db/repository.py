@@ -2,7 +2,8 @@
 
 from uuid import UUID
 
-from sqlmodel import Session, col, create_engine, select
+from sqlalchemy import Engine
+from sqlmodel import Session, col, select
 
 from yubal_api.db.models import Subscription, SubscriptionType
 
@@ -10,7 +11,7 @@ from yubal_api.db.models import Subscription, SubscriptionType
 class SubscriptionRepository:
     """Repository for subscription database operations."""
 
-    def __init__(self, engine: create_engine) -> None:
+    def __init__(self, engine: Engine) -> None:
         """Initialize repository with database engine."""
         self._engine = engine
 

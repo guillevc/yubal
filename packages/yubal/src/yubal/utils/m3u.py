@@ -41,8 +41,7 @@ def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> st
 
     for track, file_path in tracks:
         # Get duration from track metadata, use -1 if unknown
-        # TrackMetadata doesn't have duration, so use -1
-        duration = -1
+        duration = track.duration_seconds if track.duration_seconds is not None else -1
 
         # Format: Artist - Title
         display_title = f"{track.artist} - {track.title}"

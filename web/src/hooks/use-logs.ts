@@ -4,8 +4,13 @@ const SSE_URL = "/api/logs/sse";
 const MAX_LOG_LINES = 1000;
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000] as const;
 
+export interface LogLine {
+  id: string;
+  content: string;
+}
+
 export interface UseLogsResult {
-  lines: string[];
+  lines: LogLine[];
   isConnected: boolean;
 }
 
@@ -18,7 +23,7 @@ export interface UseLogsResult {
  * - Connection state tracking
  */
 export function useLogs(): UseLogsResult {
-  const [lines, setLines] = useState<string[]>([]);
+  const [lines, setLines] = useState<LogLine[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttemptRef = useRef(0);
@@ -46,8 +51,9 @@ export function useLogs(): UseLogsResult {
 
       eventSource.onmessage = (event) => {
         if (!mounted) return;
+        const line: LogLine = { id: crypto.randomUUID(), content: event.data };
         setLines((prev) => {
-          const newLines = [...prev, event.data];
+          const newLines = [...prev, line];
           return newLines.length > MAX_LOG_LINES
             ? newLines.slice(-MAX_LOG_LINES)
             : newLines;

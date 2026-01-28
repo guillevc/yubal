@@ -63,7 +63,11 @@ export function useSubscriptions(): UseSubscriptionsResult {
 
   const updateSubscription = useCallback(
     async (id: string, updates: { name?: string; enabled?: boolean }) => {
-      await updateSubscriptionApi(id, updates);
+      const result = await updateSubscriptionApi(id, updates);
+      if (result === null) {
+        showErrorToast("Update failed", "Could not update subscription");
+        return;
+      }
       await fetchData();
     },
     [fetchData],
@@ -71,7 +75,11 @@ export function useSubscriptions(): UseSubscriptionsResult {
 
   const deleteSubscription = useCallback(
     async (id: string) => {
-      await deleteSubscriptionApi(id);
+      const success = await deleteSubscriptionApi(id);
+      if (!success) {
+        showErrorToast("Delete failed", "Could not delete subscription");
+        return;
+      }
       await fetchData();
     },
     [fetchData],
