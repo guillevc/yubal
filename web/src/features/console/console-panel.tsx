@@ -1,15 +1,15 @@
+import type { Job } from "@/api/jobs";
+import type { components } from "@/api/schema";
+import { EmptyState } from "@/components/common/empty-state";
+import { Panel, PanelContent, PanelHeader } from "@/components/common/panel";
+import { useLocalStorage } from "@/hooks/use-local-storage";
+import { isActive } from "@/lib/job-status";
 import { Chip, Spinner } from "@heroui/react";
 import { ChevronDown, CloudOff, Terminal } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef } from "react";
-import type { Job } from "../api/jobs";
-import type { components } from "../api/schema";
-import { useLocalStorage } from "../hooks/use-local-storage";
-import { useLogs } from "../hooks/use-logs";
-import { isActive } from "../lib/job-status";
-import { EmptyState } from "./common/empty-state";
-import { Panel, PanelContent, PanelHeader } from "./common/panel";
-import { LogLine } from "./log-renderers";
+import { LogLine } from "./log-line";
+import { useLogs } from "./use-logs";
 
 type LogEntry = components["schemas"]["LogEntry"];
 

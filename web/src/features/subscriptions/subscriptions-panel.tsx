@@ -2,10 +2,10 @@ import { Button, Input, Tooltip } from "@heroui/react";
 import { Inbox, Link, Plus, RefreshCw, Type } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import type { Subscription } from "../../api/subscriptions";
-import { isValidUrl } from "../../lib/url";
-import { EmptyState } from "../common/empty-state";
-import { Panel, PanelContent, PanelHeader } from "../common/panel";
+import type { Subscription } from "@/api/subscriptions";
+import { EmptyState } from "@/components/common/empty-state";
+import { Panel, PanelContent, PanelHeader } from "@/components/common/panel";
+import { isValidUrl } from "@/lib/url";
 import { SubscriptionCard } from "./subscription-card";
 
 interface SubscriptionsPanelProps {

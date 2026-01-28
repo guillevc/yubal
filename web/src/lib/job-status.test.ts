@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { JobStatus } from "../api/jobs";
+import type { JobStatus } from "@/api/jobs";
 import { isActive, isFinished } from "./job-status";
 
 const ALL_STATUSES: JobStatus[] = [

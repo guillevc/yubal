@@ -9,10 +9,10 @@ import {
   updateSubscription as updateSubscriptionApi,
   type SchedulerStatus,
   type Subscription,
-} from "../api/subscriptions";
-import { showErrorToast } from "../lib/toast";
+} from "@/api/subscriptions";
+import { showErrorToast } from "@/lib/toast";
 
-export type { SchedulerStatus, Subscription } from "../api/subscriptions";
+export type { SchedulerStatus, Subscription } from "@/api/subscriptions";
 
 export interface UseSubscriptionsResult {
   subscriptions: Subscription[];

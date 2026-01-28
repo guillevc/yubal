@@ -1,4 +1,4 @@
-import { GithubIcon } from "../icons";
+import { GithubIcon } from "@/components/icons";
 
 const KofiIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" className={className}>

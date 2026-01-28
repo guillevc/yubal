@@ -12,9 +12,9 @@ import {
 import { useRouterState } from "@tanstack/react-router";
 import { Disc3, Star } from "lucide-react";
 import { useState } from "react";
-import { useCookies } from "../../hooks/use-cookies";
-import { CookieDropdown } from "../common/cookie-dropdown";
-import { AnimatedThemeToggler } from "../magicui/animated-theme-toggler";
+import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
+import { CookieDropdown } from "@/features/cookies/cookie-dropdown";
+import { useCookies } from "@/features/cookies/use-cookies";
 
 const navItems = [
   { label: "Downloads", href: "/" },

@@ -5,11 +5,11 @@ import {
   deleteJob as deleteJobApi,
   listJobs,
   type Job,
-} from "../api/jobs";
-import { isActive } from "../lib/job-status";
-import { showErrorToast } from "../lib/toast";
+} from "@/api/jobs";
+import { isActive } from "@/lib/job-status";
+import { showErrorToast } from "@/lib/toast";
 
-export type { Job } from "../api/jobs";
+export type { Job } from "@/api/jobs";
 
 export interface UseJobsResult {
   jobs: Job[];

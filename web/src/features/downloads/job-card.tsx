@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
-import type { Job, JobStatus } from "../../api/jobs";
-import { isActive, isFinished } from "../../lib/job-status";
+import type { Job, JobStatus } from "@/api/jobs";
+import { isActive, isFinished } from "@/lib/job-status";
 
 interface JobCardProps {
   job: Job;

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { deleteCookies, getCookiesStatus, uploadCookies } from "../api/cookies";
-import { showErrorToast, showSuccessToast } from "../lib/toast";
+import { deleteCookies, getCookiesStatus, uploadCookies } from "@/api/cookies";
+import { showErrorToast, showSuccessToast } from "@/lib/toast";
 
 interface UseCookiesReturn {
   cookiesConfigured: boolean;

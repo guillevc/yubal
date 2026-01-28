@@ -1,5 +1,5 @@
+import type { components } from "@/api/schema";
 import { AlertTriangle, ArrowDown, Check, Circle, X } from "lucide-react";
-import type { components } from "../api/schema";
 
 type LogEntry = components["schemas"]["LogEntry"];
 type LogStatus = NonNullable<LogEntry["status"]>;

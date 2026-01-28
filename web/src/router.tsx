@@ -12,11 +12,11 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Footer } from "./components/layout/footer";
-import { Header } from "./components/layout/header";
-import { BlurFade } from "./components/magicui/blur-fade";
-import { DownloadsPage } from "./pages/downloads";
-import { SubscriptionsPage } from "./pages/subscriptions";
+import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/layout/header";
+import { BlurFade } from "@/components/magicui/blur-fade";
+import { DownloadsPage } from "@/pages/downloads";
+import { SubscriptionsPage } from "@/pages/subscriptions";
 
 function RootLayout() {
   const router = useRouter();

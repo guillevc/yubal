@@ -1,6 +1,6 @@
-import { BlurFade } from "../components/magicui/blur-fade";
-import { SubscriptionsPanel } from "../components/subscriptions/subscriptions-panel";
-import { useSubscriptions } from "../hooks/use-subscriptions";
+import { BlurFade } from "@/components/magicui/blur-fade";
+import { SubscriptionsPanel } from "@/features/subscriptions/subscriptions-panel";
+import { useSubscriptions } from "@/features/subscriptions/use-subscriptions";
 
 export function SubscriptionsPage() {
   const {

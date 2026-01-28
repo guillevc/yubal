@@ -1,6 +1,6 @@
 import { Input } from "@heroui/react";
 import { Link } from "lucide-react";
-import { YOUTUBE_MUSIC_URL_PATTERN } from "../lib/url";
+import { YOUTUBE_MUSIC_URL_PATTERN } from "@/lib/url";
 
 interface UrlInputProps {
   value: string;

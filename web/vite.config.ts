@@ -1,4 +1,5 @@
 import { execSync } from "child_process";
+import { resolve } from "path";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
@@ -38,6 +39,11 @@ function isRelease(): boolean {
 }
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      "@": resolve(__dirname, "src"),
+    },
+  },
   define: {
     __VERSION__: JSON.stringify(getVersion()),
     __COMMIT_SHA__: JSON.stringify(getCommitSha()),

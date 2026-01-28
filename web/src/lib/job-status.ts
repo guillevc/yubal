@@ -1,4 +1,4 @@
-import type { JobStatus } from "../api/jobs";
+import type { JobStatus } from "@/api/jobs";
 
 /** Active states that indicate job is in progress */
 const ACTIVE_STATUSES = new Set<JobStatus>([

@@ -2,7 +2,7 @@ import { Button, Switch, Tooltip } from "@heroui/react";
 import { ExternalLink, RefreshCw, Trash2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useState } from "react";
-import type { Subscription } from "../../api/subscriptions";
+import type { Subscription } from "@/api/subscriptions";
 
 interface SubscriptionCardProps {
   subscription: Subscription;

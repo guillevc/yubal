@@ -24,6 +24,7 @@
 
   "ty.diagnosticMode": "workspace",
   "typescript.tsserver.experimental.enableProjectDiagnostics": true,
+  "typescript.preferences.importModuleSpecifier": "shortest",
 
   "eslint.validate": ["javascript", "typescript", "typescriptreact"],
   "prettier.requireConfig": true

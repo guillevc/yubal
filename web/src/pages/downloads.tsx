@@ -1,12 +1,12 @@
 import { Button, NumberInput, Tooltip } from "@heroui/react";
 import { Download, Hash } from "lucide-react";
 import { useState } from "react";
-import { ConsolePanel } from "../components/console-panel";
-import { DownloadsPanel } from "../components/downloads-panel";
-import { BlurFade } from "../components/magicui/blur-fade";
-import { UrlInput } from "../components/url-input";
-import { useJobs } from "../hooks/use-jobs";
-import { isValidUrl } from "../lib/url";
+import { BlurFade } from "@/components/magicui/blur-fade";
+import { ConsolePanel } from "@/features/console/console-panel";
+import { DownloadsPanel } from "@/features/downloads/downloads-panel";
+import { UrlInput } from "@/features/downloads/url-input";
+import { useJobs } from "@/features/downloads/use-jobs";
+import { isValidUrl } from "@/lib/url";
 
 const DEFAULT_MAX_ITEMS = 50;
 
