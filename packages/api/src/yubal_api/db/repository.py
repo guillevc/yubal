@@ -89,3 +89,22 @@ class SubscriptionRepository:
             if type is not None:
                 stmt = stmt.where(Subscription.type == type)
             return session.exec(stmt).one()
+
+    def update_name_by_url(self, url: str, name: str) -> bool:
+        """Update subscription name by URL.
+
+        Args:
+            url: The subscription URL.
+            name: The new name.
+
+        Returns:
+            True if a subscription was updated, False if not found.
+        """
+        with Session(self._engine) as session:
+            stmt = select(Subscription).where(Subscription.url == url)
+            subscription = session.exec(stmt).first()
+            if subscription is None:
+                return False
+            subscription.name = name
+            session.commit()
+            return True

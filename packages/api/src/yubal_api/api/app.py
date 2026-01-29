@@ -115,6 +115,7 @@ def create_services(repository: SubscriptionRepository) -> Services:
         audio_format=settings.audio_format,
         cookies_path=settings.cookies_file,
         fetch_lyrics=settings.fetch_lyrics,
+        subscription_repository=repository,
     )
 
     # Create scheduler

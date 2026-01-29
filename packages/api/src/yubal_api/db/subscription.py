@@ -24,5 +24,6 @@ class Subscription(SQLModel, table=True):
     url: str = Field(unique=True, index=True)
     name: str = Field(max_length=200)
     enabled: bool = Field(default=True)
+    max_items: int | None = Field(default=None, ge=1, le=10000)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     last_synced_at: datetime | None = Field(default=None)

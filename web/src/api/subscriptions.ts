@@ -22,10 +22,9 @@ export async function listSubscriptions(): Promise<Subscription[]> {
 
 export async function addSubscription(
   url: string,
-  name: string,
 ): Promise<AddSubscriptionResult> {
   const { data, error, response } = await api.POST("/subscriptions", {
-    body: { url, name, type: "playlist", enabled: true },
+    body: { url },
   });
 
   if (error) {
@@ -47,19 +46,9 @@ export async function addSubscription(
   return { success: true, id: data.id };
 }
 
-export async function getSubscription(
-  id: string,
-): Promise<Subscription | null> {
-  const { data, error } = await api.GET("/subscriptions/{subscription_id}", {
-    params: { path: { subscription_id: id } },
-  });
-  if (error) return null;
-  return data;
-}
-
 export async function updateSubscription(
   id: string,
-  updates: { name?: string; enabled?: boolean },
+  updates: { enabled?: boolean },
 ): Promise<Subscription | null> {
   const { data, error } = await api.PATCH("/subscriptions/{subscription_id}", {
     params: { path: { subscription_id: id } },

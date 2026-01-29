@@ -18,7 +18,7 @@ export interface UseSubscriptionsResult {
   subscriptions: Subscription[];
   schedulerStatus: SchedulerStatus | null;
   isLoading: boolean;
-  addSubscription: (url: string, name: string) => Promise<boolean>;
+  addSubscription: (url: string) => Promise<boolean>;
   updateSubscription: (
     id: string,
     updates: { name?: string; enabled?: boolean },
@@ -49,8 +49,8 @@ export function useSubscriptions(): UseSubscriptionsResult {
   }, [fetchData]);
 
   const addSubscription = useCallback(
-    async (url: string, name: string): Promise<boolean> => {
-      const result = await addSubscriptionApi(url, name);
+    async (url: string): Promise<boolean> => {
+      const result = await addSubscriptionApi(url);
       if (!result.success) {
         showErrorToast("Failed to add subscription", result.error);
         return false;

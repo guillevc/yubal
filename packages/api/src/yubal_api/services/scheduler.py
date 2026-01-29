@@ -98,7 +98,9 @@ class Scheduler:
         job_ids: list[str] = []
         for subscription in subscriptions:
             try:
-                result = self._job_store.create(subscription.url)
+                result = self._job_store.create(
+                    subscription.url, max_items=subscription.max_items
+                )
                 if result is None:
                     logger.warning(
                         "Could not create job for subscription %s (queue full)",

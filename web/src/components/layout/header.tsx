@@ -1,5 +1,10 @@
+import { listSubscriptions } from "@/api/subscriptions";
+import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
+import { CookieDropdown } from "@/features/cookies/cookie-dropdown";
+import { useCookies } from "@/features/cookies/use-cookies";
 import {
   Button,
+  Chip,
   Link,
   Navbar,
   NavbarBrand,
@@ -11,10 +16,7 @@ import {
 } from "@heroui/react";
 import { useRouterState } from "@tanstack/react-router";
 import { Disc3, Star } from "lucide-react";
-import { useState } from "react";
-import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
-import { CookieDropdown } from "@/features/cookies/cookie-dropdown";
-import { useCookies } from "@/features/cookies/use-cookies";
+import { useEffect, useState } from "react";
 
 const navItems = [
   { label: "Downloads", href: "/" },
@@ -23,6 +25,7 @@ const navItems = [
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [subscriptionCount, setSubscriptionCount] = useState(0);
   const routerState = useRouterState();
   const currentPath = routerState.location.pathname;
   const {
@@ -34,6 +37,10 @@ export function Header() {
     handleDropdownAction,
     triggerFileUpload,
   } = useCookies();
+
+  useEffect(() => {
+    listSubscriptions().then((subs) => setSubscriptionCount(subs.length));
+  }, []);
 
   return (
     <Navbar
@@ -70,9 +77,23 @@ export function Header() {
               isBlock
               href={item.href}
               color="foreground"
-              className="text-foreground-400 text-medium group-data-[active=true]:text-foreground px-3 py-2 font-medium"
+              className="text-foreground-400 text-medium group-data-[active=true]:text-foreground flex items-center gap-2 px-3 py-2 font-medium"
             >
               {item.label}
+              {item.href === "/subscriptions" && subscriptionCount > 0 && (
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  radius="sm"
+                  className="font-mono"
+                  classNames={{
+                    content:
+                      "text-foreground-400 group-data-[active=true]:text-foreground",
+                  }}
+                >
+                  {subscriptionCount}
+                </Chip>
+              )}
             </Link>
           </NavbarItem>
         ))}
@@ -119,11 +140,16 @@ export function Header() {
             <Link
               href={item.href}
               color={currentPath === item.href ? "primary" : "foreground"}
-              className="w-full"
+              className="flex w-full items-center gap-2"
               size="lg"
               onPress={() => setIsMenuOpen(false)}
             >
               {item.label}
+              {item.href === "/subscriptions" && subscriptionCount > 0 && (
+                <Chip size="sm" variant="flat" color="primary">
+                  {subscriptionCount}
+                </Chip>
+              )}
             </Link>
           </NavbarMenuItem>
         ))}

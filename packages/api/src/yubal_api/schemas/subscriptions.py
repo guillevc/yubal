@@ -12,16 +12,13 @@ from yubal_api.schemas.jobs import YouTubeMusicUrl
 class SubscriptionCreate(BaseModel):
     """Request to create a subscription."""
 
-    type: SubscriptionType = SubscriptionType.PLAYLIST
     url: YouTubeMusicUrl
-    name: str = Field(min_length=1, max_length=200)
-    enabled: bool = True
+    max_items: int | None = Field(default=None, ge=1, le=10000)
 
 
 class SubscriptionUpdate(BaseModel):
     """Request to update a subscription."""
 
-    name: str | None = Field(default=None, min_length=1, max_length=200)
     enabled: bool | None = None
 
 
@@ -33,6 +30,7 @@ class SubscriptionResponse(BaseModel):
     url: str = Field(json_schema_extra={"format": "uri"})
     name: str
     enabled: bool
+    max_items: int | None
     created_at: datetime
     last_synced_at: datetime | None
 

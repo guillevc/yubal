@@ -1,16 +1,16 @@
-import { Button, Input, Tooltip } from "@heroui/react";
-import { Inbox, Link, Plus, RefreshCw, Type } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
 import type { Subscription } from "@/api/subscriptions";
 import { EmptyState } from "@/components/common/empty-state";
 import { Panel, PanelContent, PanelHeader } from "@/components/common/panel";
 import { isValidUrl } from "@/lib/url";
+import { Button, Input, Tooltip } from "@heroui/react";
+import { Inbox, Link, Plus, RefreshCw } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { useState } from "react";
 import { SubscriptionCard } from "./subscription-card";
 
 interface SubscriptionsPanelProps {
   subscriptions: Subscription[];
-  onAddSubscription: (url: string, name: string) => Promise<boolean>;
+  onAddSubscription: (url: string) => Promise<boolean>;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onSync: (id: string) => void;
   onSyncAll: () => void;
@@ -26,19 +26,17 @@ export function SubscriptionsPanel({
   onDelete,
 }: SubscriptionsPanelProps) {
   const [url, setUrl] = useState("");
-  const [name, setName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
-  const canAdd = isValidUrl(url) && name.trim().length > 0;
+  const canAdd = isValidUrl(url);
   const enabledCount = subscriptions.filter((s) => s.enabled).length;
 
   const handleAdd = async () => {
     if (!canAdd) return;
     setIsAdding(true);
-    const success = await onAddSubscription(url.trim(), name.trim());
+    const success = await onAddSubscription(url.trim());
     if (success) {
       setUrl("");
-      setName("");
     }
     setIsAdding(false);
   };
@@ -86,17 +84,6 @@ export function SubscriptionsPanel({
           className="flex-1"
           classNames={{ input: "font-mono text-xs" }}
         />
-        <Input
-          placeholder="Name"
-          value={name}
-          onValueChange={setName}
-          variant="faded"
-          radius="lg"
-          size="sm"
-          startContent={<Type className="text-foreground-400 h-4 w-4" />}
-          className="w-40"
-          classNames={{ input: "font-mono text-xs" }}
-        />
         <Button
           color="primary"
           radius="lg"
@@ -110,7 +97,7 @@ export function SubscriptionsPanel({
         </Button>
       </div>
 
-      <PanelContent height="h-[340px]" className="space-y-2">
+      <PanelContent height="h-[580px]" className="space-y-2">
         {subscriptions.length === 0 ? (
           <EmptyState icon={Inbox} title="No playlists registered" />
         ) : (

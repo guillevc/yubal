@@ -233,11 +233,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /**
-         * Get Subscription
-         * @description Get a subscription by ID.
-         */
-        get: operations["get_subscription_api_subscriptions__subscription_id__get"];
+        get?: never;
         put?: never;
         post?: never;
         /**
@@ -743,20 +739,13 @@ export interface components {
          * @description Request to create a subscription.
          */
         SubscriptionCreate: {
-            /** @default playlist */
-            type: components["schemas"]["SubscriptionType"];
             /**
              * Url
              * Format: uri
              */
             url: string;
-            /** Name */
-            name: string;
-            /**
-             * Enabled
-             * @default true
-             */
-            enabled: boolean;
+            /** Max Items */
+            max_items?: number | null;
         };
         /**
          * SubscriptionListResponse
@@ -786,6 +775,8 @@ export interface components {
             name: string;
             /** Enabled */
             enabled: boolean;
+            /** Max Items */
+            max_items: number | null;
             /**
              * Created At
              * Format: date-time
@@ -805,8 +796,6 @@ export interface components {
          * @description Request to update a subscription.
          */
         SubscriptionUpdate: {
-            /** Name */
-            name?: string | null;
             /** Enabled */
             enabled?: boolean | null;
         };
@@ -1212,37 +1201,6 @@ export interface operations {
         responses: {
             /** @description Successful Response */
             201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["SubscriptionResponse"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    get_subscription_api_subscriptions__subscription_id__get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                subscription_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
                 headers: {
                     [name: string]: unknown;
                 };

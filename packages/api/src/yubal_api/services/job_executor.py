@@ -9,6 +9,7 @@ from typing import Any
 
 from yubal import CancelToken, cleanup_part_files
 
+from yubal_api.db.repository import SubscriptionRepository
 from yubal_api.domain.enums import JobStatus, ProgressStep
 from yubal_api.domain.job import ContentInfo, Job
 from yubal_api.services.protocols import JobExecutionStore
@@ -45,6 +46,7 @@ class JobExecutor:
         audio_format: str = "opus",
         cookies_path: Path | None = None,
         fetch_lyrics: bool = True,
+        subscription_repository: SubscriptionRepository | None = None,
     ) -> None:
         """Initialize the job executor.
 
@@ -54,12 +56,14 @@ class JobExecutor:
             audio_format: Target audio format (opus, mp3, m4a).
             cookies_path: Optional path to cookies.txt for authenticated requests.
             fetch_lyrics: Whether to fetch lyrics from lrclib.net.
+            subscription_repository: Optional repository to update subscription names.
         """
         self._job_store = job_store
         self._base_path = base_path
         self._audio_format = audio_format
         self._cookies_path = cookies_path
         self._fetch_lyrics = fetch_lyrics
+        self._subscription_repository = subscription_repository
 
         # Track background tasks to prevent GC during execution
         self._background_tasks: set[asyncio.Task[Any]] = set()
@@ -187,6 +191,15 @@ class JobExecutor:
                     content_info=result.content_info,
                     download_stats=result.download_stats,
                 )
+                # Update subscription name with latest title from YouTube Music
+                if (
+                    self._subscription_repository
+                    and result.content_info
+                    and result.content_info.title
+                ):
+                    self._subscription_repository.update_name_by_url(
+                        url, result.content_info.title
+                    )
             else:
                 error_msg = result.error or "Unknown error"
                 logger.error("Job %s failed: %s", job_id[:8], error_msg)

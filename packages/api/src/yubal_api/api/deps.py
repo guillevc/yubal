@@ -21,6 +21,7 @@ from yubal_api.api.container import Services, get_services
 from yubal_api.db.repository import SubscriptionRepository
 from yubal_api.services.job_executor import JobExecutor
 from yubal_api.services.job_store import JobStore
+from yubal_api.services.playlist_info import PlaylistInfoService
 from yubal_api.services.scheduler import Scheduler
 from yubal_api.settings import get_settings
 
@@ -59,3 +60,15 @@ SchedulerDep = Annotated[Scheduler, Depends(_get_scheduler)]
 AudioFormatDep = Annotated[AudioCodec, Depends(lambda: get_settings().audio_format)]
 CookiesFileDep = Annotated[Path, Depends(lambda: get_settings().cookies_file)]
 YtdlpDirDep = Annotated[Path, Depends(lambda: get_settings().ytdlp_dir)]
+
+
+def _get_playlist_info_service() -> PlaylistInfoService:
+    """Get playlist info service for fetching playlist metadata."""
+    settings = get_settings()
+    cookies_path = settings.cookies_file if settings.cookies_file.exists() else None
+    return PlaylistInfoService(cookies_path=cookies_path)
+
+
+PlaylistInfoServiceDep = Annotated[
+    PlaylistInfoService, Depends(_get_playlist_info_service)
+]

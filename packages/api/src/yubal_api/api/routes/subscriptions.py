@@ -4,8 +4,15 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
+from yubal import (
+    APIError,
+    AuthenticationRequiredError,
+    PlaylistNotFoundError,
+    PlaylistParseError,
+    UnsupportedPlaylistError,
+)
 
-from yubal_api.api.deps import RepositoryDep, SchedulerDep
+from yubal_api.api.deps import PlaylistInfoServiceDep, RepositoryDep, SchedulerDep
 from yubal_api.db.subscription import Subscription, SubscriptionType
 from yubal_api.schemas.subscriptions import (
     SubscriptionCreate,
@@ -57,6 +64,7 @@ def list_subscriptions(
 def create_subscription(
     data: SubscriptionCreate,
     repository: RepositoryDep,
+    playlist_info_service: PlaylistInfoServiceDep,
 ) -> SubscriptionResponse:
     """Create a new subscription."""
     existing = repository.get_by_url(str(data.url))
@@ -66,30 +74,40 @@ def create_subscription(
             detail=f"Subscription with URL already exists: {existing.id}",
         )
 
+    # Fetch name from YouTube Music
+    try:
+        name = playlist_info_service.get_playlist_title(str(data.url))
+    except PlaylistNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+    except AuthenticationRequiredError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+        ) from e
+    except (PlaylistParseError, UnsupportedPlaylistError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        ) from e
+    except APIError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(e),
+        ) from e
+
     subscription = Subscription(
-        type=data.type,
+        type=SubscriptionType.PLAYLIST,
         url=str(data.url),
-        name=data.name,
-        enabled=data.enabled,
+        name=name,
+        enabled=True,
+        max_items=data.max_items,
         created_at=datetime.now(UTC),
     )
     created = repository.create(subscription)
     return SubscriptionResponse.model_validate(created)
-
-
-@router.get("/{subscription_id}", response_model=SubscriptionResponse)
-def get_subscription(
-    subscription_id: UUID,
-    repository: RepositoryDep,
-) -> SubscriptionResponse:
-    """Get a subscription by ID."""
-    subscription = repository.get(subscription_id)
-    if subscription is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Subscription not found",
-        )
-    return SubscriptionResponse.model_validate(subscription)
 
 
 @router.patch("/{subscription_id}", response_model=SubscriptionResponse)
