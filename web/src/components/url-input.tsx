@@ -71,14 +71,13 @@ export function UrlInput({
         type="url"
         placeholder="Album or playlist URL, or search terms"
         value={value}
-        onValueChange={(nextValue: string) => onChange(nextValue.trim())}
+        onValueChange={(nextValue: string) => onChange(nextValue)}
         onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
           if (event.key === "Enter") {
             onSubmit?.();
             setIsFocused(false);
           }
         }}
-        onClick={() => setIsFocused(true)}
         onFocus={() => setIsFocused(true)}
         isDisabled={disabled}
         isInvalid={!isValid}
