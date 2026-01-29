@@ -1,8 +1,8 @@
 import { Button, Switch, Tooltip } from "@heroui/react";
 import { ExternalLink, RefreshCw, Trash2 } from "lucide-react";
-import { motion } from "motion/react";
-import { useState } from "react";
 import type { Subscription } from "@/api/subscriptions";
+import { HoverFade } from "@/components/common/hover-fade";
+import { useHover } from "@/hooks/use-hover";
 
 interface SubscriptionCardProps {
   subscription: Subscription;
@@ -32,15 +32,14 @@ export function SubscriptionCard({
   onSync,
   onDelete,
 }: SubscriptionCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, hoverHandlers] = useHover();
 
   return (
     <div
       className={`bg-content2 shadow-small rounded-large overflow-hidden px-3 py-2.5 transition-opacity ${
         !subscription.enabled ? "opacity-60" : ""
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      {...hoverHandlers}
     >
       <div className="flex items-center gap-3">
         {/* Icon */}
@@ -90,14 +89,7 @@ export function SubscriptionCard({
         </Tooltip>
 
         {/* External link */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            scale: isHovered ? 1 : 0.8,
-          }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        >
+        <HoverFade show={isHovered}>
           <Button
             as="a"
             href={subscription.url}
@@ -110,17 +102,10 @@ export function SubscriptionCard({
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
-        </motion.div>
+        </HoverFade>
 
         {/* Delete button */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{
-            opacity: isHovered ? 1 : 0,
-            scale: isHovered ? 1 : 0.8,
-          }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        >
+        <HoverFade show={isHovered}>
           <Button
             variant="light"
             size="sm"
@@ -130,7 +115,7 @@ export function SubscriptionCard({
           >
             <Trash2 className="h-4 w-4" />
           </Button>
-        </motion.div>
+        </HoverFade>
       </div>
     </div>
   );

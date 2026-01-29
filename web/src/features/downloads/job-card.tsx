@@ -9,9 +9,9 @@ import {
   X,
   XCircle,
 } from "lucide-react";
-import { motion } from "motion/react";
-import { useState } from "react";
 import type { Job, JobStatus } from "@/api/jobs";
+import { HoverFade } from "@/components/common/hover-fade";
+import { useHover } from "@/hooks/use-hover";
 import { isActive, isFinished } from "@/lib/job-status";
 
 interface JobCardProps {
@@ -192,7 +192,7 @@ function ContentInfo({
 }
 
 export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
-  const [isHovered, setIsHovered] = useState(false);
+  const [isHovered, hoverHandlers] = useHover();
   const isRunning = isActive(job.status);
   const isJobFinished = isFinished(job.status);
   const { content_info, download_stats } = job;
@@ -204,8 +204,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
       className={`bg-content2 shadow-small rounded-large overflow-hidden px-3 py-2.5 transition-colors ${
         job.status === "cancelled" ? "opacity-50" : ""
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      {...hoverHandlers}
     >
       <div className="flex items-center gap-3">
         <Thumbnail
@@ -231,14 +230,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
           )}
         </div>
 
-        <motion.div
-          initial={{ opacity: isRunning ? 1 : 0, scale: isRunning ? 1 : 0.8 }}
-          animate={{
-            opacity: isRunning || isHovered ? 1 : 0,
-            scale: isRunning || isHovered ? 1 : 0.8,
-          }}
-          transition={{ type: "spring", stiffness: 500, damping: 30 }}
-        >
+        <HoverFade show={isRunning || isHovered} initialShow={isRunning}>
           <Button
             as="a"
             href={job.url}
@@ -251,7 +243,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
           >
             <ExternalLink className="h-4 w-4" />
           </Button>
-        </motion.div>
+        </HoverFade>
 
         {isRunning && onCancel && (
           <Button
@@ -266,14 +258,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
         )}
 
         {isJobFinished && onDelete && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{
-              opacity: isHovered ? 1 : 0,
-              scale: isHovered ? 1 : 0.8,
-            }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          >
+          <HoverFade show={isHovered}>
             <Button
               variant="light"
               size="sm"
@@ -283,7 +268,7 @@ export function JobCard({ job, onCancel, onDelete }: JobCardProps) {
             >
               <Trash2 className="h-4 w-4" />
             </Button>
-          </motion.div>
+          </HoverFade>
         )}
       </div>
 
