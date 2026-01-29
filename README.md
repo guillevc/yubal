@@ -204,21 +204,21 @@ Need age-restricted content, private playlists, or Premium quality? Add your coo
 
 If yubal is useful to you:
 
-⭐ **[Star this repo](https://github.com/guillevc/yubal)** — Free, helps others discover yubal
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/guillevc) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/guillevc)
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/guillevc)
+Thanks to everyone who has supported the project 💝
 
-[![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/guillevc)
+A ⭐ also helps others discover yubal!
 
-## Star History
+## 📈 Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=guillevc/yubal&type=Date)](https://star-history.com/#guillevc/yubal&Date)
 
-## 🤝 Acknowledgments
+## 🙏 Acknowledgments
 
 Built with [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [ytmusicapi](https://github.com/sigma67/ytmusicapi).
 
-Thanks to everyone who's starred, shared, or contributed.
+Thanks to everyone who's starred, shared, reported bugs, suggested features, or [supported the project](https://ko-fi.com/guillevc).
 
 ## License
 
