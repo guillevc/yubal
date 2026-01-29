@@ -1,5 +1,9 @@
 /* eslint-disable react-refresh/only-export-components */
 
+import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/layout/header";
+import { DownloadsPage } from "@/pages/downloads";
+import { SubscriptionsPage } from "@/pages/subscriptions";
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import {
   createRootRoute,
@@ -12,11 +16,6 @@ import {
   useRouter,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { Footer } from "@/components/layout/footer";
-import { Header } from "@/components/layout/header";
-import { BlurFade } from "@/components/magicui/blur-fade";
-import { DownloadsPage } from "@/pages/downloads";
-import { SubscriptionsPage } from "@/pages/subscriptions";
 
 function RootLayout() {
   const router = useRouter();
@@ -29,12 +28,10 @@ function RootLayout() {
       <ToastProvider />
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="m-auto w-full max-w-4xl flex-1 px-4 py-8">
+        <main className="m-auto w-full max-w-4xl flex-1 px-4 py-6">
           <Outlet />
         </main>
-        <BlurFade delay={0.15} direction="up">
-          <Footer />
-        </BlurFade>
+        <Footer />
       </div>
     </HeroUIProvider>
   );

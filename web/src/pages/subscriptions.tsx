@@ -1,4 +1,3 @@
-import { BlurFade } from "@/components/magicui/blur-fade";
 import { SubscriptionsPanel } from "@/features/subscriptions/subscriptions-panel";
 import { useSubscriptions } from "@/features/subscriptions/use-subscriptions";
 
@@ -19,24 +18,18 @@ export function SubscriptionsPage() {
   return (
     <>
       {/* Page Title */}
-      <BlurFade delay={0.025} direction="up">
-        <h1 className="text-foreground mb-6 text-2xl font-bold">
-          My playlists
-        </h1>
-      </BlurFade>
+      <h1 className="text-foreground mb-5 text-2xl font-bold">My playlists</h1>
 
-      <BlurFade delay={0.05} direction="up">
-        <section className="mb-6">
-          <SubscriptionsPanel
-            subscriptions={subscriptions}
-            onAddSubscription={addSubscription}
-            onToggleEnabled={handleToggleEnabled}
-            onSync={syncSubscription}
-            onSyncAll={syncAll}
-            onDelete={deleteSubscription}
-          />
-        </section>
-      </BlurFade>
+      <section className="mb-6">
+        <SubscriptionsPanel
+          subscriptions={subscriptions}
+          onAddSubscription={addSubscription}
+          onToggleEnabled={handleToggleEnabled}
+          onSync={syncSubscription}
+          onSyncAll={syncAll}
+          onDelete={deleteSubscription}
+        />
+      </section>
     </>
   );
 }

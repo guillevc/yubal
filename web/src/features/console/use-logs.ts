@@ -11,7 +11,7 @@ export interface LogLine {
 
 export interface UseLogsResult {
   lines: LogLine[];
-  isConnected: boolean;
+  isOffline: boolean;
 }
 
 /**
@@ -24,7 +24,7 @@ export interface UseLogsResult {
  */
 export function useLogs(): UseLogsResult {
   const [lines, setLines] = useState<LogLine[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttemptRef = useRef(0);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -45,7 +45,7 @@ export function useLogs(): UseLogsResult {
 
       eventSource.onopen = () => {
         if (!mounted) return;
-        setIsConnected(true);
+        setIsOffline(false);
         reconnectAttemptRef.current = 0;
       };
 
@@ -62,7 +62,7 @@ export function useLogs(): UseLogsResult {
 
       eventSource.onerror = () => {
         if (!mounted) return;
-        setIsConnected(false);
+        setIsOffline(true);
         eventSource.close();
 
         // Schedule reconnection with exponential backoff
@@ -91,5 +91,5 @@ export function useLogs(): UseLogsResult {
     };
   }, []);
 
-  return { lines, isConnected };
+  return { lines, isOffline };
 }

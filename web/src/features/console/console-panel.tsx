@@ -23,7 +23,7 @@ interface ConsolePanelProps {
 
 export function ConsolePanel({ jobs = [] }: ConsolePanelProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { lines, isConnected } = useLogs();
+  const { lines, isOffline } = useLogs();
   const [isExpanded, setIsExpanded] = useLocalStorage(
     "yubal-console-expanded",
     false,
@@ -62,7 +62,7 @@ export function ConsolePanel({ jobs = [] }: ConsolePanelProps) {
         onClick={() => setIsExpanded(!isExpanded)}
         leadingIcon={<Terminal size={18} />}
         badge={
-          !isConnected ? (
+          isOffline ? (
             <Chip
               size="sm"
               radius="full"
