@@ -80,11 +80,12 @@ class Playlist(YTMusicModel):
 class AlbumTrack(YTMusicModel):
     """Track in an album."""
 
-    video_id: str = Field(alias="videoId")
+    video_id: str | None = Field(default=None, alias="videoId")
     title: str
-    artists: list[Artist]
-    track_number: int = Field(alias="trackNumber")
-    duration_seconds: int
+    artists: list[Artist] = Field(default_factory=list)
+    track_number: int | None = Field(default=None, alias="trackNumber")
+    duration_seconds: int | None = None
+    duration: str | None = None
 
 
 class Album(YTMusicModel):
@@ -95,6 +96,10 @@ class Album(YTMusicModel):
     year: str | None = None
     thumbnails: list[Thumbnail]
     tracks: list[AlbumTrack]
+    audio_playlist_id: str | None = Field(default=None, alias="audioPlaylistId")
+    track_count: int | None = Field(default=None, alias="trackCount")
+    duration: str | None = None
+    description: str | None = None
 
 
 class SearchResult(YTMusicModel):

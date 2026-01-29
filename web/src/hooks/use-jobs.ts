@@ -13,7 +13,7 @@ export type { Job } from "../api/jobs";
 
 export interface UseJobsResult {
   jobs: Job[];
-  startJob: (url: string, maxItems?: number) => Promise<void>;
+  startJob: (url: string, maxItems?: number) => Promise<boolean>;
   cancelJob: (jobId: string) => Promise<void>;
   deleteJob: (jobId: string) => Promise<void>;
   refreshJobs: () => Promise<void>;
@@ -63,11 +63,12 @@ export function useJobs(): UseJobsResult {
       if (!result.success) {
         showErrorToast("Download failed", result.error);
         await fetchJobs();
-        return;
+        return false;
       }
 
       await fetchJobs();
       startPolling();
+      return true;
     },
     [fetchJobs, startPolling],
   );

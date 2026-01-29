@@ -3,7 +3,7 @@
 import logging
 from collections import OrderedDict
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 from ytmusicapi import YTMusic
 from ytmusicapi.exceptions import YTMusicError, YTMusicServerError, YTMusicUserError
@@ -46,8 +46,33 @@ class YTMusicProtocol(Protocol):
         """Search for songs."""
         ...
 
+    def search(
+        self,
+        query: str,
+        *,
+        filter: str | None = None,
+        scope: str | None = None,
+        limit: int | None = None,
+        ignore_spelling: bool | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search YouTube Music across multiple result types."""
+        ...
+
+    def search_suggestions(
+        self,
+        query: str,
+        *,
+        detailed_runs: bool = False,
+    ) -> list[Any]:
+        """Get search suggestions for a query."""
+        ...
+
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Fetch a single track by video ID."""
+        ...
+
+    def get_song_related(self, video_id: str) -> list[dict[str, Any]]:
+        """Fetch related content for a song by video ID."""
         ...
 
 
@@ -269,6 +294,92 @@ class YTMusicClient:
 
         return [SearchResult.model_validate(r) for r in data]
 
+    def search(
+        self,
+        query: str,
+        *,
+        filter: str | None = None,
+        scope: str | None = None,
+        limit: int | None = None,
+        ignore_spelling: bool | None = None,
+    ) -> list[dict[str, Any]]:
+        """Search YouTube Music across multiple result types.
+
+        Args:
+            query: Search query string.
+            filter: Optional filter for item types.
+            scope: Optional search scope.
+            limit: Maximum number of results to return.
+            ignore_spelling: Whether to ignore YTM spelling suggestions.
+
+        Returns:
+            Raw list of result dictionaries from ytmusicapi.
+
+        Raises:
+            ValueError: If query is empty.
+            APIError: If API request fails.
+        """
+        if not query or not query.strip():
+            raise ValueError("query cannot be empty")
+
+        search_limit = limit if limit is not None else self._config.search_limit
+        spelling = (
+            ignore_spelling
+            if ignore_spelling is not None
+            else self._config.ignore_spelling
+        )
+
+        logger.debug("Searching YouTube Music: %s", query)
+        try:
+            return self._ytm.search(
+                query,
+                filter=filter,
+                scope=scope,
+                limit=search_limit,
+                ignore_spelling=spelling,
+            )
+        except (YTMusicServerError, YTMusicUserError) as e:
+            logger.warning("YTMusic API error for search '%s': %s", query, e)
+            raise APIError(f"Search failed: {e}") from e
+        except YTMusicError as e:
+            logger.warning("YTMusic error for search '%s': %s", query, e)
+            raise APIError(f"Search failed: {e}") from e
+
+    def search_suggestions(
+        self,
+        query: str,
+        *,
+        detailed_runs: bool = False,
+    ) -> list[Any]:
+        """Get search suggestions for a query.
+
+        Args:
+            query: Search query string.
+            detailed_runs: Whether to return detailed runs.
+
+        Returns:
+            List of suggestions (strings or dicts).
+
+        Raises:
+            ValueError: If query is empty.
+            APIError: If API request fails.
+        """
+        if not query or not query.strip():
+            raise ValueError("query cannot be empty")
+
+        logger.debug("Fetching search suggestions: %s", query)
+        try:
+            return self._ytm.get_search_suggestions(
+                query,
+                detailed_runs=detailed_runs,
+            )
+        except (YTMusicServerError, YTMusicUserError) as e:
+            logger.warning("YTMusic API error for suggestions '%s': %s", query, e)
+            raise APIError(f"Search suggestions failed: {e}") from e
+        except YTMusicError as e:
+            logger.warning("YTMusic error for suggestions '%s': %s", query, e)
+            raise APIError(f"Search suggestions failed: {e}") from e
+
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Fetch a single track by video ID using get_watch_playlist().
 
@@ -302,6 +413,48 @@ class YTMusicClient:
 
         track_data = self._normalize_watch_track(tracks[0])
         return PlaylistTrack.model_validate(track_data)
+
+    def get_song_related(self, video_id: str) -> list[dict[str, Any]]:
+        """Fetch related content for a song by video ID.
+
+        Args:
+            video_id: YouTube video ID.
+
+        Returns:
+            List of related content sections.
+
+        Raises:
+            ValueError: If video_id is empty.
+            APIError: If API request fails or related key missing.
+        """
+        if not video_id or not video_id.strip():
+            raise ValueError("video_id cannot be empty")
+
+        logger.debug("Fetching related content for track: %s", video_id)
+        try:
+            data = self._ytm.get_watch_playlist(video_id)
+        except (YTMusicServerError, YTMusicUserError) as e:
+            logger.warning("YTMusic API error for track %s: %s", video_id, e)
+            raise APIError(f"Failed to fetch track: {e}") from e
+        except YTMusicError as e:
+            logger.warning("YTMusic error for track %s: %s", video_id, e)
+            raise APIError(f"Failed to fetch track: {e}") from e
+
+        related_key = data.get("related")
+        if isinstance(related_key, dict):
+            related_key = related_key.get("browseId")
+
+        if not isinstance(related_key, str) or not related_key:
+            raise APIError("Related content not available for this track")
+
+        try:
+            return self._ytm.get_song_related(related_key)
+        except (YTMusicServerError, YTMusicUserError) as e:
+            logger.warning("YTMusic API error for related '%s': %s", related_key, e)
+            raise APIError(f"Failed to fetch related content: {e}") from e
+        except YTMusicError as e:
+            logger.warning("YTMusic error for related '%s': %s", related_key, e)
+            raise APIError(f"Failed to fetch related content: {e}") from e
 
     def _normalize_watch_track(self, track: dict) -> dict:
         """Normalize get_watch_playlist track to PlaylistTrack format.
