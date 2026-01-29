@@ -18,6 +18,11 @@ RUN VITE_VERSION=$VERSION \
 # Install Python dependencies
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS python-builder
 
+# Git is required to install yt-dlp from GitHub
+# hadolint ignore=DL3008
+RUN apt-get update && apt-get install -y --no-install-recommends git \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY packages/ ./packages/
