@@ -117,6 +117,11 @@ class YTDLPDownloader:
             "quiet": self._config.quiet,
             "no_warnings": self._config.quiet,
             "noprogress": self._config.quiet,
+            # Rate limiting mitigation: exponential backoff (1s, 2s, 4s, 8s, ...)
+            "retry_sleep_functions": {
+                "http": lambda n: min(2**n, 30),  # Cap at 30s
+                "fragment": lambda n: min(2**n, 30),
+            },
         }
 
         # Use cookies for age-restricted content, premium quality, etc.
