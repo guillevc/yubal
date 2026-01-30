@@ -1,9 +1,9 @@
 import { UrlInput } from "@/components/common/url-input";
-import { SubscriptionsPanel } from "@/features/subscriptions/subscriptions-panel";
+import { SubscriptionsTable } from "@/features/subscriptions/subscriptions-table";
 import { useSubscriptions } from "@/features/subscriptions/use-subscriptions";
 import { isValidUrl } from "@/lib/url";
 import { Button, NumberInput, Tooltip } from "@heroui/react";
-import { Hash, Plus } from "lucide-react";
+import { Hash, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 
 const DEFAULT_MAX_ITEMS = 100;
@@ -43,7 +43,7 @@ export function SubscriptionsPage() {
       <h1 className="text-foreground mb-5 text-2xl font-bold">My Playlists</h1>
 
       {/* URL Input Section */}
-      <section className="mb-6 flex gap-2">
+      <section className="mb-4 flex gap-2">
         <div className="flex-1">
           <UrlInput
             value={url}
@@ -84,12 +84,29 @@ export function SubscriptionsPage() {
         </Button>
       </section>
 
-      <section className="mb-6">
-        <SubscriptionsPanel
+      {/* Subscriptions Table */}
+      <section>
+        {subscriptions.length > 0 && (
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-foreground-400 text-small font-mono">
+              {subscriptions.filter((s) => s.enabled).length}/
+              {subscriptions.length} enabled
+            </span>
+            <Button
+              variant="light"
+              size="md"
+              className="text-foreground-500 hover:text-primary"
+              onPress={syncAll}
+              startContent={<RefreshCw className="h-3.5 w-3.5" />}
+            >
+              Sync All
+            </Button>
+          </div>
+        )}
+        <SubscriptionsTable
           subscriptions={subscriptions}
           onToggleEnabled={handleToggleEnabled}
           onSync={syncSubscription}
-          onSyncAll={syncAll}
           onDelete={deleteSubscription}
         />
       </section>

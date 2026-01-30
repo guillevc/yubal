@@ -1,9 +1,9 @@
-import { Download, Inbox } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
 import type { Job } from "@/api/jobs";
 import { EmptyState } from "@/components/common/empty-state";
 import { Panel, PanelContent, PanelHeader } from "@/components/common/panel";
 import { isActive } from "@/lib/job-status";
+import { Download, Inbox } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
 import { JobCard } from "./job-card";
 
 interface DownloadsPanelProps {

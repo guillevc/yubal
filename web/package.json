@@ -17,6 +17,7 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
+    "@formkit/tempo": "^1.0.0",
     "@heroui/react": "^2.8.7",
     "@tanstack/react-router": "^1.157.16",
     "lucide-react": "^0.562.0",
