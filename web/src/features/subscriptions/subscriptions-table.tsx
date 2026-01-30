@@ -82,6 +82,7 @@ export function SubscriptionsTable({
             <div className="flex items-center justify-center gap-1">
               <Button
                 variant="light"
+                size="sm"
                 isIconOnly
                 className="text-foreground-500 hover:text-primary"
                 onPress={() => onSync(subscription.id)}
@@ -90,6 +91,7 @@ export function SubscriptionsTable({
               </Button>
               <Button
                 variant="light"
+                size="sm"
                 isIconOnly
                 className="text-foreground-500 hover:text-danger"
                 onPress={() => onDelete(subscription.id)}
