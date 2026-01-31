@@ -32,6 +32,7 @@ const columns: { name: string; key: ColumnKey }[] = [
 
 interface SubscriptionsTableProps {
   subscriptions: Subscription[];
+  isLoading?: boolean;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onSync: (id: string) => void;
   onDelete: (id: string) => void;
@@ -39,6 +40,7 @@ interface SubscriptionsTableProps {
 
 export function SubscriptionsTable({
   subscriptions,
+  isLoading,
   onToggleEnabled,
   onSync,
   onDelete,
@@ -141,6 +143,10 @@ export function SubscriptionsTable({
       </TableHeader>
       <TableBody
         items={subscriptions}
+        loadingState={isLoading ? "loading" : "idle"}
+        loadingContent=<span className="text-foreground-400 text-small font-mono">
+          Loading...
+        </span>
         emptyContent={
           <EmptyState icon={InboxIcon} title="No playlists registered" />
         }

@@ -2,7 +2,7 @@ import { UrlInput } from "@/components/common/url-input";
 import { SubscriptionsTable } from "@/features/subscriptions/subscriptions-table";
 import { useSubscriptions } from "@/features/subscriptions/use-subscriptions";
 import { isValidUrl } from "@/lib/url";
-import { Button, NumberInput, Tooltip } from "@heroui/react";
+import { Button, NumberInput, Spacer, Tooltip } from "@heroui/react";
 import { HashIcon, RefreshCwIcon, RssIcon } from "lucide-react";
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ export function SubscriptionsPage() {
   const [isAdding, setIsAdding] = useState(false);
   const {
     subscriptions,
+    isLoading,
     addSubscription,
     updateSubscription,
     deleteSubscription,
@@ -22,6 +23,7 @@ export function SubscriptionsPage() {
   } = useSubscriptions();
 
   const canAdd = isValidUrl(url);
+  const isEmpty = subscriptions.length == 0;
 
   const handleAdd = async () => {
     if (!canAdd) return;
@@ -86,26 +88,29 @@ export function SubscriptionsPage() {
 
       {/* Subscriptions Table */}
       <section>
-        {subscriptions.length > 0 && (
-          <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-between">
+          {!isEmpty && (
             <span className="text-foreground-400 text-small font-mono">
               {subscriptions.filter((s) => s.enabled).length}/
               {subscriptions.length} enabled
             </span>
-            <Button
-              variant="light"
-              size="sm"
-              radius="lg"
-              className="text-foreground-500 hover:text-primary text-small"
-              onPress={syncAll}
-              startContent={<RefreshCwIcon className="h-3.5 w-3.5" />}
-            >
-              Sync All
-            </Button>
-          </div>
-        )}
+          )}
+          <Spacer />
+          <Button
+            variant="light"
+            size="sm"
+            radius="lg"
+            className="text-foreground-500 hover:text-primary text-small"
+            onPress={syncAll}
+            isDisabled={isEmpty}
+            startContent={<RefreshCwIcon className="h-3.5 w-3.5" />}
+          >
+            Sync All
+          </Button>
+        </div>
         <SubscriptionsTable
           subscriptions={subscriptions}
+          isLoading={isLoading}
           onToggleEnabled={handleToggleEnabled}
           onSync={syncSubscription}
           onDelete={deleteSubscription}

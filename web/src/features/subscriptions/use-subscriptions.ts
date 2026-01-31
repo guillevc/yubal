@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useState } from "react";
 import {
   addSubscription as addSubscriptionApi,
   deleteSubscription as deleteSubscriptionApi,
@@ -11,6 +10,7 @@ import {
   type Subscription,
 } from "@/api/subscriptions";
 import { showErrorToast } from "@/lib/toast";
+import { useCallback, useEffect, useState } from "react";
 
 export type { SchedulerStatus, Subscription } from "@/api/subscriptions";
 
