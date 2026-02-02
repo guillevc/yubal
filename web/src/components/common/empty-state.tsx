@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-interface EmptyStateProps {
+type Props = {
   /** Lucide icon component to display */
   icon: LucideIcon;
   /** Main title text */
@@ -12,7 +12,7 @@ interface EmptyStateProps {
   className?: string;
   /** Use monospace font (useful for console-style panels) */
   mono?: boolean;
-}
+};
 
 export function EmptyState({
   icon: Icon,
@@ -20,7 +20,7 @@ export function EmptyState({
   description,
   className = "",
   mono = false,
-}: EmptyStateProps) {
+}: Props) {
   return (
     <div
       className={`flex h-full flex-col items-center justify-center gap-3 py-8 ${className}`}

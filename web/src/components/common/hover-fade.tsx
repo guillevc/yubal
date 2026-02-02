@@ -1,14 +1,14 @@
 import { motion } from "motion/react";
 import type { ReactNode } from "react";
 
-interface HoverFadeProps {
+type Props = {
   show: boolean;
   /** Skip initial animation (useful when element should be visible on mount) */
   initialShow?: boolean;
   children: ReactNode;
-}
+};
 
-export function HoverFade({ show, initialShow, children }: HoverFadeProps) {
+export function HoverFade({ show, initialShow, children }: Props) {
   const shouldShow = initialShow ?? false;
   return (
     <motion.div

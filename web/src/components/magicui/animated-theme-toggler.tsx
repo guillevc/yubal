@@ -4,13 +4,11 @@ import { useCallback, useRef } from "react";
 import { flushSync } from "react-dom";
 import { useTheme } from "@/hooks/use-theme";
 
-interface AnimatedThemeTogglerProps {
+type Props = {
   duration?: number;
-}
+};
 
-export function AnimatedThemeToggler({
-  duration = 400,
-}: AnimatedThemeTogglerProps) {
+export function AnimatedThemeToggler({ duration = 400 }: Props) {
   const { theme, toggle } = useTheme();
   const buttonRef = useRef<HTMLButtonElement>(null);
 

@@ -1,15 +1,15 @@
 import { AlertTriangleIcon } from "lucide-react";
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
-interface Props {
+type Props = {
   children: ReactNode;
   fallback?: ReactNode;
-}
+};
 
-interface State {
+type State = {
   hasError: boolean;
   error: Error | null;
-}
+};
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
