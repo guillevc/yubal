@@ -116,9 +116,7 @@ function Thumbnail({
       {url ? (
         <Image src={url} radius="sm" isBlurred />
       ) : (
-        <div className="bg-content3 flex h-16 w-16 shrink-0 items-center justify-center rounded">
-          {statusIcon}
-        </div>
+        <div className="bg-content3 rounded-small flex h-full w-full shrink-0 items-center justify-center"></div>
       )}
       <div className="bg-content2/80 absolute right-0.5 bottom-0.5 z-10 grid h-6 w-6 place-items-center rounded-full">
         {statusIcon}
@@ -199,9 +197,7 @@ export function JobCard({ job, onCancel, onDelete }: Props) {
 
   return (
     <Card
-      classNames={{
-        base: `bg-content2 transition-colors ${opacity}`,
-      }}
+      className={`bg-content2 transition-colors ${opacity}`}
       {...hoverHandlers}
     >
       <CardBody className="flex flex-row items-center gap-3">
@@ -224,7 +220,9 @@ export function JobCard({ job, onCancel, onDelete }: Props) {
               kind={content_info.kind ?? null}
             />
           ) : (
-            <p className="text-foreground-500 truncate text-xs">{job.url}</p>
+            <p className="text-foreground-500 truncate font-mono text-xs">
+              {job.url}
+            </p>
           )}
         </div>
 
@@ -271,10 +269,10 @@ export function JobCard({ job, onCancel, onDelete }: Props) {
       </CardBody>
 
       {isRunning && (
-        <CardFooter className="mt-2 flex items-center gap-2">
+        <CardFooter className="flex items-center gap-2 pt-0">
           <Progress
             value={job.progress}
-            size="sm"
+            size="md"
             color={STATUS_CONFIG[job.status].progressColor}
             className="flex-1"
             classNames={{
@@ -282,7 +280,7 @@ export function JobCard({ job, onCancel, onDelete }: Props) {
             }}
             aria-label="Job progress"
           />
-          <span className="text-foreground-500 w-8 text-right font-mono text-xs">
+          <span className="text-foreground-500 text-small w-8 text-right font-mono">
             {Math.round(job.progress)}%
           </span>
         </CardFooter>
