@@ -10,7 +10,7 @@ from typing import Any
 from yubal import AudioCodec, CancelToken, cleanup_part_files
 
 from yubal_api.db.repository import SubscriptionRepository
-from yubal_api.domain.enums import JobStatus, ProgressStep
+from yubal_api.domain.enums import JobSource, JobStatus, ProgressStep
 from yubal_api.domain.job import ContentInfo, Job
 from yubal_api.services.protocols import JobExecutionStore
 from yubal_api.services.sync import SyncService
@@ -71,7 +71,10 @@ class JobExecutor:
         self._cancel_tokens: dict[str, CancelToken] = {}
 
     def create_and_start_job(
-        self, url: str, max_items: int | None = None
+        self,
+        url: str,
+        max_items: int | None = None,
+        source: JobSource = JobSource.MANUAL,
     ) -> Job | None:
         """Create a new job and start it if ready.
 
@@ -82,11 +85,12 @@ class JobExecutor:
         Args:
             url: The URL to download content from.
             max_items: Maximum number of items to download (None for all).
+            source: Source of the job (manual API call or scheduler).
 
         Returns:
             The created Job, or None if queue is full.
         """
-        result = self._job_store.create(url, self._audio_format, max_items)
+        result = self._job_store.create(url, self._audio_format, max_items, source)
         if result is None:
             return None
 

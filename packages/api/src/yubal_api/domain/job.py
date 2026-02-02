@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, ConfigDict, Field
 from yubal import AudioCodec, ContentKind, PhaseStats
 
-from yubal_api.domain.enums import JobStatus
+from yubal_api.domain.enums import JobSource, JobStatus
 
 
 class ContentInfo(BaseModel):
@@ -32,6 +32,7 @@ class Job(BaseModel):
     url: str = Field(json_schema_extra={"format": "uri"})
     audio_format: AudioCodec = AudioCodec.OPUS
     max_items: int | None = None
+    source: JobSource = JobSource.MANUAL
     status: JobStatus = JobStatus.PENDING
     progress: float = 0.0
     content_info: ContentInfo | None = None

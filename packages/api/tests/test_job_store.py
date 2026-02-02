@@ -7,7 +7,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from yubal import AudioCodec, PhaseStats
-from yubal_api.domain.enums import JobStatus
+from yubal_api.domain.enums import JobSource, JobStatus
 from yubal_api.domain.job import ContentInfo
 from yubal_api.services.job_store import JobStore
 
@@ -133,6 +133,36 @@ class TestJobLifecycle:
         assert result is not None
         job, _ = result
         assert job.max_items == 5
+
+    def test_create_defaults_to_manual_source(self, store: JobStore) -> None:
+        """Created job should default to MANUAL source when not specified."""
+        result = store.create("https://music.youtube.com/playlist?list=PLtest")
+        assert result is not None
+        job, _ = result
+        assert job.source == JobSource.MANUAL
+
+    def test_create_with_scheduler_source(self, store: JobStore) -> None:
+        """Created job should respect source parameter when set to SCHEDULER."""
+        result = store.create(
+            "https://music.youtube.com/playlist?list=PLtest",
+            source=JobSource.SCHEDULER,
+        )
+        assert result is not None
+        job, _ = result
+        assert job.source == JobSource.SCHEDULER
+
+    def test_source_is_retrievable_after_get(self, store: JobStore) -> None:
+        """Source should be correctly stored and retrievable via get()."""
+        result = store.create(
+            "https://music.youtube.com/playlist?list=PLtest",
+            source=JobSource.SCHEDULER,
+        )
+        assert result is not None
+        job, _ = result
+
+        retrieved = store.get(job.id)
+        assert retrieved is not None
+        assert retrieved.source == JobSource.SCHEDULER
 
     def test_create_first_job_should_start_immediately(self, store: JobStore) -> None:
         """First job created should be marked for immediate start."""

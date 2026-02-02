@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 
 from yubal_api.db.repository import SubscriptionRepository
 from yubal_api.db.subscription import Subscription
+from yubal_api.domain.enums import JobSource
 from yubal_api.services.job_executor import JobExecutor
 from yubal_api.settings import Settings
 
@@ -99,7 +100,7 @@ class Scheduler:
         for subscription in subscriptions:
             try:
                 job = self._job_executor.create_and_start_job(
-                    subscription.url, subscription.max_items
+                    subscription.url, subscription.max_items, JobSource.SCHEDULER
                 )
                 if job is None:
                     logger.warning(

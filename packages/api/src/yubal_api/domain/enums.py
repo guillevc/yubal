@@ -25,3 +25,10 @@ class ProgressStep(StrEnum):
     IMPORTING = "importing"
     COMPLETED = "completed"
     FAILED = "failed"
+
+
+class JobSource(StrEnum):
+    """Source of a background job."""
+
+    MANUAL = "manual"
+    SCHEDULER = "scheduler"

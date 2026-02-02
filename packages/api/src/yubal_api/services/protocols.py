@@ -5,7 +5,7 @@ from typing import Protocol
 
 from yubal import AudioCodec, PhaseStats
 
-from yubal_api.domain.enums import JobStatus
+from yubal_api.domain.enums import JobSource, JobStatus
 from yubal_api.domain.job import ContentInfo, Job
 
 
@@ -23,6 +23,7 @@ class JobExecutionStore(Protocol):
         url: str,
         audio_format: AudioCodec,
         max_items: int | None = None,
+        source: JobSource = JobSource.MANUAL,
     ) -> tuple[Job, bool] | None:
         """Create a new job.
 

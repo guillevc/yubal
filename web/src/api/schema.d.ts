@@ -451,6 +451,8 @@ export interface components {
             audio_format: components["schemas"]["AudioCodec"];
             /** Max Items */
             max_items?: number | null;
+            /** @default manual */
+            source: components["schemas"]["JobSource"];
             /** @default pending */
             status: components["schemas"]["JobStatus"];
             /**
@@ -484,6 +486,12 @@ export interface components {
              */
             message: "Job created";
         };
+        /**
+         * JobSource
+         * @description Source of a background job.
+         * @enum {string}
+         */
+        JobSource: "manual" | "scheduler";
         /**
          * JobStatus
          * @description Status of a background job.

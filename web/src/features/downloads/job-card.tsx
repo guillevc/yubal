@@ -134,6 +134,7 @@ function ContentInfo({
   audioBitrate,
   showBitrate,
   kind,
+  source,
 }: {
   title: string;
   artist: string | null;
@@ -143,6 +144,7 @@ function ContentInfo({
   audioBitrate: number | null;
   showBitrate: boolean;
   kind: "playlist" | "album" | "track" | null;
+  source: "manual" | "scheduler";
 }) {
   return (
     <div>
@@ -173,14 +175,16 @@ function ContentInfo({
             {`${audioCodec} ${showBitrate && audioBitrate ? `@ ${audioBitrate}kbps` : ""}`}
           </JobChip>
         )}
-        <Chip
-          size="sm"
-          variant="flat"
-          startContent={<ZapIcon size={14} className="mx-1" />}
-          className="bg-sky-500/15 font-mono text-sky-600 dark:bg-sky-500/20 dark:text-sky-300"
-        >
-          Auto
-        </Chip>
+        {source === "scheduler" && (
+          <Chip
+            size="sm"
+            variant="flat"
+            startContent={<ZapIcon size={14} className="mx-1" />}
+            className="bg-sky-500/15 font-mono text-sky-600 dark:bg-sky-500/20 dark:text-sky-300"
+          >
+            Auto
+          </Chip>
+        )}
       </div>
     </div>
   );
@@ -218,6 +222,7 @@ export function JobCard({ job, onCancel, onDelete }: Props) {
               audioBitrate={content_info.audio_bitrate ?? null}
               showBitrate={isJobFinished}
               kind={content_info.kind ?? null}
+              source={job.source}
             />
           ) : (
             <p className="text-foreground-500 truncate font-mono text-xs">
