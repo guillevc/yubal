@@ -3,9 +3,9 @@
 services:
   yubal:
     build: .
-    image: yubal:latest
+    image: yubal:local
     container_name: yubal
-    user: 1000:1000 # run as UID:GID (run `id` to check yours)
+    user: 1000:1000
     environment:
       YUBAL_PORT: 8000
       YUBAL_TZ: Europe/Madrid

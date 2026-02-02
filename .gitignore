@@ -1,7 +1,6 @@
 /data/
 /config/
 /.env
-/.env.docker
 
 /web/dist/
 /web/node_modules/
