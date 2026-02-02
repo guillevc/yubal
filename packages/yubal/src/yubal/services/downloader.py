@@ -103,8 +103,11 @@ class YTDLPDownloader:
         Returns:
             Dictionary of yt-dlp options.
         """
+        codec = self._config.codec.value
         opts: dict[str, Any] = {
-            "format": "bestaudio/best",
+            "format": (
+                f"bestaudio[ext={codec}]/bestaudio[acodec={codec}]/bestaudio/best"
+            ),
             "outtmpl": str(output_path),
             "color": "never",  # Disable ANSI codes in error messages
             "postprocessors": [
