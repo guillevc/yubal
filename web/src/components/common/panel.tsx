@@ -63,10 +63,10 @@ export interface PanelContentProps extends HTMLAttributes<HTMLDivElement> {
 export const PanelContent = forwardRef<HTMLDivElement, PanelContentProps>(
   ({ children, className = "", height = "h-72", ...props }, ref) => {
     return (
-      <CardBody>
+      <CardBody className="pt-0">
         <ScrollShadow
           ref={ref}
-          className={`${height} px-4 ${className}`}
+          className={`${height} px-4 py-4 ${className}`}
           offset={2}
           {...props}
         >

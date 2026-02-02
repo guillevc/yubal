@@ -3,7 +3,6 @@
 from pathlib import Path
 
 from pathvalidate import sanitize_filename
-from unidecode import unidecode
 
 
 def clean_filename(s: str) -> str:
@@ -24,7 +23,7 @@ def clean_filename(s: str) -> str:
         >>> clean_filename("AC/DC")
         'ACDC'
     """
-    return sanitize_filename(unidecode(s))
+    return sanitize_filename(s)
 
 
 def build_track_path(
