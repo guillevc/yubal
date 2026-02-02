@@ -1,4 +1,15 @@
-"""Test fixtures and configuration."""
+"""Test fixtures and configuration.
+
+This module provides shared fixtures for the yubal test suite, organized into:
+- Model fixtures: Sample data models for testing
+- Mock fixtures: Pre-configured mocks for external dependencies
+- Factory fixtures: Builders for creating customized test data
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 import pytest
 from yubal.models.ytmusic import (
@@ -11,6 +22,14 @@ from yubal.models.ytmusic import (
     SearchResult,
     Thumbnail,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+
+# =============================================================================
+# Model Fixtures - Basic building blocks
+# =============================================================================
 
 
 @pytest.fixture
@@ -48,6 +67,11 @@ def sample_thumbnails() -> list[Thumbnail]:
 def sample_album_ref() -> AlbumRef:
     """Create a sample album reference."""
     return AlbumRef(id="album123", name="Test Album")
+
+
+# =============================================================================
+# Composite Model Fixtures - Built from basic fixtures
+# =============================================================================
 
 
 @pytest.fixture
@@ -166,8 +190,75 @@ def sample_search_result(
     )
 
 
+# =============================================================================
+# Factory Fixtures - For creating customized test data
+# =============================================================================
+
+
+@pytest.fixture
+def make_artist() -> Callable[..., Artist]:
+    """Factory fixture for creating artists with custom attributes."""
+
+    def _make_artist(
+        name: str = "Test Artist",
+        id: str | None = "artist123",
+    ) -> Artist:
+        return Artist(name=name, id=id)
+
+    return _make_artist
+
+
+@pytest.fixture
+def make_thumbnail() -> Callable[..., Thumbnail]:
+    """Factory fixture for creating thumbnails with custom dimensions."""
+
+    def _make_thumbnail(
+        url: str = "https://example.com/thumb.jpg",
+        width: int = 544,
+        height: int = 544,
+    ) -> Thumbnail:
+        return Thumbnail(url=url, width=width, height=height)
+
+    return _make_thumbnail
+
+
+@pytest.fixture
+def make_album_track() -> Callable[..., AlbumTrack]:
+    """Factory fixture for creating album tracks with custom attributes."""
+
+    def _make_album_track(
+        video_id: str = "video123",
+        title: str = "Test Song",
+        artists: list[dict] | None = None,
+        track_number: int = 1,
+        duration_seconds: int = 240,
+    ) -> AlbumTrack:
+        if artists is None:
+            artists = [{"name": "Test Artist", "id": "artist1"}]
+        return AlbumTrack.model_validate(
+            {
+                "videoId": video_id,
+                "title": title,
+                "artists": artists,
+                "trackNumber": track_number,
+                "duration_seconds": duration_seconds,
+            }
+        )
+
+    return _make_album_track
+
+
+# =============================================================================
+# Mock Fixtures - For external dependencies
+# =============================================================================
+
+
 class MockYTMusicClient:
-    """Mock YouTube Music client for testing."""
+    """Mock YouTube Music client for testing.
+
+    This mock tracks all API calls made during tests and returns
+    pre-configured responses.
+    """
 
     def __init__(
         self,
@@ -218,3 +309,24 @@ def mock_client(
         album=sample_album,
         search_results=[sample_search_result],
     )
+
+
+@pytest.fixture
+def mock_urlopen_response() -> Callable[..., MagicMock]:
+    """Factory for creating mock urlopen responses.
+
+    Usage:
+        def test_example(mock_urlopen_response):
+            mock_resp = mock_urlopen_response(b"response data")
+            with patch("urllib.request.urlopen", return_value=mock_resp):
+                ...
+    """
+
+    def _create_response(data: bytes = b"mock data") -> MagicMock:
+        mock_response = MagicMock()
+        mock_response.read.return_value = data
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+        return mock_response
+
+    return _create_response

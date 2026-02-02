@@ -1,9 +1,16 @@
 """Tests for cover art fetching."""
 
+from collections.abc import Callable
+from email.message import Message
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
+from urllib.error import HTTPError, URLError
 
 import pytest
 from yubal.utils.cover import clear_cover_cache, fetch_cover, get_cover_cache_size
+
+if TYPE_CHECKING:
+    pass
 
 
 @pytest.fixture(autouse=True)
@@ -15,64 +22,43 @@ def clear_cache() -> None:
 class TestFetchCover:
     """Tests for fetch_cover function."""
 
-    def test_returns_none_for_none_url(self) -> None:
-        """Should return None when URL is None."""
-        result = fetch_cover(None)
-        assert result is None
+    @pytest.mark.parametrize("url", [None, ""])
+    def test_returns_none_for_invalid_url(self, url: str | None) -> None:
+        """Should return None when URL is None or empty."""
+        assert fetch_cover(url) is None
 
-    def test_returns_none_for_empty_url(self) -> None:
-        """Should return None when URL is empty."""
-        result = fetch_cover("")
-        assert result is None
-
-    def test_fetches_cover_successfully(self) -> None:
+    def test_fetches_cover_successfully(
+        self, mock_urlopen_response: Callable[..., MagicMock]
+    ) -> None:
         """Should fetch and return cover bytes."""
-        mock_response = MagicMock()
-        mock_response.read.return_value = b"fake image data"
-        mock_response.__enter__ = MagicMock(return_value=mock_response)
-        mock_response.__exit__ = MagicMock(return_value=False)
-
-        with patch(
-            "yubal.utils.cover.urllib.request.urlopen", return_value=mock_response
-        ):
+        mock_resp = mock_urlopen_response(b"fake image data")
+        with patch("yubal.utils.cover.urllib.request.urlopen", return_value=mock_resp):
             result = fetch_cover("https://example.com/cover.jpg")
-
         assert result == b"fake image data"
 
-    def test_caches_cover(self) -> None:
+    def test_caches_cover(
+        self, mock_urlopen_response: Callable[..., MagicMock]
+    ) -> None:
         """Should cache fetched cover and return from cache on second call."""
-        mock_response = MagicMock()
-        mock_response.read.return_value = b"cached image"
-        mock_response.__enter__ = MagicMock(return_value=mock_response)
-        mock_response.__exit__ = MagicMock(return_value=False)
-
+        mock_resp = mock_urlopen_response(b"cached image")
         with patch(
-            "yubal.utils.cover.urllib.request.urlopen", return_value=mock_response
+            "yubal.utils.cover.urllib.request.urlopen", return_value=mock_resp
         ) as mock_urlopen:
-            # First call - fetches
             result1 = fetch_cover("https://example.com/cover.jpg")
-            # Second call - should use cache
             result2 = fetch_cover("https://example.com/cover.jpg")
 
-        assert result1 == b"cached image"
-        assert result2 == b"cached image"
-        # urlopen should only be called once
+        assert result1 == result2 == b"cached image"
         assert mock_urlopen.call_count == 1
 
-    def test_different_urls_not_cached_together(self) -> None:
+    def test_different_urls_not_cached_together(
+        self, mock_urlopen_response: Callable[..., MagicMock]
+    ) -> None:
         """Should cache different URLs separately."""
-        mock_response1 = MagicMock()
-        mock_response1.read.return_value = b"image 1"
-        mock_response1.__enter__ = MagicMock(return_value=mock_response1)
-        mock_response1.__exit__ = MagicMock(return_value=False)
-
-        mock_response2 = MagicMock()
-        mock_response2.read.return_value = b"image 2"
-        mock_response2.__enter__ = MagicMock(return_value=mock_response2)
-        mock_response2.__exit__ = MagicMock(return_value=False)
+        mock_resp1 = mock_urlopen_response(b"image 1")
+        mock_resp2 = mock_urlopen_response(b"image 2")
 
         with patch("yubal.utils.cover.urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = [mock_response1, mock_response2]
+            mock_urlopen.side_effect = [mock_resp1, mock_resp2]
             result1 = fetch_cover("https://example.com/cover1.jpg")
             result2 = fetch_cover("https://example.com/cover2.jpg")
 
@@ -80,54 +66,36 @@ class TestFetchCover:
         assert result2 == b"image 2"
         assert mock_urlopen.call_count == 2
 
-    def test_handles_http_error(self) -> None:
-        """Should return None on HTTP error."""
-        from email.message import Message
-        from urllib.error import HTTPError
-
-        with patch("yubal.utils.cover.urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = HTTPError(
+    @pytest.mark.parametrize(
+        "error",
+        [
+            HTTPError(
                 "https://example.com/cover.jpg", 404, "Not Found", Message(), None
-            )
-            result = fetch_cover("https://example.com/cover.jpg")
-
-        assert result is None
-
-    def test_handles_url_error(self) -> None:
-        """Should return None on URL error."""
-        from urllib.error import URLError
-
+            ),
+            URLError("Connection refused"),
+            TimeoutError("Connection timed out"),
+        ],
+        ids=["http_error", "url_error", "timeout"],
+    )
+    def test_handles_network_errors(self, error: Exception) -> None:
+        """Should return None on network errors."""
         with patch("yubal.utils.cover.urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = URLError("Connection refused")
+            mock_urlopen.side_effect = error
             result = fetch_cover("https://example.com/cover.jpg")
-
-        assert result is None
-
-    def test_handles_timeout(self) -> None:
-        """Should return None on timeout."""
-        with patch("yubal.utils.cover.urllib.request.urlopen") as mock_urlopen:
-            mock_urlopen.side_effect = TimeoutError("Connection timed out")
-            result = fetch_cover("https://example.com/cover.jpg")
-
         assert result is None
 
 
 class TestClearCoverCache:
     """Tests for clear_cover_cache function."""
 
-    def test_clears_cache(self) -> None:
+    def test_clears_cache(
+        self, mock_urlopen_response: Callable[..., MagicMock]
+    ) -> None:
         """Should clear all cached covers."""
-        mock_response = MagicMock()
-        mock_response.read.return_value = b"image"
-        mock_response.__enter__ = MagicMock(return_value=mock_response)
-        mock_response.__exit__ = MagicMock(return_value=False)
-
-        with patch(
-            "yubal.utils.cover.urllib.request.urlopen", return_value=mock_response
-        ):
+        mock_resp = mock_urlopen_response(b"image")
+        with patch("yubal.utils.cover.urllib.request.urlopen", return_value=mock_resp):
             fetch_cover("https://example.com/cover.jpg")
             assert get_cover_cache_size() == 1
-
             clear_cover_cache()
             assert get_cover_cache_size() == 0
 
@@ -139,18 +107,13 @@ class TestGetCoverCacheSize:
         """Should return 0 for empty cache."""
         assert get_cover_cache_size() == 0
 
-    def test_returns_correct_count(self) -> None:
+    def test_returns_correct_count(
+        self, mock_urlopen_response: Callable[..., MagicMock]
+    ) -> None:
         """Should return correct number of cached items."""
-        mock_response = MagicMock()
-        mock_response.read.return_value = b"image"
-        mock_response.__enter__ = MagicMock(return_value=mock_response)
-        mock_response.__exit__ = MagicMock(return_value=False)
-
-        with patch(
-            "yubal.utils.cover.urllib.request.urlopen", return_value=mock_response
-        ):
+        mock_resp = mock_urlopen_response(b"image")
+        with patch("yubal.utils.cover.urllib.request.urlopen", return_value=mock_resp):
             fetch_cover("https://example.com/cover1.jpg")
             assert get_cover_cache_size() == 1
-
             fetch_cover("https://example.com/cover2.jpg")
             assert get_cover_cache_size() == 2

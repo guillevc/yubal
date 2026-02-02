@@ -9,16 +9,6 @@ from yubal_api.services.scheduler import Scheduler
 
 
 @pytest.fixture
-def mock_settings() -> MagicMock:
-    """Create mock settings with default values."""
-    settings = MagicMock()
-    settings.sync_enabled = True
-    settings.sync_cron = "0 */6 * * *"
-    settings.timezone = ZoneInfo("UTC")
-    return settings
-
-
-@pytest.fixture
 def scheduler(mock_settings: MagicMock) -> Scheduler:
     """Create scheduler with mocked dependencies."""
     repository = MagicMock()

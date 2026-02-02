@@ -1,26 +1,9 @@
 """Tests for subscription repository."""
 
-from collections.abc import Generator
+from uuid import uuid4
 
-import pytest
-from sqlalchemy.engine import Engine
-from sqlmodel import SQLModel, create_engine
 from yubal_api.db.repository import SubscriptionRepository
 from yubal_api.db.subscription import Subscription, SubscriptionType
-
-
-@pytest.fixture
-def engine() -> Generator[Engine, None, None]:
-    """Create in-memory SQLite engine for tests."""
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    yield engine
-
-
-@pytest.fixture
-def repository(engine: Engine) -> SubscriptionRepository:
-    """Create repository with test engine."""
-    return SubscriptionRepository(engine)
 
 
 class TestSubscriptionRepository:
@@ -117,9 +100,6 @@ class TestSubscriptionRepository:
 
         assert repository.delete(created.id) is True
         assert repository.get(created.id) is None
-
-        from uuid import uuid4
-
         assert repository.delete(uuid4()) is False
 
     def test_count(self, repository: SubscriptionRepository) -> None:

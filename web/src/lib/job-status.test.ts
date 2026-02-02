@@ -12,48 +12,36 @@ const ALL_STATUSES: JobStatus[] = [
   "cancelled",
 ];
 
+const FINISHED_STATUSES: JobStatus[] = ["completed", "failed", "cancelled"];
+const ACTIVE_STATUSES: JobStatus[] = [
+  "pending",
+  "fetching_info",
+  "downloading",
+  "importing",
+];
+const RUNNING_STATUSES: JobStatus[] = [
+  "fetching_info",
+  "downloading",
+  "importing",
+];
+
 describe("isFinished", () => {
-  test("returns true for completed status", () => {
-    expect(isFinished("completed")).toBe(true);
+  test.each(FINISHED_STATUSES)("returns true for %s", (status) => {
+    expect(isFinished(status)).toBe(true);
   });
 
-  test("returns true for failed status", () => {
-    expect(isFinished("failed")).toBe(true);
-  });
-
-  test("returns true for cancelled status", () => {
-    expect(isFinished("cancelled")).toBe(true);
-  });
-
-  test("returns false for pending status", () => {
-    expect(isFinished("pending")).toBe(false);
-  });
-
-  test("returns false for fetching_info status", () => {
-    expect(isFinished("fetching_info")).toBe(false);
-  });
-
-  test("returns false for downloading status", () => {
-    expect(isFinished("downloading")).toBe(false);
-  });
-
-  test("returns false for importing status", () => {
-    expect(isFinished("importing")).toBe(false);
+  test.each(ACTIVE_STATUSES)("returns false for %s", (status) => {
+    expect(isFinished(status)).toBe(false);
   });
 });
 
 describe("isActive", () => {
-  test("returns true for active statuses", () => {
-    expect(isActive("pending")).toBe(true);
-    expect(isActive("fetching_info")).toBe(true);
-    expect(isActive("downloading")).toBe(true);
-    expect(isActive("importing")).toBe(true);
+  test.each(ACTIVE_STATUSES)("returns true for %s", (status) => {
+    expect(isActive(status)).toBe(true);
   });
 
-  test("returns false for finished statuses", () => {
-    expect(isActive("completed")).toBe(false);
-    expect(isActive("failed")).toBe(false);
-    expect(isActive("cancelled")).toBe(false);
+  test.each(FINISHED_STATUSES)("returns false for %s", (status) => {
+    expect(isActive(status)).toBe(false);
   });
 
   test("isActive and isFinished are mutually exclusive", () => {
@@ -64,20 +52,16 @@ describe("isActive", () => {
 });
 
 describe("isRunning", () => {
-  test("returns true for running statuses (excludes pending)", () => {
-    expect(isRunning("fetching_info")).toBe(true);
-    expect(isRunning("downloading")).toBe(true);
-    expect(isRunning("importing")).toBe(true);
+  test.each(RUNNING_STATUSES)("returns true for %s", (status) => {
+    expect(isRunning(status)).toBe(true);
   });
 
-  test("returns false for pending status", () => {
+  test("returns false for pending", () => {
     expect(isRunning("pending")).toBe(false);
   });
 
-  test("returns false for finished statuses", () => {
-    expect(isRunning("completed")).toBe(false);
-    expect(isRunning("failed")).toBe(false);
-    expect(isRunning("cancelled")).toBe(false);
+  test.each(FINISHED_STATUSES)("returns false for %s", (status) => {
+    expect(isRunning(status)).toBe(false);
   });
 
   test("isRunning is a subset of isActive", () => {

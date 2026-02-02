@@ -1,79 +1,51 @@
 import { describe, expect, test } from "bun:test";
 import { isValidUrl, YOUTUBE_MUSIC_URL_PATTERN } from "./url";
 
+const VALID_YOUTUBE_MUSIC_URLS = [
+  "https://music.youtube.com/playlist?list=OLAK5uy_abc123",
+  "http://music.youtube.com/playlist?list=PLxyz",
+  "https://music.youtube.com/browse/VLPLxyz123",
+  "https://music.youtube.com/browse/MPREb_abc123",
+  "https://music.youtube.com/watch?v=dQw4w9WgXcQ",
+];
+
+const VALID_YOUTUBE_URLS = [
+  "https://youtube.com/playlist?list=PLxyz123",
+  "http://youtube.com/playlist?list=abc",
+  "https://www.youtube.com/playlist?list=PLxyz",
+  "https://youtube.com/watch?v=dQw4w9WgXcQ",
+  "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+];
+
+const INVALID_URLS = [
+  ["empty string", ""],
+  ["Spotify URL", "https://spotify.com/playlist/abc"],
+  ["SoundCloud URL", "https://soundcloud.com/track/xyz"],
+  ["YouTube homepage", "https://youtube.com/"],
+  ["YouTube channel", "https://youtube.com/channel/abc"],
+  ["YouTube shorts", "https://youtube.com/shorts/abc"],
+  ["youtu.be short URL", "https://youtu.be/dQw4w9WgXcQ"],
+  ["plain text", "not a url"],
+  ["missing protocol", "youtube.com/watch?v=abc"],
+  ["YouTube browse (not music)", "https://youtube.com/browse/VLPLxyz"],
+] as const;
+
 describe("isValidUrl", () => {
   describe("valid YouTube Music URLs", () => {
-    test("accepts playlist URLs", () => {
-      expect(
-        isValidUrl("https://music.youtube.com/playlist?list=OLAK5uy_abc123"),
-      ).toBe(true);
-      expect(isValidUrl("http://music.youtube.com/playlist?list=PLxyz")).toBe(
-        true,
-      );
-    });
-
-    test("accepts browse URLs (album URLs)", () => {
-      expect(isValidUrl("https://music.youtube.com/browse/VLPLxyz123")).toBe(
-        true,
-      );
-      expect(isValidUrl("https://music.youtube.com/browse/MPREb_abc123")).toBe(
-        true,
-      );
-    });
-
-    test("accepts watch URLs (single tracks)", () => {
-      expect(isValidUrl("https://music.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
-        true,
-      );
+    test.each(VALID_YOUTUBE_MUSIC_URLS)("accepts %s", (url) => {
+      expect(isValidUrl(url)).toBe(true);
     });
   });
 
-  describe("valid regular YouTube URLs", () => {
-    test("accepts playlist URLs", () => {
-      expect(isValidUrl("https://youtube.com/playlist?list=PLxyz123")).toBe(
-        true,
-      );
-      expect(isValidUrl("http://youtube.com/playlist?list=abc")).toBe(true);
-      expect(isValidUrl("https://www.youtube.com/playlist?list=PLxyz")).toBe(
-        true,
-      );
-    });
-
-    test("accepts watch URLs (single tracks)", () => {
-      expect(isValidUrl("https://youtube.com/watch?v=dQw4w9WgXcQ")).toBe(true);
-      expect(isValidUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).toBe(
-        true,
-      );
-    });
-
-    test("rejects browse URLs (only music.youtube.com browse supported)", () => {
-      expect(isValidUrl("https://youtube.com/browse/VLPLxyz")).toBe(false);
+  describe("valid YouTube URLs", () => {
+    test.each(VALID_YOUTUBE_URLS)("accepts %s", (url) => {
+      expect(isValidUrl(url)).toBe(true);
     });
   });
 
   describe("invalid URLs", () => {
-    test("rejects empty string", () => {
-      expect(isValidUrl("")).toBe(false);
-    });
-
-    test("rejects non-YouTube URLs", () => {
-      expect(isValidUrl("https://spotify.com/playlist/abc")).toBe(false);
-      expect(isValidUrl("https://soundcloud.com/track/xyz")).toBe(false);
-    });
-
-    test("rejects YouTube URLs without valid path", () => {
-      expect(isValidUrl("https://youtube.com/")).toBe(false);
-      expect(isValidUrl("https://youtube.com/channel/abc")).toBe(false);
-      expect(isValidUrl("https://youtube.com/shorts/abc")).toBe(false);
-    });
-
-    test("rejects youtu.be short URLs", () => {
-      expect(isValidUrl("https://youtu.be/dQw4w9WgXcQ")).toBe(false);
-    });
-
-    test("rejects malformed URLs", () => {
-      expect(isValidUrl("not a url")).toBe(false);
-      expect(isValidUrl("youtube.com/watch?v=abc")).toBe(false); // missing protocol
+    test.each(INVALID_URLS)("rejects %s", (_description, url) => {
+      expect(isValidUrl(url)).toBe(false);
     });
   });
 });

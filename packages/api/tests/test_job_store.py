@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import threading
-from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import pytest
 from yubal import AudioCodec, PhaseStats
@@ -16,54 +16,8 @@ from yubal_api.services.job_store import JobStore
 # =============================================================================
 
 
-class MockClock:
-    """Mock clock for deterministic time-based testing."""
-
-    def __init__(self, initial: datetime | None = None) -> None:
-        self._time = initial or datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
-
-    def __call__(self) -> datetime:
-        return self._time
-
-    def advance(self, seconds: int) -> None:
-        """Advance the clock by the specified seconds."""
-        self._time += timedelta(seconds=seconds)
-
-    def set(self, time: datetime) -> None:
-        """Set the clock to a specific time."""
-        self._time = time
-
-
-class MockIdGenerator:
-    """Mock ID generator for deterministic ID generation."""
-
-    def __init__(self, prefix: str = "job") -> None:
-        self._counter = 0
-        self._prefix = prefix
-
-    def __call__(self) -> str:
-        self._counter += 1
-        return f"{self._prefix}-{self._counter:04d}"
-
-    def reset(self) -> None:
-        """Reset the counter."""
-        self._counter = 0
-
-
 @pytest.fixture
-def clock() -> MockClock:
-    """Provide a mock clock."""
-    return MockClock()
-
-
-@pytest.fixture
-def id_generator() -> MockIdGenerator:
-    """Provide a mock ID generator."""
-    return MockIdGenerator()
-
-
-@pytest.fixture
-def store(clock: MockClock, id_generator: MockIdGenerator) -> JobStore:
+def store(clock: Any, id_generator: Any) -> JobStore:
     """Provide a configured JobStore instance."""
     return JobStore(clock=clock, id_generator=id_generator)
 
@@ -96,7 +50,7 @@ class TestJobLifecycle:
     """Tests for basic job lifecycle operations: create, get, get_all, delete."""
 
     def test_create_returns_job_with_correct_fields(
-        self, store: JobStore, id_generator: MockIdGenerator
+        self, store: JobStore, id_generator: Any
     ) -> None:
         """Created job should have all expected default fields."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
@@ -366,9 +320,7 @@ class TestJobStateTransitions:
         assert updated is not None
         assert updated.download_stats == sample_download_stats
 
-    def test_transition_updates_started_at(
-        self, store: JobStore, clock: MockClock
-    ) -> None:
+    def test_transition_updates_started_at(self, store: JobStore, clock: Any) -> None:
         """Transition should update started_at when provided."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
         assert result is not None
@@ -385,7 +337,7 @@ class TestJobStateTransitions:
         assert updated.started_at == start_time
 
     def test_transition_to_finished_sets_completed_at(
-        self, store: JobStore, clock: MockClock
+        self, store: JobStore, clock: Any
     ) -> None:
         """Finishing a job should automatically set completed_at."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
@@ -456,7 +408,7 @@ class TestJobStateTransitions:
         assert updated is not None
         assert updated.status == JobStatus.CANCELLED
 
-    def test_cancel_sets_completed_at(self, store: JobStore, clock: MockClock) -> None:
+    def test_cancel_sets_completed_at(self, store: JobStore, clock: Any) -> None:
         """Cancelling a job should set completed_at."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
         assert result is not None
@@ -627,9 +579,7 @@ class TestQueueManagement:
 class TestCapacityLimits:
     """Tests for MAX_JOBS capacity limits and pruning behavior."""
 
-    def test_capacity_limit_reached(
-        self, clock: MockClock, id_generator: MockIdGenerator
-    ) -> None:
+    def test_capacity_limit_reached(self, clock: Any, id_generator: Any) -> None:
         """Should return None when at capacity with no finished jobs to prune."""
         store = JobStore(clock=clock, id_generator=id_generator)
 
@@ -643,7 +593,7 @@ class TestCapacityLimits:
         assert result is None
 
     def test_pruning_removes_oldest_finished(
-        self, clock: MockClock, id_generator: MockIdGenerator
+        self, clock: Any, id_generator: Any
     ) -> None:
         """When at capacity, oldest finished job should be pruned."""
         store = JobStore(clock=clock, id_generator=id_generator)
@@ -666,7 +616,7 @@ class TestCapacityLimits:
         assert store.get(result[0].id) is not None
 
     def test_pruning_multiple_finished_jobs(
-        self, clock: MockClock, id_generator: MockIdGenerator
+        self, clock: Any, id_generator: Any
     ) -> None:
         """Should prune enough finished jobs to make room."""
         store = JobStore(clock=clock, id_generator=id_generator)
@@ -690,7 +640,7 @@ class TestCapacityLimits:
         assert store.get("job-0003") is not None  # Still exists
 
     def test_capacity_with_all_running_jobs(
-        self, clock: MockClock, id_generator: MockIdGenerator
+        self, clock: Any, id_generator: Any
     ) -> None:
         """Should fail when all jobs are running or pending."""
         store = JobStore(clock=clock, id_generator=id_generator)
@@ -714,9 +664,7 @@ class TestCapacityLimits:
 class TestTimeoutDetection:
     """Tests for timeout detection on stalled jobs."""
 
-    def test_timeout_marks_job_as_failed(
-        self, store: JobStore, clock: MockClock
-    ) -> None:
+    def test_timeout_marks_job_as_failed(self, store: JobStore, clock: Any) -> None:
         """Job exceeding timeout should be marked as failed."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
         assert result is not None
@@ -736,7 +684,7 @@ class TestTimeoutDetection:
         assert updated.completed_at == clock()
 
     def test_timeout_not_triggered_before_threshold(
-        self, store: JobStore, clock: MockClock
+        self, store: JobStore, clock: Any
     ) -> None:
         """Job should not timeout if within threshold."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
@@ -754,7 +702,7 @@ class TestTimeoutDetection:
         assert updated.status == JobStatus.DOWNLOADING
 
     def test_timeout_not_triggered_for_pending_jobs(
-        self, store: JobStore, clock: MockClock
+        self, store: JobStore, clock: Any
     ) -> None:
         """Pending jobs without started_at should not timeout."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
@@ -769,7 +717,7 @@ class TestTimeoutDetection:
         assert updated.status == JobStatus.PENDING
 
     def test_timeout_not_triggered_for_finished_jobs(
-        self, store: JobStore, clock: MockClock
+        self, store: JobStore, clock: Any
     ) -> None:
         """Already finished jobs should not be re-marked on timeout check."""
         result = store.create("https://music.youtube.com/playlist?list=PLtest")
@@ -787,7 +735,7 @@ class TestTimeoutDetection:
         assert updated is not None
         assert updated.status == JobStatus.COMPLETED
 
-    def test_timeout_clears_active_job(self, store: JobStore, clock: MockClock) -> None:
+    def test_timeout_clears_active_job(self, store: JobStore, clock: Any) -> None:
         """Timed-out job should release the active slot."""
         r1 = store.create("https://music.youtube.com/playlist?list=PL1")
         r2 = store.create("https://music.youtube.com/playlist?list=PL2")
@@ -807,7 +755,7 @@ class TestTimeoutDetection:
         assert next_job.id == "job-0002"
 
     def test_get_all_checks_timeouts_on_all_jobs(
-        self, store: JobStore, clock: MockClock
+        self, store: JobStore, clock: Any
     ) -> None:
         """get_all should check timeouts on all jobs."""
         r1 = store.create("https://music.youtube.com/playlist?list=PL1")
@@ -846,9 +794,7 @@ class TestTimeoutDetection:
 class TestThreadSafety:
     """Tests for concurrent access to JobStore."""
 
-    def test_concurrent_creates(
-        self, clock: MockClock, id_generator: MockIdGenerator
-    ) -> None:
+    def test_concurrent_creates(self, clock: Any, id_generator: Any) -> None:
         """Multiple threads creating jobs should not cause race conditions."""
         store = JobStore(clock=clock, id_generator=id_generator)
         results: list[tuple[str, bool] | None] = []
@@ -1077,7 +1023,7 @@ class TestEdgeCases:
         assert job1 is job2
 
     def test_create_at_capacity_prunes_oldest_finished_first(
-        self, clock: MockClock, id_generator: MockIdGenerator
+        self, clock: Any, id_generator: Any
     ) -> None:
         """When pruning, oldest finished job should be removed first."""
         store = JobStore(clock=clock, id_generator=id_generator)
