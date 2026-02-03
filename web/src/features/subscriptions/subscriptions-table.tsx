@@ -30,23 +30,29 @@ const columns: { name: string; key: ColumnKey }[] = [
   { name: "ACTIONS", key: "actions" },
 ];
 
-interface SubscriptionsTableProps {
+type SubscriptionsTableProps = {
   subscriptions: Subscription[];
   isLoading?: boolean;
+  isSchedulerEnabled?: boolean;
   onToggleEnabled: (id: string, enabled: boolean) => void;
   onSync: (id: string) => void;
   onDelete: (id: string) => void;
-}
+};
 
 export function SubscriptionsTable({
   subscriptions,
   isLoading,
+  isSchedulerEnabled,
   onToggleEnabled,
   onSync,
   onDelete,
 }: SubscriptionsTableProps) {
   const renderCell = useCallback(
-    (subscription: Subscription, columnKey: ColumnKey) => {
+    (
+      subscription: Subscription,
+      isSchedulerEnabled: boolean,
+      columnKey: ColumnKey,
+    ) => {
       switch (columnKey) {
         case "name": {
           const size = 40;
@@ -90,6 +96,7 @@ export function SubscriptionsTable({
           return (
             <Switch
               size="sm"
+              isDisabled={!isSchedulerEnabled}
               isSelected={subscription.enabled}
               onValueChange={(enabled) =>
                 onToggleEnabled(subscription.id, enabled)
@@ -155,7 +162,11 @@ export function SubscriptionsTable({
           <TableRow key={subscription.id}>
             {(columnKey) => (
               <TableCell>
-                {renderCell(subscription, columnKey as ColumnKey)}
+                {renderCell(
+                  subscription,
+                  !!isSchedulerEnabled,
+                  columnKey as ColumnKey,
+                )}
               </TableCell>
             )}
           </TableRow>

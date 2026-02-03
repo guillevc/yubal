@@ -4,13 +4,22 @@ import { SubscriptionsTable } from "@/features/subscriptions/subscriptions-table
 import { useSubscriptions } from "@/features/subscriptions/use-subscriptions";
 import { useCountdown } from "@/hooks/use-countdown";
 import { isValidUrl } from "@/lib/url";
-import { Button, Card, CardBody, NumberInput, Tooltip } from "@heroui/react";
 import {
+  Alert,
+  Button,
+  Card,
+  CardBody,
+  NumberInput,
+  Tooltip,
+} from "@heroui/react";
+import {
+  CircleQuestionMarkIcon,
   ClockIcon,
   HashIcon,
   ListMusicIcon,
   RefreshCw,
-  RssIcon,
+  ZapIcon,
+  ZapOffIcon,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -104,7 +113,7 @@ export function SubscriptionsPage() {
           onPress={handleAdd}
           isDisabled={!canAdd}
           isLoading={isAdding}
-          startContent={!isAdding && <RssIcon className="h-4 w-4" />}
+          startContent={!isAdding && <ZapIcon className="h-4 w-4" />}
         >
           Subscribe
         </Button>
@@ -113,7 +122,7 @@ export function SubscriptionsPage() {
       {/* Stats Cards */}
       <div className="mb-6 grid w-full grid-cols-1 gap-4 md:grid-cols-3">
         {/* Active playlists */}
-        <SubscriptionCard>
+        <SubscriptionCard isDisabled={!schedulerStatus?.enabled}>
           <SubscriptionCard.Header title="Active">
             <SubscriptionCard.Value suffix={`of ${totalCount}`}>
               <span className="font-mono">{enabledCount}</span>
@@ -124,7 +133,7 @@ export function SubscriptionsPage() {
           </SubscriptionCard.Icon>
         </SubscriptionCard>
         {/* Next sync */}
-        <SubscriptionCard>
+        <SubscriptionCard isDisabled={!schedulerStatus?.enabled}>
           <SubscriptionCard.Header title="Next sync">
             <SubscriptionCard.Value suffix="remaining">
               <span className="font-mono">{countdown}</span>
@@ -156,11 +165,29 @@ export function SubscriptionsPage() {
           </CardBody>
         </Card>
       </div>
-
+      {/* Scheduler disabled alert */}
+      <div className="mb-6 flex w-full items-center justify-center">
+        <Alert
+          icon={<ZapOffIcon size={18} />}
+          endContent={
+            <a
+              target="_blank"
+              rel="noopener noreferrer"
+              href="https://github.com/guillevc/yubal?tab=readme-ov-file#%EF%B8%8F-configuration"
+            >
+              <CircleQuestionMarkIcon size={20} className="mr-2" />
+            </a>
+          }
+          color="warning"
+          title="Scheduler is disabled."
+          description="You can still add playlists and sync them manually."
+        />
+      </div>
       {/* Subscriptions Table */}
       <SubscriptionsTable
         subscriptions={subscriptions}
         isLoading={isLoading}
+        isSchedulerEnabled={schedulerStatus?.enabled}
         onToggleEnabled={handleToggleEnabled}
         onSync={syncSubscription}
         onDelete={deleteSubscription}
