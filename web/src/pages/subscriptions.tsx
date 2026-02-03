@@ -90,7 +90,6 @@ export function SubscriptionsPage() {
         <Tooltip content="Max tracks to sync per run" offset={14}>
           <NumberInput
             hideStepper
-            variant="faded"
             value={maxItems}
             onValueChange={setMaxItems}
             minValue={1}

@@ -40,7 +40,6 @@ export function DownloadsPage() {
         <Tooltip content="Max number of tracks to download" offset={14}>
           <NumberInput
             hideStepper
-            variant="faded"
             value={maxItems}
             onValueChange={setMaxItems}
             minValue={1}

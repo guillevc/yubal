@@ -20,7 +20,6 @@ export function UrlInput({
   return (
     <Input
       isClearable
-      variant="faded"
       type="url"
       placeholder={placeholder}
       value={value}
