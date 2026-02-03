@@ -65,6 +65,7 @@ When downloading a playlist, each track goes to its album folder—the M3U file 
 
 - **Web UI** — Real-time progress, job queue, responsive design
 - **Albums, playlists & tracks** — Paste any YouTube Music link, get organized files
+- **Scheduled sync** — Subscribe to playlists; new tracks download automatically
 - **Smart deduplication** — Same track across 10 playlists? Stored once, referenced everywhere
 - **Reliable downloads** — Automatic retry on failures, safe to interrupt
 - **Automatic lyrics** — Synced `.lrc` files downloaded alongside tracks when available
@@ -103,26 +104,29 @@ docker compose up -d
 
 ## ⚙️ Configuration
 
-| Variable              | Description                          | Default (Docker) |
-| --------------------- | ------------------------------------ | ---------------- |
-| `YUBAL_DATA`          | Music library output                 | `/app/data`      |
-| `YUBAL_CONFIG`        | Config directory                     | `/app/config`    |
-| `YUBAL_AUDIO_FORMAT`  | `opus`, `mp3`, or `m4a`              | `opus`           |
-| `YUBAL_AUDIO_QUALITY` | Transcode quality (0=best, 10=worst) | `0`              |
-| `YUBAL_TZ`            | Timezone (IANA format)               | `UTC`            |
-| `YUBAL_LOG_LEVEL`     | `DEBUG`, `INFO`, `WARNING`, `ERROR`  | `INFO`           |
+| Variable                  | Description                          | Default (Docker) |
+| ------------------------- | ------------------------------------ | ---------------- |
+| `YUBAL_AUDIO_FORMAT`      | `opus`, `mp3`, or `m4a`              | `opus`           |
+| `YUBAL_AUDIO_QUALITY`     | Transcode quality (0=best, 10=worst) | `0`              |
+| `YUBAL_FETCH_LYRICS`      | Fetch lyrics from lrclib.net         | `true`           |
+| `YUBAL_SCHEDULER_ENABLED` | Enable automatic scheduled sync      | `true`           |
+| `YUBAL_SCHEDULER_CRON`    | Cron schedule for auto-sync          | `0 0 * * *`      |
+| `YUBAL_TZ`                | Timezone (IANA format)               | `UTC`            |
 
 <details>
 <summary>All options</summary>
 
-| Variable             | Description            | Default (Docker) |
-| -------------------- | ---------------------- | ---------------- |
-| `YUBAL_HOST`         | Server bind address    | `0.0.0.0`        |
-| `YUBAL_PORT`         | Server port            | `8000`           |
-| `YUBAL_DEBUG`        | Debug mode             | `false`          |
-| `YUBAL_CORS_ORIGINS` | Allowed CORS origins   | `["*"]`          |
-| `YUBAL_RELOAD`       | Auto-reload (dev only) | `false`          |
-| `YUBAL_TEMP`         | Temp directory         | System temp      |
+| Variable             | Description                         | Default (Docker) |
+| -------------------- | ----------------------------------- | ---------------- |
+| `YUBAL_HOST`         | Server bind address                 | `127.0.0.1`      |
+| `YUBAL_PORT`         | Server port                         | `8000`           |
+| `YUBAL_DATA`         | Music library output                | `/app/data`      |
+| `YUBAL_CONFIG`       | Config directory                    | `/app/config`    |
+| `YUBAL_LOG_LEVEL`    | `DEBUG`, `INFO`, `WARNING`, `ERROR` | `INFO`           |
+| `YUBAL_DEBUG`        | Debug mode                          | `false`          |
+| `YUBAL_CORS_ORIGINS` | Allowed CORS origins                | `["*"]`          |
+| `YUBAL_RELOAD`       | Auto-reload (dev only)              | `false`          |
+| `YUBAL_TEMP`         | Temp directory                      | System temp      |
 
 </details>
 
@@ -187,13 +191,10 @@ Need age-restricted content, private playlists, or Premium quality? Add your coo
 - [x] Cookie import via Web UI
 - [x] Multi-arch Docker images
 - [x] Configurable audio format
-- [x] Playlist support with M3U generation
-      ([v0.2.0](https://github.com/guillevc/yubal/releases/tag/v0.2.0))
-- [x] Single track downloads
-      ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
-- [x] Automatic lyrics (.lrc)
-      ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
-- [ ] Auto-sync playlists
+- [x] Playlist support with M3U generation ([v0.2.0](https://github.com/guillevc/yubal/releases/tag/v0.2.0))
+- [x] Single track downloads ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
+- [x] Automatic lyrics (.lrc) ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
+- [x] Auto-sync playlists ([v0.4.0](https://github.com/guillevc/yubal/releases/tag/v0.4.0))
 - [ ] Flat folder mode
 - [ ] Browser extension
 - [ ] Batch import

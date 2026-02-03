@@ -51,8 +51,8 @@ def repository(engine: Engine) -> SubscriptionRepository:
 def mock_settings() -> MagicMock:
     """Create mock settings with default values."""
     settings = MagicMock()
-    settings.sync_enabled = True
-    settings.sync_cron = "0 */6 * * *"
+    settings.scheduler_enabled = True
+    settings.scheduler_cron = "0 0 * * *"
     settings.timezone = ZoneInfo("UTC")
     return settings
 

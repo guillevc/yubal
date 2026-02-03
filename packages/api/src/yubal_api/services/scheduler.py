@@ -42,12 +42,12 @@ class Scheduler:
     @property
     def enabled(self) -> bool:
         """Check if scheduler is enabled (from settings)."""
-        return self._settings.sync_enabled
+        return self._settings.scheduler_enabled
 
     @property
     def cron_expression(self) -> str:
         """Get cron expression (from settings)."""
-        return self._settings.sync_cron
+        return self._settings.scheduler_cron
 
     @property
     def next_run_at(self) -> datetime | None:
@@ -57,7 +57,7 @@ class Scheduler:
     def _get_next_run_time(self) -> datetime:
         """Calculate next run time using croniter in configured timezone."""
         tz = self._settings.timezone
-        cron = croniter(self._settings.sync_cron, datetime.now(tz))
+        cron = croniter(self._settings.scheduler_cron, datetime.now(tz))
         next_time = cron.get_next(datetime)
         # Convert to UTC for storage/comparison
         if next_time.tzinfo is None:
@@ -89,8 +89,9 @@ class Scheduler:
     async def _run_loop(self) -> None:
         """Main scheduler loop."""
         while not self._stop_event.is_set():
-            self._next_run_at = self._get_next_run_time()
-            wait_seconds = (self._next_run_at - datetime.now(UTC)).total_seconds()
+            next_run = self._get_next_run_time()
+            self._next_run_at = next_run if self._settings.scheduler_enabled else None
+            wait_seconds = (next_run - datetime.now(UTC)).total_seconds()
 
             try:
                 await asyncio.wait_for(
@@ -101,7 +102,7 @@ class Scheduler:
             except TimeoutError:
                 pass  # Timeout expired, time to sync
 
-            if self._settings.sync_enabled:
+            if self._settings.scheduler_enabled:
                 await self._sync_all_enabled()
 
     def _create_jobs_for_subscriptions(

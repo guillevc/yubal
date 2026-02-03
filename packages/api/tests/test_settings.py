@@ -198,8 +198,8 @@ class TestCronExpression:
     )
     def test_accepts_valid_cron_expressions(self, cron: str) -> None:
         """Should accept valid cron expressions."""
-        settings = _create_settings(sync_cron=cron)
-        assert settings.sync_cron == cron
+        settings = _create_settings(scheduler_cron=cron)
+        assert settings.scheduler_cron == cron
 
     @pytest.mark.parametrize(
         "invalid_cron",
@@ -214,13 +214,13 @@ class TestCronExpression:
     def test_rejects_invalid_cron_expressions(self, invalid_cron: str) -> None:
         """Should reject invalid cron expressions."""
         with pytest.raises(ValidationError) as exc_info:
-            _create_settings(sync_cron=invalid_cron)
+            _create_settings(scheduler_cron=invalid_cron)
 
         errors = exc_info.value.errors()
         assert len(errors) == 1
-        assert errors[0]["loc"] == ("sync_cron",)
+        assert errors[0]["loc"] == ("scheduler_cron",)
 
     def test_default_cron_expression(self) -> None:
-        """Should use every 6 hours as default."""
+        """Should use daily at midnight as default."""
         settings = _create_settings()
-        assert settings.sync_cron == "0 */6 * * *"
+        assert settings.scheduler_cron == "0 0 * * *"

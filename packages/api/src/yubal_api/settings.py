@@ -83,12 +83,12 @@ class Settings(BaseSettings):
     cors_origins: list[str] = Field(default=["*"], description="Allowed CORS origins")
 
     # Scheduler settings
-    sync_enabled: bool = Field(
-        default=True, description="Enable playlist sync scheduler"
+    scheduler_enabled: bool = Field(
+        default=True, description="Enable automatic scheduled sync"
     )
-    sync_cron: CronExpression = Field(
-        default="0 */6 * * *",
-        description="Cron expression for sync schedule",
+    scheduler_cron: CronExpression = Field(
+        default="0 0 * * *",
+        description="Cron expression for scheduled sync",
     )
 
     # Timezone
