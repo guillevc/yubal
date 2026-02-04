@@ -183,7 +183,7 @@ M3U playlists are not supported ([pending PR](https://github.com/sentriz/gonic/p
 
 Need age-restricted content, private playlists, or Premium quality? Add your cookies:
 
-1. Export with a browser extension ([yt-dlp guide](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp))
+1. Export `https://www.youtube.com/` cookies with a browser extension ([yt-dlp guide](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp))
 2. Place at `config/ytdlp/cookies.txt` or upload via the web UI
 
 > [!CAUTION]
