@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 function formatCountdown(targetDate: Date | null): string {
   if (!targetDate) return "—";
@@ -26,18 +26,33 @@ function formatCountdown(targetDate: Date | null): string {
   return `${mins}:${pad(secs)}`;
 }
 
-export function useCountdown(targetDate: Date | null): string {
+export function useCountdown(
+  targetDate: Date | null,
+  onComplete?: () => void,
+): string {
   const [tick, setTick] = useState(0);
+  const completedRef = useRef(false);
+
+  useEffect(() => {
+    if (!targetDate) return;
+    completedRef.current = false;
+  }, [targetDate]);
 
   useEffect(() => {
     if (!targetDate) return;
 
     const interval = setInterval(() => {
+      const ms = targetDate.getTime() - Date.now();
+      if (ms <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        // Delay to allow backend to update next_run_at
+        setTimeout(() => onComplete?.(), 1000);
+      }
       setTick((t) => t + 1);
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [targetDate, onComplete]);
 
   void tick;
   return formatCountdown(targetDate);

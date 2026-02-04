@@ -2,6 +2,7 @@ import { listSubscriptions } from "@/api/subscriptions";
 import { AnimatedThemeToggler } from "@/components/magicui/animated-theme-toggler";
 import { CookieDropdown } from "@/features/cookies/cookie-dropdown";
 import { useCookies } from "@/features/cookies/use-cookies";
+import { useJobs } from "@/features/downloads/jobs-context";
 import { useVersionCheck } from "@/hooks/use-version-check";
 import {
   Button,
@@ -45,6 +46,7 @@ export function Header() {
     triggerFileUpload,
   } = useCookies();
   const { data: versionInfo } = useVersionCheck();
+  const { hasActiveJobs } = useJobs();
 
   useEffect(() => {
     listSubscriptions().then((subs) => setSubscriptionCount(subs.length));
@@ -68,7 +70,9 @@ export function Header() {
 
       <NavbarBrand className="mr-4">
         <Link href="/" className="flex items-center">
-          <Disc3Icon className="text-primary h-7 w-7" />
+          <Disc3Icon
+            className={`text-primary h-7 w-7 ${hasActiveJobs ? "animate-[spin_4s_linear_infinite] motion-reduce:animate-none" : ""}`}
+          />
           <p className="text-foreground ml-2 text-xl font-bold">yubal</p>
         </Link>
       </NavbarBrand>

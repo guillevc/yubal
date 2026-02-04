@@ -11,18 +11,9 @@ import { showErrorToast } from "@/lib/toast";
 
 export type { Job } from "@/api/jobs";
 
-export interface UseJobsResult {
-  jobs: Job[];
-  isLoading: boolean;
-  startJob: (url: string, maxItems?: number) => Promise<void>;
-  cancelJob: (jobId: string) => Promise<void>;
-  deleteJob: (jobId: string) => Promise<void>;
-  refreshJobs: () => Promise<void>;
-}
-
 const POLL_INTERVAL = 2000;
 
-export function useJobs(): UseJobsResult {
+export function useJobsState() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -136,8 +127,11 @@ export function useJobs(): UseJobsResult {
     };
   }, [startPolling, stopPolling]);
 
+  const hasActiveJobs = jobs.some((j) => isActive(j.status));
+
   return {
     jobs,
+    hasActiveJobs,
     isLoading,
     startJob,
     cancelJob,
@@ -145,3 +139,5 @@ export function useJobs(): UseJobsResult {
     refreshJobs,
   };
 }
+
+export type UseJobsResult = ReturnType<typeof useJobsState>;

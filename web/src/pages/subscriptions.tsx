@@ -38,6 +38,7 @@ export function SubscriptionsPage() {
     deleteSubscription,
     syncSubscription,
     syncAll,
+    refresh,
   } = useSubscriptions();
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -68,7 +69,7 @@ export function SubscriptionsPage() {
   const nextSyncTime = schedulerStatus?.next_run_at
     ? new Date(schedulerStatus.next_run_at)
     : null;
-  const countdown = useCountdown(nextSyncTime);
+  const countdown = useCountdown(nextSyncTime, refresh);
   const enabledCount = subscriptions.filter((s) => s.enabled).length;
   const totalCount = subscriptions.length;
 

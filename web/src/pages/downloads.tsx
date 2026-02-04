@@ -1,18 +1,24 @@
 import { UrlInput } from "@/components/common/url-input";
 import { ConsolePanel } from "@/features/console/console-panel";
 import { DownloadsPanel } from "@/features/downloads/downloads-panel";
-import { useJobs } from "@/features/downloads/use-jobs";
+import { useJobs } from "@/features/downloads/jobs-context";
 import { isValidUrl } from "@/lib/url";
 import { Button, NumberInput, Tooltip } from "@heroui/react";
 import { DownloadIcon, HashIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const DEFAULT_MAX_ITEMS = 100;
 
 export function DownloadsPage() {
   const [url, setUrl] = useState("");
   const [maxItems, setMaxItems] = useState(DEFAULT_MAX_ITEMS);
-  const { jobs, isLoading, startJob, cancelJob, deleteJob } = useJobs();
+  const { jobs, isLoading, startJob, cancelJob, deleteJob, refreshJobs } =
+    useJobs();
+
+  // Refresh jobs when navigating to this page
+  useEffect(() => {
+    refreshJobs();
+  }, [refreshJobs]);
 
   const canDownload = isValidUrl(url);
 

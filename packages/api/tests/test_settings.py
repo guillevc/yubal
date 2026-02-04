@@ -15,11 +15,14 @@ TEST_CONFIG = Path("/tmp/test/config")
 
 
 @pytest.fixture(autouse=True)
-def _isolate_settings(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Clear all YUBAL_* env vars to isolate tests from .env and shell environment."""
+def _isolate_settings(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Isolate tests from .env file and shell environment."""
+    # Clear all YUBAL_* env vars
     for key in list(os.environ.keys()):
         if key.startswith("YUBAL_"):
             monkeypatch.delenv(key, raising=False)
+    # Change to temp dir so Settings won't find .env file
+    monkeypatch.chdir(tmp_path)
 
 
 def _create_settings(**kwargs: Any) -> Settings:
