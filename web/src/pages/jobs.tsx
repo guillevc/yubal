@@ -1,5 +1,5 @@
 import { UrlInput } from "@/components/common/url-input";
-import { ConsolePanel } from "@/features/console/console-panel";
+import { LogsPanel } from "@/features/logs/logs-panel";
 import { JobsPanel } from "@/features/jobs/jobs-panel";
 import { useJobs } from "@/features/jobs/jobs-context";
 import { isValidUrl } from "@/lib/url";
@@ -75,7 +75,7 @@ export function JobsPage() {
           onCancel={cancelJob}
           onDelete={handleDeleteJob}
         />
-        <ConsolePanel jobs={jobs} />
+        <LogsPanel jobs={jobs} />
       </section>
     </>
   );

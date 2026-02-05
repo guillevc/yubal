@@ -70,9 +70,9 @@ html.dark {
   background-color: #000;
 }
 
-/* Console panel ANSI styling using HeroUI semantic colors */
+/* Logs panel ANSI styling using HeroUI semantic colors */
 /* ansi_up outputs class names like ansi-red-fg, ansi-bright-green-fg, etc. */
-.console-logs {
+.logs-container {
   color: hsl(var(--heroui-foreground));
 
   /* Standard ANSI colors */

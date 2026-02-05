@@ -14,11 +14,11 @@ type Props = {
   jobs?: Job[];
 };
 
-export function ConsolePanel({ jobs = [] }: Props) {
+export function LogsPanel({ jobs = [] }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { lines, isOffline } = useLogs();
   const [isExpanded, setIsExpanded] = useLocalStorage(
-    "yubal-console-expanded",
+    "yubal-logs-expanded",
     false,
   );
 
@@ -86,7 +86,7 @@ export function ConsolePanel({ jobs = [] }: Props) {
             <PanelContent
               ref={containerRef}
               height="h-70"
-              className="console-logs space-y-0.5 p-4 font-mono text-xs"
+              className="logs-container space-y-0.5 p-4 font-mono text-xs"
             >
               {lines.length === 0 ? (
                 <EmptyState icon={TerminalIcon} title="No activity yet" mono />
