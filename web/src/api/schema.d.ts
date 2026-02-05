@@ -95,6 +95,33 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/jobs/sse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Stream Jobs
+         * @description Stream job events via Server-Sent Events.
+         *
+         *     Events:
+         *     - snapshot: Initial state with all jobs
+         *     - created: New job created
+         *     - updated: Job status/progress changed
+         *     - deleted: Job removed
+         *     - cleared: Finished jobs cleared
+         */
+        get: operations["stream_jobs_api_jobs_sse_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/logs/history": {
         parameters: {
             query?: never;
@@ -717,6 +744,8 @@ export interface components {
             enabled: boolean;
             /** Cron Expression */
             cron_expression: string;
+            /** Timezone */
+            timezone: string;
             /** Next Run At */
             next_run_at: string | null;
             subscription_counts: components["schemas"]["SubscriptionCounts"];
@@ -1033,6 +1062,24 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    stream_jobs_api_jobs_sse_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

@@ -2,7 +2,7 @@ import { UrlInput } from "@/components/common/url-input";
 import { SubscriptionCard } from "@/features/subscriptions/subscription-card";
 import { SubscriptionsTable } from "@/features/subscriptions/subscriptions-table";
 import { useSubscriptions } from "@/features/subscriptions/use-subscriptions";
-import { useCountdown } from "@/hooks/use-countdown";
+import { useScheduleCountdown } from "@/hooks/use-schedule-countdown";
 import { isValidUrl } from "@/lib/url";
 import {
   Alert,
@@ -38,7 +38,6 @@ export function SubscriptionsPage() {
     deleteSubscription,
     syncSubscription,
     syncAll,
-    refresh,
   } = useSubscriptions();
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -66,10 +65,10 @@ export function SubscriptionsPage() {
     setIsSyncing(false);
   };
 
-  const nextSyncTime = schedulerStatus?.next_run_at
-    ? new Date(schedulerStatus.next_run_at)
-    : null;
-  const countdown = useCountdown(nextSyncTime, refresh);
+  const countdown = useScheduleCountdown(
+    schedulerStatus?.cron_expression,
+    schedulerStatus?.timezone,
+  );
   const enabledCount = subscriptions.filter((s) => s.enabled).length;
   const totalCount = subscriptions.length;
 

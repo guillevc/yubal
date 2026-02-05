@@ -23,7 +23,11 @@ from yubal_api.services.job_executor import JobExecutor
 from yubal_api.services.job_store import JobStore
 from yubal_api.services.playlist_info import PlaylistInfoService
 from yubal_api.services.scheduler import Scheduler
-from yubal_api.settings import get_settings
+from yubal_api.settings import Settings, get_settings
+
+# -- Settings --
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 # -- Service dependencies (request-scoped via app.state) --
 

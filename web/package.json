@@ -20,6 +20,7 @@
     "@formkit/tempo": "^1.0.0",
     "@heroui/react": "^2.8.8",
     "@tanstack/react-router": "^1.157.18",
+    "cron-parser": "^5.0.6",
     "lucide-react": "^0.563.0",
     "motion": "^12.29.2",
     "openapi-fetch": "0.15.0",

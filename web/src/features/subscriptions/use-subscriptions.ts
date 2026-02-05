@@ -26,7 +26,6 @@ export interface UseSubscriptionsResult {
   deleteSubscription: (id: string) => Promise<void>;
   syncSubscription: (id: string) => Promise<void>;
   syncAll: () => Promise<void>;
-  refresh: () => Promise<void>;
 }
 
 export function useSubscriptions(): UseSubscriptionsResult {
@@ -35,18 +34,10 @@ export function useSubscriptions(): UseSubscriptionsResult {
     useState<SchedulerStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
-    const [subscriptionsData, statusData] = await Promise.all([
-      listSubscriptions(),
-      getStatus(),
-    ]);
-    setSubscriptions(subscriptionsData);
-    setSchedulerStatus(statusData);
+  const fetchSubscriptions = useCallback(async () => {
+    const data = await listSubscriptions();
+    setSubscriptions(data);
   }, []);
-
-  const refresh = useCallback(async () => {
-    await fetchData();
-  }, [fetchData]);
 
   const addSubscription = useCallback(
     async (url: string, maxItems?: number): Promise<boolean> => {
@@ -55,10 +46,10 @@ export function useSubscriptions(): UseSubscriptionsResult {
         showErrorToast("Failed to add subscription", result.error);
         return false;
       }
-      await fetchData();
+      await fetchSubscriptions();
       return true;
     },
-    [fetchData],
+    [fetchSubscriptions],
   );
 
   const updateSubscription = useCallback(
@@ -68,9 +59,9 @@ export function useSubscriptions(): UseSubscriptionsResult {
         showErrorToast("Update failed", "Could not update subscription");
         return;
       }
-      await fetchData();
+      await fetchSubscriptions();
     },
-    [fetchData],
+    [fetchSubscriptions],
   );
 
   const deleteSubscription = useCallback(
@@ -80,9 +71,9 @@ export function useSubscriptions(): UseSubscriptionsResult {
         showErrorToast("Delete failed", "Could not delete subscription");
         return;
       }
-      await fetchData();
+      await fetchSubscriptions();
     },
-    [fetchData],
+    [fetchSubscriptions],
   );
 
   const syncSubscription = useCallback(
@@ -92,10 +83,10 @@ export function useSubscriptions(): UseSubscriptionsResult {
         showErrorToast("Sync failed", result.error);
         return;
       }
-      await fetchData();
+      await fetchSubscriptions();
       showSuccessToast("Sync queued", "Subscription will sync shortly");
     },
-    [fetchData],
+    [fetchSubscriptions],
   );
 
   const syncAll = useCallback(async () => {
@@ -104,16 +95,23 @@ export function useSubscriptions(): UseSubscriptionsResult {
       showErrorToast("Sync failed", result.error);
       return;
     }
-    await fetchData();
+    await fetchSubscriptions();
     showSuccessToast("Sync queued", "All subscriptions will sync shortly");
-  }, [fetchData]);
+  }, [fetchSubscriptions]);
 
   useEffect(() => {
     let mounted = true;
 
     async function init() {
       try {
-        await fetchData();
+        const [subscriptionsData, statusData] = await Promise.all([
+          listSubscriptions(),
+          getStatus(),
+        ]);
+        if (mounted) {
+          setSubscriptions(subscriptionsData);
+          setSchedulerStatus(statusData);
+        }
       } finally {
         if (mounted) setIsLoading(false);
       }
@@ -123,7 +121,7 @@ export function useSubscriptions(): UseSubscriptionsResult {
     return () => {
       mounted = false;
     };
-  }, [fetchData]);
+  }, []);
 
   return {
     subscriptions,
@@ -134,6 +132,5 @@ export function useSubscriptions(): UseSubscriptionsResult {
     deleteSubscription,
     syncSubscription,
     syncAll,
-    refresh,
   };
 }

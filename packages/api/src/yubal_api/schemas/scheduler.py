@@ -18,5 +18,6 @@ class SchedulerStatus(BaseModel):
     running: bool
     enabled: bool
     cron_expression: str
+    timezone: str
     next_run_at: UTCDateTime | None
     subscription_counts: SubscriptionCounts
