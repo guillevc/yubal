@@ -19,7 +19,7 @@ HEARTBEAT_INTERVAL = 30
 
 
 @router.get(
-    "/",
+    "",
     summary="Get buffered log entries",
     description="Returns all currently buffered log entries as an array.",
 )

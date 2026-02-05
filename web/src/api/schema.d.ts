@@ -122,7 +122,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/logs/": {
+    "/logs": {
         parameters: {
             query?: never;
             header?: never;
@@ -133,7 +133,7 @@ export interface paths {
          * Get buffered log entries
          * @description Returns all currently buffered log entries as an array.
          */
-        get: operations["get_logs_api_logs__get"];
+        get: operations["get_logs_api_logs_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1083,7 +1083,7 @@ export interface operations {
             };
         };
     };
-    get_logs_api_logs__get: {
+    get_logs_api_logs_get: {
         parameters: {
             query?: never;
             header?: never;
