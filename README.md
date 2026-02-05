@@ -12,7 +12,7 @@ Paste a link, get a properly tagged and organized library. Subscribe to playlist
 [![codecov](https://codecov.io/gh/guillevc/yubal/branch/master/graph/badge.svg)](https://codecov.io/gh/guillevc/yubal)
 
 <picture>
-  <img src="docs/demo.gif" alt="yubal demo">
+  <img src="docs/demo.gif" alt="yubal demo" width="65%">
 </picture>
 
 </div>
