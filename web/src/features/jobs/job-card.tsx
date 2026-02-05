@@ -187,14 +187,14 @@ function ContentInfo({
             <span className="capitalize">{kind}</span>
           </JobChip>
         )}
-        {trackCount && kind !== "track" && (
-          <JobChip variant="flat" className="max-md:hidden">
-            {trackCount} {trackCount === 1 ? "track" : "tracks"}
-          </JobChip>
-        )}
         {audioCodec && (
           <JobChip variant="flat" className="max-md:hidden">
             {`${audioCodec} ${showBitrate && audioBitrate ? `@ ${audioBitrate}kbps` : ""}`}
+          </JobChip>
+        )}
+        {trackCount && kind !== "track" && (
+          <JobChip variant="flat" className="max-md:hidden">
+            {trackCount} {trackCount === 1 ? "track" : "tracks"}
           </JobChip>
         )}
       </div>
