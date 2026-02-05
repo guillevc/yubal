@@ -2,7 +2,7 @@
 
 # yubal
 
-**YouTube Music downloader with automatic tagging and playlist sync.**
+**Self-hosted YouTube Music downloader with automatic metadata tagging and playlist sync.**
 
 Paste a link, get a properly tagged and organized library. Subscribe to playlists to keep them synced. Albums sorted by artist and year. No duplicates. Media server ready.
 
