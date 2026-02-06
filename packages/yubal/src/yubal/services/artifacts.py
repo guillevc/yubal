@@ -224,7 +224,7 @@ class PlaylistArtifactsService:
         )
         if cover_path:
             logger.info(
-                "Saved playlist cover: '%s'",
+                "Saved cover: '%s'",
                 cover_path,
                 extra={"file_type": "cover", "file_path": str(cover_path)},
             )

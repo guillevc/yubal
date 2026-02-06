@@ -311,7 +311,7 @@ docker-build:
 [group('docker')]
 [doc("Build image, show size, then remove")]
 docker-size:
-    docker build -q -t yubal:docker-size .
+    docker build -t yubal:docker-size .
     @docker images yubal:docker-size --format '{{"{{"}}.Size{{"}}"}}'
     @docker rmi yubal:docker-size
 
@@ -353,8 +353,9 @@ docs-serve:
 
 # yubal CLI
 [group('cli')]
+[positional-arguments]
 cli *args:
-    uv run yubal {{ args }}
+    uv run yubal "$@"
 
 # Database migrations
 [group('db')]

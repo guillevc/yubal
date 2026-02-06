@@ -33,10 +33,11 @@ RUN uv sync --package yubal-api --no-dev --frozen --no-cache --no-editable
 FROM python:3.12-slim-bookworm
 
 ARG TARGETARCH
+ARG RSGAIN_VERSION=3.6
 
 WORKDIR /app
 
-# Install ffmpeg (static) + deno for yt-dlp
+# Install ffmpeg (static) + deno for yt-dlp + rsgain for ReplayGain (amd64 only)
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -47,6 +48,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && tar -xJf /tmp/ffmpeg.tar.xz --strip-components=1 -C /usr/local/bin/ --wildcards '*/ffmpeg' '*/ffprobe' \
     && rm /tmp/ffmpeg.tar.xz \
     && curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh \
+    && if [ "$TARGETARCH" = "amd64" ]; then \
+         curl -fsSL --retry 3 --retry-delay 5 -o /tmp/rsgain.deb \
+           "https://github.com/complexlogic/rsgain/releases/download/v${RSGAIN_VERSION}/rsgain_${RSGAIN_VERSION}_amd64.deb" \
+         && dpkg -i /tmp/rsgain.deb || apt-get install -y -f --no-install-recommends \
+         && rm /tmp/rsgain.deb; \
+       fi \
     && apt-get purge -y curl xz-utils unzip \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \

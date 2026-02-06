@@ -73,12 +73,8 @@ class LogEntry(BaseModel):
     message: str = Field(..., description="Human-readable log message")
 
     # Optional structured fields for enhanced frontend rendering
-    phase: str | None = Field(
-        None, description="Current operation phase: extracting, downloading, composing"
-    )
-    phase_num: int | None = Field(
-        None, description="Phase number (1, 2, 3)", ge=1, le=3
-    )
+    phase: str | None = Field(None, description="Current operation phase")
+    phase_num: int | None = Field(None, description="Phase number (1-4)", ge=1, le=4)
     event_type: str | None = Field(
         None, description="Specific event type for granular tracking"
     )

@@ -57,6 +57,7 @@ class PlaylistDownloadConfig:
         save_cover: Whether to save playlist cover image.
         skip_album_m3u: Skip M3U generation for album playlists.
         max_items: Maximum number of tracks to download.
+        apply_replaygain: Whether to apply ReplayGain tags using rsgain.
     """
 
     download: DownloadConfig
@@ -64,3 +65,4 @@ class PlaylistDownloadConfig:
     save_cover: bool = True
     skip_album_m3u: bool = True
     max_items: int | None = None
+    apply_replaygain: bool = True

@@ -407,6 +407,11 @@ def meta_cmd(ctx: click.Context, url: str, as_json: bool, cookies: Path | None) 
     is_flag=True,
     help="Generate M3U files for albums (disabled by default).",
 )
+@click.option(
+    "--no-replaygain",
+    is_flag=True,
+    help="Disable ReplayGain tagging.",
+)
 @click.pass_context
 def download_cmd(
     ctx: click.Context,
@@ -419,6 +424,7 @@ def download_cmd(
     no_m3u: bool,
     no_cover: bool,
     album_m3u: bool,
+    no_replaygain: bool,
 ) -> None:
     """Download tracks from a YouTube Music URL.
 
@@ -458,6 +464,7 @@ def download_cmd(
             save_cover=not no_cover,
             skip_album_m3u=not album_m3u,
             max_items=max_items,
+            apply_replaygain=not no_replaygain,
         )
         service = PlaylistDownloadService(config, cookies_path=cookies)
 

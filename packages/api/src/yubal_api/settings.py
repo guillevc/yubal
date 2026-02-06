@@ -73,6 +73,12 @@ class Settings(BaseSettings):
     # Lyrics settings
     fetch_lyrics: bool = Field(default=True, description="Fetch lyrics from lrclib.net")
 
+    # ReplayGain settings
+    replaygain: bool = Field(
+        default=True,
+        description="Apply ReplayGain tags using rsgain",
+    )
+
     # Temp directory
     temp: Path = Field(
         default_factory=lambda: Path(tempfile.gettempdir()) / "yubal",
