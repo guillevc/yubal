@@ -17,21 +17,12 @@ class TestReplayGainServiceAvailability:
         with patch(
             "yubal.services.replaygain.shutil.which", return_value="/usr/bin/rsgain"
         ):
-            # Clear the cache to ensure our mock is used
-            from yubal.services.replaygain import _is_rsgain_available
-
-            _is_rsgain_available.cache_clear()
-
             assert service.is_available() is True
 
     def test_is_available_when_rsgain_not_installed(self) -> None:
         """Should return False when rsgain is not in PATH."""
         service = ReplayGainService()
         with patch("yubal.services.replaygain.shutil.which", return_value=None):
-            from yubal.services.replaygain import _is_rsgain_available
-
-            _is_rsgain_available.cache_clear()
-
             assert service.is_available() is False
 
 
@@ -130,6 +121,46 @@ class TestReplayGainServiceApply:
         ):
             result = service.apply_replaygain(mock_files, AudioCodec.OPUS)
             assert result is False
+
+    def test_apply_replaygain_all_files_missing(
+        self, service: ReplayGainService
+    ) -> None:
+        """Should return False when all files are missing."""
+        missing_files = [
+            Path("/nonexistent/track1.opus"),
+            Path("/nonexistent/track2.opus"),
+        ]
+        with patch.object(service, "is_available", return_value=True):
+            result = service.apply_replaygain(missing_files, AudioCodec.OPUS)
+            assert result is False
+
+    def test_apply_replaygain_partial_files_missing_falls_back_to_track_mode(
+        self, service: ReplayGainService, mock_files: list[Path], tmp_path: Path
+    ) -> None:
+        """Should fall back to track-only mode when some files are missing."""
+        # Add a non-existent file to the list
+        files_with_missing = [*mock_files, tmp_path / "missing.opus"]
+
+        mock_result = MagicMock()
+        mock_result.returncode = 0
+        mock_result.stderr = ""
+        mock_result.stdout = ""
+
+        with (
+            patch.object(service, "is_available", return_value=True),
+            patch(
+                "yubal.services.replaygain.subprocess.run", return_value=mock_result
+            ) as mock_run,
+        ):
+            result = service.apply_replaygain(
+                files_with_missing, AudioCodec.OPUS, album_mode=True
+            )
+            assert result is True
+            # Verify album mode was disabled (no -a flag)
+            cmd = mock_run.call_args[0][0]
+            assert "-a" not in cmd
+            # Verify only existing files were passed
+            assert len([arg for arg in cmd if arg.endswith(".opus")]) == len(mock_files)
 
 
 class TestReplayGainServiceCommandBuilding:

@@ -5,7 +5,7 @@ import {
   CheckIcon,
   CircleIcon,
   PaperclipIcon,
-  XIcon
+  XIcon,
 } from "lucide-react";
 
 type LogEntry = components["schemas"]["LogEntry"];

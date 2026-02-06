@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import shutil
 import subprocess
-from functools import cache
 from pathlib import Path
 
 from yubal.config import AudioCodec
@@ -16,9 +15,12 @@ logger = logging.getLogger(__name__)
 RSGAIN_TIMEOUT = 300
 
 
-@cache
 def _is_rsgain_available() -> bool:
-    """Check if rsgain is available in PATH (cached)."""
+    """Check if rsgain is available in PATH.
+
+    Not cached since shutil.which is fast (<1ms) and users may install
+    rsgain after starting the server.
+    """
     return shutil.which("rsgain") is not None
 
 
@@ -82,7 +84,22 @@ class ReplayGainService:
             )
             return False
 
-        cmd = self._build_command(files, codec, album_mode=album_mode)
+        # Validate files exist (may have been deleted between download and normalize)
+        existing_files = [f for f in files if f.exists()]
+        if not existing_files:
+            logger.warning("No files found for ReplayGain tagging (all files missing)")
+            return False
+
+        # If any files missing in album mode, fall back to track-only
+        # (album gain calculation would be wrong with partial files)
+        if len(existing_files) < len(files) and album_mode:
+            logger.warning(
+                "Missing %d file(s), using track-only mode for ReplayGain",
+                len(files) - len(existing_files),
+            )
+            album_mode = False
+
+        cmd = self._build_command(existing_files, codec, album_mode=album_mode)
 
         try:
             result = subprocess.run(
@@ -101,7 +118,7 @@ class ReplayGainService:
                 )
                 return False
 
-            file_count = len(files)
+            file_count = len(existing_files)
             mode_desc = "album + track" if album_mode else "track only"
             logger.debug(
                 "Applied ReplayGain (%s) to %d file(s)",
@@ -137,8 +154,8 @@ class ReplayGainService:
         Returns:
             Command list suitable for subprocess.run().
         """
-        # Base command: rsgain custom -s i (scan and INSERT tags)
-        cmd = ["rsgain", "custom", "-s", "i"]
+        # Base command: rsgain custom -q -s i (quiet mode, scan and INSERT tags)
+        cmd = ["rsgain", "custom", "-q", "-s", "i"]
 
         # Add album mode flag
         if album_mode:

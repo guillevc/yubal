@@ -609,8 +609,13 @@ class PlaylistDownloadService:
 
         # Determine if this is a complete album (use album mode)
         # Album mode calculates album gain in addition to track gain
+        # Only use album mode if ALL expected tracks downloaded successfully
+        success_count = sum(1 for r in results if r.status == DownloadStatus.SUCCESS)
+        expected_count = len(self._extracted_tracks)
         is_complete_album = (
-            playlist_info.kind == ContentKind.ALBUM and self._config.max_items is None
+            playlist_info.kind == ContentKind.ALBUM
+            and self._config.max_items is None
+            and success_count == expected_count
         )
 
         mode_desc = "album + track gain" if is_complete_album else "track gain only"
