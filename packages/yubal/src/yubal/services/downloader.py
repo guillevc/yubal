@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import logging
+import os
+import shutil
+import tempfile
 import time
 from collections.abc import Iterator
 from pathlib import Path
@@ -87,7 +90,9 @@ class YTDLPDownloader:
         else:
             logger.info("No cookies configured for yt-dlp downloads")
 
-    def _build_yt_dlp_options(self, output_path: Path) -> dict[str, Any]:
+    def _build_yt_dlp_options(
+        self, output_path: Path, cookies_override: Path | None = None
+    ) -> dict[str, Any]:
         """Build yt-dlp options for audio extraction and post-processing.
 
         Why these options: Configures yt-dlp to download best audio quality and
@@ -96,6 +101,9 @@ class YTDLPDownloader:
 
         Args:
             output_path: Target path for the downloaded file.
+            cookies_override: Optional path to a temp cookies copy. When provided,
+                this is used instead of the original cookies path to prevent yt-dlp
+                from overwriting the original file.
 
         Returns:
             Dictionary of yt-dlp options.
@@ -127,8 +135,9 @@ class YTDLPDownloader:
         }
 
         # Use cookies for age-restricted content, premium quality, etc.
-        if self._cookies_path and self._cookies_path.exists():
-            opts["cookiefile"] = str(self._cookies_path)
+        cookies = cookies_override or self._cookies_path
+        if cookies and cookies.exists():
+            opts["cookiefile"] = str(cookies)
 
         return opts
 
@@ -168,81 +177,97 @@ class YTDLPDownloader:
             DownloadError: If download fails.
         """
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        opts = self._build_yt_dlp_options(output_path)
-        url = self.YOUTUBE_MUSIC_URL.format(video_id=video_id)
 
-        logger.debug("Downloading %s to %s", video_id, output_path)
+        # Copy cookies to temp file to prevent yt-dlp from modifying the original.
+        # yt-dlp writes back its cookie jar to cookiefile, stripping entries
+        # needed by ytmusicapi (SID, HSID, SSID).
+        temp_cookies: Path | None = None
+        if self._cookies_path and self._cookies_path.exists():
+            fd, tmp = tempfile.mkstemp(suffix=".txt", prefix="yubal_cookies_")
+            os.close(fd)
+            temp_cookies = Path(tmp)
+            shutil.copy2(self._cookies_path, temp_cookies)
 
-        actual_path: Path | None = None
+        try:
+            opts = self._build_yt_dlp_options(output_path, temp_cookies)
+            url = self.YOUTUBE_MUSIC_URL.format(video_id=video_id)
 
-        def capture_postprocessed_path(d: dict[str, Any]) -> None:
-            """Capture the final output path after FFmpeg post-processing."""
-            nonlocal actual_path
-            # Capture filepath after FFmpeg postprocessor completes
-            if d["status"] == "finished":
-                filepath = d.get("info_dict", {}).get("filepath")
-                if filepath:
-                    actual_path = Path(filepath)
+            logger.debug("Downloading %s to %s", video_id, output_path)
 
-        opts["postprocessor_hooks"] = [capture_postprocessed_path]
+            actual_path: Path | None = None
 
-        for attempt in range(self.MAX_RETRIES + 1):
-            try:
-                with yt_dlp.YoutubeDL(opts) as ydl:
-                    ydl.download([url])
-                break  # Success
-            except (KeyboardInterrupt, SystemExit):
-                raise
-            except Exception as e:
-                error_msg = str(e)
+            def capture_postprocessed_path(d: dict[str, Any]) -> None:
+                """Capture the final output path after FFmpeg post-processing."""
+                nonlocal actual_path
+                # Capture filepath after FFmpeg postprocessor completes
+                if d["status"] == "finished":
+                    filepath = d.get("info_dict", {}).get("filepath")
+                    if filepath:
+                        actual_path = Path(filepath)
 
-                # Non-retryable errors - fail immediately
-                if "Video unavailable" in error_msg:
-                    logger.error(
-                        "Video %s is unavailable (may be region-locked)", video_id
-                    )
-                    raise DownloadError(
-                        f"Video {video_id} is unavailable "
-                        "(may be region-locked or removed)"
-                    ) from e
-                if "Sign in" in error_msg or "cookies" in error_msg.lower():
-                    logger.error("Authentication required for video %s", video_id)
-                    raise DownloadError(
-                        f"Authentication required for {video_id}. "
-                        "Try providing a cookies.txt file."
-                    ) from e
+            opts["postprocessor_hooks"] = [capture_postprocessed_path]
 
-                # Retryable transient errors (403, 429, 5xx)
-                if self._is_retryable_error(error_msg):
-                    if attempt < self.MAX_RETRIES:
-                        delay = self.RETRY_BASE_DELAY * (2**attempt)
-                        logger.warning(
-                            "Transient error downloading %s (attempt %d/%d), "
-                            "retrying in %.1fs: %s",
+            for attempt in range(self.MAX_RETRIES + 1):
+                try:
+                    with yt_dlp.YoutubeDL(opts) as ydl:
+                        ydl.download([url])
+                    break  # Success
+                except (KeyboardInterrupt, SystemExit):
+                    raise
+                except Exception as e:
+                    error_msg = str(e)
+
+                    # Non-retryable errors - fail immediately
+                    if "Video unavailable" in error_msg:
+                        logger.error(
+                            "Video %s is unavailable (may be region-locked)",
                             video_id,
-                            attempt + 1,
+                        )
+                        raise DownloadError(
+                            f"Video {video_id} is unavailable "
+                            "(may be region-locked or removed)"
+                        ) from e
+                    if "Sign in" in error_msg or "cookies" in error_msg.lower():
+                        logger.error("Authentication required for video %s", video_id)
+                        raise DownloadError(
+                            f"Authentication required for {video_id}. "
+                            "Try providing a cookies.txt file."
+                        ) from e
+
+                    # Retryable transient errors (403, 429, 5xx)
+                    if self._is_retryable_error(error_msg):
+                        if attempt < self.MAX_RETRIES:
+                            delay = self.RETRY_BASE_DELAY * (2**attempt)
+                            logger.warning(
+                                "Transient error downloading %s (attempt %d/%d), "
+                                "retrying in %.1fs: %s",
+                                video_id,
+                                attempt + 1,
+                                self.MAX_RETRIES + 1,
+                                delay,
+                                error_msg,
+                            )
+                            self._cleanup_partial_downloads(output_path)
+                            time.sleep(delay)
+                            continue
+                        # All retries exhausted
+                        logger.error(
+                            "Failed to download %s after %d attempts: %s",
+                            video_id,
                             self.MAX_RETRIES + 1,
-                            delay,
                             error_msg,
                         )
-                        self._cleanup_partial_downloads(output_path)
-                        time.sleep(delay)
-                        continue
-                    # All retries exhausted
-                    logger.error(
-                        "Failed to download %s after %d attempts: %s",
-                        video_id,
-                        self.MAX_RETRIES + 1,
-                        error_msg,
-                    )
-                    raise DownloadError(
-                        f"Failed to download {video_id} after "
-                        f"{self.MAX_RETRIES + 1} attempts: {e}"
-                    ) from e
+                        raise DownloadError(
+                            f"Failed to download {video_id} after "
+                            f"{self.MAX_RETRIES + 1} attempts: {e}"
+                        ) from e
 
-                # Other errors - fail immediately
-                logger.exception("Failed to download %s: %s", video_id, e)
-                raise DownloadError(f"Failed to download {video_id}: {e}") from e
+                    # Other errors - fail immediately
+                    logger.exception("Failed to download %s: %s", video_id, e)
+                    raise DownloadError(f"Failed to download {video_id}: {e}") from e
+        finally:
+            if temp_cookies is not None:
+                temp_cookies.unlink(missing_ok=True)
 
         # Return actual path captured by hook, or fallback to expected path
         return self._resolve_output_path(actual_path, output_path)
