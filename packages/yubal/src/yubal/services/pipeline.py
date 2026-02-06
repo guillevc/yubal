@@ -19,6 +19,7 @@ from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
 from yubal.services.artifacts import PlaylistArtifactsService
 from yubal.services.downloader import DownloadService
 from yubal.services.extractor import MetadataExtractorService
+from yubal.services.replaygain import ReplayGainService
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ class PlaylistDownloadService:
 
     Pipeline Overview:
     ==================
-    1. download_playlist() - Main entry point: orchestrates three-phase pipeline
+    1. download_playlist() - Main entry point: orchestrates four-phase pipeline
                    and yields progress updates after each track/milestone
     2. _execute_extraction_phase() - Phase 1: Extracts all track metadata from
                    YouTube Music playlist, yielding progress after each track
@@ -57,7 +58,9 @@ class PlaylistDownloadService:
                    yt-dlp, yielding progress after each download completion
     4. _execute_composition_phase() - Phase 3: Generates M3U playlist files and
                    saves cover art to filesystem
-    5. _build_final_result() - Constructs the final result object with all
+    5. _execute_normalization_phase() - Phase 4: Applies ReplayGain tags using
+                   rsgain (optional, only if apply_replaygain is enabled)
+    6. _build_final_result() - Constructs the final result object with all
                    download outcomes and artifact paths
 
     This service provides the recommended high-level interface for playlist
@@ -119,6 +122,7 @@ class PlaylistDownloadService:
             config.download, cookies_path=cookies_path
         )
         self._composer = composer or PlaylistArtifactsService()
+        self._replaygain = ReplayGainService()
 
         # Store last result for retrieval after iteration
         self._last_result: PlaylistDownloadResult | None = None
@@ -155,6 +159,7 @@ class PlaylistDownloadService:
         1. "extracting" - Fetch track metadata from YouTube Music API
         2. "downloading" - Download audio files via yt-dlp (respects skip logic)
         3. "composing" - Generate M3U playlist files and save cover art
+        4. "normalizing" - Apply ReplayGain tags (optional, if enabled)
 
         Why three phases: Separating concerns allows better error handling,
         progress reporting, and cancellation. If extraction fails, we don't
@@ -211,6 +216,12 @@ class PlaylistDownloadService:
         # Phase 3: Generate playlist artifacts
         yield from self._execute_composition_phase(playlist_info, results, cancel_token)
         m3u_path, cover_path = self._get_composition_results()
+
+        # Phase 4: Apply ReplayGain tags (optional)
+        if self._config.apply_replaygain:
+            yield from self._execute_normalization_phase(
+                playlist_info, results, cancel_token
+            )
 
         # Store complete result for retrieval via get_result()
         self._last_result = self._build_final_result(
@@ -507,9 +518,10 @@ class PlaylistDownloadService:
         will_generate_m3u = self._config.generate_m3u and not (
             is_track or (self._config.skip_album_m3u and is_album)
         )
-        will_save_cover = self._config.save_cover
+        # Cover saved for albums and playlists (not single tracks)
+        will_save_cover = self._config.save_cover and not is_track
 
-        # Only log if we're actually doing something
+        # Build phase message based on what we're doing
         if will_generate_m3u or will_save_cover:
             actions = []
             if will_generate_m3u:
@@ -517,15 +529,19 @@ class PlaylistDownloadService:
             if will_save_cover:
                 actions.append("cover")
             message = f"Saving {' and '.join(actions)}"
+        elif is_track:
+            message = "Single track, no artifacts"
+        else:
+            message = "No artifacts to generate"
 
-            logger.info(message, extra={"phase": "composing", "phase_num": 3})
+        logger.info(message, extra={"phase": "composing", "phase_num": 3})
 
-            yield PlaylistProgress(
-                phase="composing",
-                current=0,
-                total=1,
-                message=f"{message}...",
-            )
+        yield PlaylistProgress(
+            phase="composing",
+            current=0,
+            total=1,
+            message=message,
+        )
 
         self._m3u_path, self._cover_path = self._composer.compose(
             self._config.download.base_path,
@@ -550,6 +566,89 @@ class PlaylistDownloadService:
             Tuple of (m3u_path, cover_path). Either may be None if not generated.
         """
         return self._m3u_path, self._cover_path
+
+    # ============================================================================
+    # PHASE 4: NORMALIZATION - Apply ReplayGain tags using rsgain
+    # ============================================================================
+
+    def _execute_normalization_phase(
+        self,
+        playlist_info: PlaylistInfo,
+        results: list[DownloadResult],
+        cancel_token: CancelToken | None,
+    ) -> Iterator[PlaylistProgress]:
+        """Execute ReplayGain normalization phase with progress updates.
+
+        Applies ReplayGain/R128 tags to successfully downloaded tracks using
+        rsgain. For complete album downloads, calculates both album and track
+        gain. For partial downloads or playlists, only calculates track gain.
+
+        This phase is optional and only runs if apply_replaygain is enabled.
+        All errors are non-fatal - the pipeline continues even if rsgain fails.
+
+        Args:
+            playlist_info: Playlist metadata for determining album mode.
+            results: Download results to identify successful downloads.
+            cancel_token: Optional cancellation token.
+
+        Yields:
+            PlaylistProgress with phase="normalizing" and status messages.
+        """
+        self._check_cancellation(cancel_token)
+
+        # Collect successfully downloaded files
+        downloaded_files = [
+            r.output_path
+            for r in results
+            if r.status == DownloadStatus.SUCCESS and r.output_path
+        ]
+
+        if not downloaded_files:
+            logger.debug("No files to normalize")
+            return
+
+        # Determine if this is a complete album (use album mode)
+        # Album mode calculates album gain in addition to track gain
+        is_complete_album = (
+            playlist_info.kind == ContentKind.ALBUM and self._config.max_items is None
+        )
+
+        mode_desc = "album + track gain" if is_complete_album else "track gain only"
+        logger.info(
+            "Applying ReplayGain (%s) to %d file(s)",
+            mode_desc,
+            len(downloaded_files),
+            extra={"phase": "normalizing", "phase_num": 4},
+        )
+
+        yield PlaylistProgress(
+            phase="normalizing",
+            current=0,
+            total=1,
+            message=f"Applying ReplayGain ({mode_desc})...",
+        )
+
+        success = self._replaygain.apply_replaygain(
+            downloaded_files,
+            self._config.download.codec,
+            album_mode=is_complete_album,
+        )
+
+        if success:
+            yield PlaylistProgress(
+                phase="normalizing",
+                current=1,
+                total=1,
+                message="ReplayGain applied",
+            )
+        else:
+            # Non-fatal: warn but continue
+            yield PlaylistProgress(
+                phase="normalizing",
+                current=1,
+                total=1,
+                message="ReplayGain skipped (rsgain unavailable or failed)",
+            )
 
     # ============================================================================
     # RESULT CONSTRUCTION - Build final result object

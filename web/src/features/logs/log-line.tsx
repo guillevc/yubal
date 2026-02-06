@@ -4,7 +4,8 @@ import {
   ArrowDownIcon,
   CheckIcon,
   CircleIcon,
-  XIcon,
+  PaperclipIcon,
+  XIcon
 } from "lucide-react";
 
 type LogEntry = components["schemas"]["LogEntry"];
@@ -30,20 +31,29 @@ const STATUS_CONFIG: Record<
 function HeaderLog({ header }: { header: string }) {
   return (
     <div className="mt-2 first:mt-0">
-      <span className="text-secondary font-bold">
+      <span className="text-primary font-bold">
         {"═".repeat(15)} {header} {"═".repeat(15)}
       </span>
     </div>
   );
 }
 
-/** Phase log - cyan/primary bold with separator */
-function PhaseLog({ phaseNum, phase }: { phaseNum: number; phase: string }) {
+/** Phase log - cyan/primary bold with separator and message */
+function PhaseLog({
+  phaseNum,
+  phase,
+  message,
+}: {
+  phaseNum: number;
+  phase: string;
+  message: string;
+}) {
   return (
-    <div>
-      <span className="text-primary font-bold">
+    <div className="flex flex-col">
+      <span className="text-secondary font-bold">
         ━━ Phase {phaseNum}: {phase} {"━".repeat(20)}
       </span>
+      <span>{message}</span>
     </div>
   );
 }
@@ -168,7 +178,12 @@ function StatusLog({
 
 /** File operation display */
 function FileLog({ message }: { message: string }) {
-  return <div className="text-foreground-400">{message}</div>;
+  return (
+    <div className="flex items-center gap-1">
+      <PaperclipIcon className={`${ICON_CLASS} text-foreground-400`} />
+      <span>{message}</span>
+    </div>
+  );
 }
 
 /** Level-based color mapping */
@@ -195,7 +210,11 @@ export function LogLine({ entry }: { entry: LogEntry }) {
 
     case "phase":
       return (
-        <PhaseLog phaseNum={entry.phase_num ?? 0} phase={entry.phase ?? ""} />
+        <PhaseLog
+          phaseNum={entry.phase_num ?? 0}
+          phase={entry.phase ?? ""}
+          message={entry.message}
+        />
       );
 
     case "stats": {

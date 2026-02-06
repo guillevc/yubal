@@ -46,6 +46,7 @@ class JobExecutor:
         audio_format: AudioCodec = AudioCodec.OPUS,
         cookies_path: Path | None = None,
         fetch_lyrics: bool = True,
+        apply_replaygain: bool = False,
         subscription_repository: SubscriptionRepository | None = None,
     ) -> None:
         """Initialize the job executor.
@@ -56,6 +57,7 @@ class JobExecutor:
             audio_format: Target audio format (opus, mp3, m4a).
             cookies_path: Optional path to cookies.txt for authenticated requests.
             fetch_lyrics: Whether to fetch lyrics from lrclib.net.
+            apply_replaygain: Whether to apply ReplayGain tags using rsgain.
             subscription_repository: Optional repository to update subscription names.
         """
         self._job_store = job_store
@@ -63,6 +65,7 @@ class JobExecutor:
         self._audio_format = audio_format
         self._cookies_path = cookies_path
         self._fetch_lyrics = fetch_lyrics
+        self._apply_replaygain = apply_replaygain
         self._subscription_repository = subscription_repository
 
         # Track background tasks to prevent GC during execution
@@ -201,6 +204,7 @@ class JobExecutor:
                 self._audio_format,
                 self._cookies_path,
                 self._fetch_lyrics,
+                self._apply_replaygain,
             )
             result = await asyncio.to_thread(
                 sync_service.run,

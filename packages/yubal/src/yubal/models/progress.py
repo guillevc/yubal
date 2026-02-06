@@ -70,7 +70,8 @@ class PlaylistProgress(BaseModel):
     PlaylistDownloadService.download_playlist().
 
     Attributes:
-        phase: Current phase of the workflow.
+        phase: Current phase of the workflow (extracting, downloading,
+            composing, or normalizing).
         current: Number of items processed in current phase (1-indexed).
         total: Total items in current phase.
         message: Optional status message.
@@ -80,7 +81,7 @@ class PlaylistProgress(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    phase: Literal["extracting", "downloading", "composing"]
+    phase: Literal["extracting", "downloading", "composing", "normalizing"]
     current: int
     total: int
     message: str | None = None

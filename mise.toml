@@ -1,5 +1,6 @@
 [tools]
 bun = "1.3.6"
 deno = "2.6.3"
+"github:complexlogic/rsgain" = "3.6"
 just = "1.45.0"
 uv = "0.9.24"

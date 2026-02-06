@@ -62,17 +62,19 @@ class PhaseRange:
         return self.start + ratio * (self.end - self.start)
 
 
-# Extraction: 0-10%, Download: 10-90%, Compose: 90-100%
+# Extraction: 0-10%, Download: 10-85%, Compose: 85-90%, Normalize: 90-100%
 PHASE_RANGES: dict[str, PhaseRange] = {
     "extracting": PhaseRange(0.0, 10.0),
-    "downloading": PhaseRange(10.0, 90.0),
-    "composing": PhaseRange(90.0, 100.0),
+    "downloading": PhaseRange(10.0, 85.0),
+    "composing": PhaseRange(85.0, 90.0),
+    "normalizing": PhaseRange(90.0, 100.0),
 }
 
 PHASE_TO_STEP: dict[str, ProgressStep] = {
     "extracting": ProgressStep.FETCHING_INFO,
     "downloading": ProgressStep.DOWNLOADING,
     "composing": ProgressStep.IMPORTING,
+    "normalizing": ProgressStep.IMPORTING,
 }
 
 
@@ -272,6 +274,7 @@ class SyncService:
     audio_format: str = "opus"
     cookies_path: Path | None = None
     fetch_lyrics: bool = True
+    apply_replaygain: bool = False
     _codec: AudioCodec = field(init=False)
 
     def __post_init__(self) -> None:
@@ -310,6 +313,7 @@ class SyncService:
             audio_format=self.audio_format,
             cookies_path=self.cookies_path,
             fetch_lyrics=self.fetch_lyrics,
+            apply_replaygain=self.apply_replaygain,
         )
         return workflow.execute()
 
@@ -336,6 +340,7 @@ class _SyncWorkflow:
     audio_format: str
     cookies_path: Path | None
     fetch_lyrics: bool
+    apply_replaygain: bool
 
     # Workflow state
     content_info: ContentInfo | None = field(default=None, init=False)
@@ -386,6 +391,7 @@ class _SyncWorkflow:
             generate_m3u=True,
             save_cover=True,
             max_items=self.max_items,
+            apply_replaygain=self.apply_replaygain,
         )
         return create_playlist_downloader(config, cookies_path=self.cookies_path)
 
