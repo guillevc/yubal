@@ -4,8 +4,9 @@ import json
 import logging
 import sys
 from pathlib import Path
+from typing import Annotated
 
-import click
+import typer
 from rich.console import Console
 from rich.progress import Progress
 
@@ -45,26 +46,32 @@ def print_no_tracks_message(console: Console, state: ExtractionState) -> None:
         print_unavailable_tracks(console, state.unavailable_tracks)
 
 
-@click.command(name="meta")
-@click.argument("url", metavar="URL")
-@click.option("--json", "as_json", is_flag=True, help="Output as JSON.")
-@click.option(
-    "--cookies",
-    type=click.Path(exists=True, path_type=Path),
-    help="Path to cookies.txt for YouTube Music authentication.",
-)
-@click.pass_context
-def meta_cmd(ctx: click.Context, url: str, as_json: bool, cookies: Path | None) -> None:
+def meta_cmd(
+    ctx: typer.Context,
+    url: Annotated[str, typer.Argument(metavar="URL")],
+    as_json: Annotated[bool, typer.Option("--json", help="Output as JSON.")] = False,
+    cookies: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            help="Path to cookies.txt for YouTube Music authentication.",
+        ),
+    ] = None,
+) -> None:
     """Extract structured metadata from a YouTube Music URL.
 
     URL can be either a single track URL or a playlist/album URL.
     The content type is automatically detected.
 
-    \b
     Examples:
-      yubal meta "https://music.youtube.com/watch?v=VIDEO_ID"
-      yubal meta "https://music.youtube.com/playlist?list=OLAK5uy_xxx"
-      yubal meta "https://music.youtube.com/playlist?list=PLxxx"
+
+        yubal meta "https://music.youtube.com/watch?v=VIDEO_ID"
+
+        yubal meta "https://music.youtube.com/playlist?list=OLAK5uy_xxx"
+
+        yubal meta "https://music.youtube.com/playlist?list=PLxxx"
     """
     console = Console()
     verbose = ctx.obj.get("verbose", False)
@@ -113,7 +120,9 @@ def meta_cmd(ctx: click.Context, url: str, as_json: bool, cookies: Path | None) 
 
     except YTMetaError as e:
         logger.error(str(e))
-        raise click.ClickException(str(e)) from e
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(code=1) from e
     except Exception as e:
         logger.exception("Unexpected error")
-        raise click.ClickException(f"Unexpected error: {e}") from e
+        console.print(f"[red]Unexpected error: {e}[/red]")
+        raise typer.Exit(code=1) from e

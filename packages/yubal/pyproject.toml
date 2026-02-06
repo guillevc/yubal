@@ -14,10 +14,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-cli = ["click>=8.1.0", "rich>=13.0.0"]
+cli = ["typer>=0.21.1", "rich>=13.0.0"]
 
 [project.scripts]
-yubal = "yubal.cli:main"
+yubal = "yubal.cli:app"
 
 [build-system]
 requires = ["uv_build>=0.9.23,<0.10.0"]

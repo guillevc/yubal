@@ -2,8 +2,9 @@
 
 import logging
 from pathlib import Path
+from typing import Annotated
 
-import click
+import typer
 from rich.console import Console
 from rich.progress import Progress
 
@@ -31,65 +32,53 @@ STATUS_ICON = {
 }
 
 
-@click.command(name="download")
-@click.argument("url", metavar="URL")
-@click.argument("output", type=click.Path(path_type=Path), metavar="OUTPUT_DIR")
-@click.option(
-    "--codec",
-    type=click.Choice([c.value for c in AudioCodec]),
-    default=AudioCodec.OPUS.value,
-    help="Audio codec (default: opus).",
-)
-@click.option(
-    "--quality",
-    type=click.IntRange(0, 10),
-    default=0,
-    help="Audio quality, 0 (best) to 10 (worst). Only applies to lossy codecs.",
-)
-@click.option(
-    "--max-items",
-    type=int,
-    default=None,
-    help="Maximum number of tracks to download.",
-)
-@click.option(
-    "--cookies",
-    type=click.Path(exists=True, path_type=Path),
-    help="Path to cookies.txt for YouTube Music authentication.",
-)
-@click.option(
-    "--no-m3u",
-    is_flag=True,
-    help="Disable M3U playlist file generation.",
-)
-@click.option(
-    "--no-cover",
-    is_flag=True,
-    help="Disable cover image saving.",
-)
-@click.option(
-    "--album-m3u",
-    is_flag=True,
-    help="Generate M3U files for albums (disabled by default).",
-)
-@click.option(
-    "--no-replaygain",
-    is_flag=True,
-    help="Disable ReplayGain tagging.",
-)
-@click.pass_context
 def download_cmd(
-    ctx: click.Context,
-    url: str,
-    output: Path,
-    codec: str,
-    quality: int,
-    max_items: int | None,
-    cookies: Path | None,
-    no_m3u: bool,
-    no_cover: bool,
-    album_m3u: bool,
-    no_replaygain: bool,
+    ctx: typer.Context,
+    url: Annotated[str, typer.Argument(metavar="URL")],
+    output: Annotated[Path, typer.Argument(metavar="OUTPUT_DIR")],
+    codec: Annotated[
+        AudioCodec,
+        typer.Option(help="Audio codec (default: opus)."),
+    ] = AudioCodec.OPUS,
+    quality: Annotated[
+        int,
+        typer.Option(
+            min=0,
+            max=10,
+            help="Audio quality, 0 (best) to 10 (worst). Only applies to lossy codecs.",
+        ),
+    ] = 0,
+    max_items: Annotated[
+        int | None,
+        typer.Option(help="Maximum number of tracks to download."),
+    ] = None,
+    cookies: Annotated[
+        Path | None,
+        typer.Option(
+            exists=True,
+            file_okay=True,
+            dir_okay=False,
+            help="Path to cookies.txt for YouTube Music authentication.",
+        ),
+    ] = None,
+    no_m3u: Annotated[
+        bool,
+        typer.Option("--no-m3u", help="Disable M3U playlist file generation."),
+    ] = False,
+    no_cover: Annotated[
+        bool,
+        typer.Option("--no-cover", help="Disable cover image saving."),
+    ] = False,
+    album_m3u: Annotated[
+        bool,
+        typer.Option(
+            "--album-m3u", help="Generate M3U files for albums (disabled by default)."
+        ),
+    ] = False,
+    no_replaygain: Annotated[
+        bool,
+        typer.Option("--no-replaygain", help="Disable ReplayGain tagging."),
+    ] = False,
 ) -> None:
     """Download tracks from a YouTube Music URL.
 
@@ -101,11 +90,13 @@ def download_cmd(
     The content type (album, playlist, or single track) is automatically detected.
     Albums skip M3U generation by default (use --album-m3u to override).
 
-    \b
     Examples:
-      yubal download "https://music.youtube.com/watch?v=VIDEO_ID" ~/Music
-      yubal download "https://music.youtube.com/playlist?list=OLAK5uy_xxx" ~/Music
-      yubal download "https://music.youtube.com/playlist?list=PLxxx" ~/Music
+
+        yubal download "https://music.youtube.com/watch?v=VIDEO_ID" ~/Music
+
+        yubal download "https://music.youtube.com/playlist?list=OLAK5uy_xxx" ~/Music
+
+        yubal download "https://music.youtube.com/playlist?list=PLxxx" ~/Music
     """
     console = Console()
     verbose = ctx.obj.get("verbose", False)
@@ -121,7 +112,7 @@ def download_cmd(
         config = PlaylistDownloadConfig(
             download=DownloadConfig(
                 base_path=output,
-                codec=AudioCodec(codec),
+                codec=codec,
                 quality=quality,
                 quiet=True,
             ),
@@ -226,7 +217,9 @@ def download_cmd(
 
     except YTMetaError as e:
         logger.error(str(e))
-        raise click.ClickException(str(e)) from e
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(code=1) from e
     except Exception as e:
         logger.exception("Unexpected error")
-        raise click.ClickException(f"Unexpected error: {e}") from e
+        console.print(f"[red]Unexpected error: {e}[/red]")
+        raise typer.Exit(code=1) from e

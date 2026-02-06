@@ -4,8 +4,9 @@ import glob as globlib
 import json
 import sys
 from pathlib import Path
+from typing import Annotated
 
-import click
+import typer
 from mediafile import MediaFile, UnreadableFileError
 from rich.console import Console
 from rich.table import Table
@@ -180,11 +181,11 @@ def get_file_tags(path: Path) -> dict:
     }
 
 
-def expand_file_patterns(patterns: tuple[str, ...]) -> list[Path]:
+def expand_file_patterns(patterns: list[str]) -> list[Path]:
     """Expand file patterns (including globs) to a list of paths.
 
     Args:
-        patterns: Tuple of file paths or glob patterns.
+        patterns: List of file paths or glob patterns.
 
     Returns:
         List of resolved file paths.
@@ -355,21 +356,17 @@ def print_replaygain_table(console: Console, files_tags: list[dict]) -> None:
     console.print(table)
 
 
-@click.command(name="tags")
-@click.argument("files", nargs=-1, required=True, metavar="FILE...")
-@click.option("--json", "as_json", is_flag=True, help="Output as JSON.")
-@click.option(
-    "-r",
-    "--replaygain-only",
-    is_flag=True,
-    help="Show only ReplayGain/R128 fields in table format.",
-)
-@click.pass_context
 def tags_cmd(
-    ctx: click.Context,
-    files: tuple[str, ...],
-    as_json: bool,
-    replaygain_only: bool,
+    files: Annotated[list[str], typer.Argument(metavar="FILE...")],
+    as_json: Annotated[bool, typer.Option("--json", help="Output as JSON.")] = False,
+    replaygain_only: Annotated[
+        bool,
+        typer.Option(
+            "-r",
+            "--replaygain-only",
+            help="Show only ReplayGain/R128 fields in table format.",
+        ),
+    ] = False,
 ) -> None:
     """Inspect audio file tags including ReplayGain metadata.
 
@@ -380,20 +377,28 @@ def tags_cmd(
     FILE can be a path to an audio file, a glob pattern, or a directory.
     Supports MP3, FLAC, M4A, Opus, OGG, and WAV files.
 
-    \b
     Examples:
-      yubal tags ~/Music/Artist/Album/track.opus
-      yubal tags ~/Music/Artist/Album/*.opus
-      yubal tags ~/Music/Artist/Album/ -r
-      yubal tags track1.opus track2.opus --json
+
+        yubal tags ~/Music/Artist/Album/track.opus
+
+        yubal tags ~/Music/Artist/Album/*.opus
+
+        yubal tags ~/Music/Artist/Album/ -r
+
+        yubal tags track1.opus track2.opus --json
     """
     console = Console()
+
+    if not files:
+        console.print("[red]Error: No files specified.[/red]")
+        raise typer.Exit(code=1)
 
     # Expand file patterns
     file_paths = expand_file_patterns(files)
 
     if not file_paths:
-        raise click.ClickException("No files found matching the given patterns.")
+        console.print("[red]Error: No files found matching the given patterns.[/red]")
+        raise typer.Exit(code=1)
 
     # Read tags from all files
     all_tags: list[dict] = []
