@@ -74,6 +74,7 @@ When downloading a playlist, each track goes to its album folder—the M3U file 
 - **ReplayGain tagging** — Track and album ReplayGain/R128 tags for consistent playback volume
 - **Format options** — Native `opus` (best quality), or transcode to `mp3`/`m4a`
 - **Media server ready** — Tested with [Navidrome, Jellyfin, and Gonic](#-media-server-integration)
+- **[CLI](packages/yubal/src/yubal/cli/README.md)** — Download and inspect metadata from the terminal
 
 ## 🚀 Quick Start
 
