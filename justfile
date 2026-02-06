@@ -25,7 +25,7 @@ install: install-py install-web
 [group('setup')]
 [private]
 install-py:
-    uv sync --frozen --all-packages
+    uv sync --frozen --all-packages --all-extras
 
 [group('setup')]
 [private]
@@ -41,7 +41,7 @@ sync: sync-py sync-web
 [group('setup')]
 [private]
 sync-py:
-    uv sync --all-packages
+    uv sync --all-packages --all-extras
 
 [group('setup')]
 [private]
