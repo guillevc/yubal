@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Protocol
 
 from yubal.models.enums import ContentKind, DownloadStatus
 from yubal.models.results import DownloadResult
@@ -9,6 +10,26 @@ from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.utils.m3u import write_m3u, write_playlist_cover
 
 logger = logging.getLogger(__name__)
+
+
+class PlaylistArtifactsProtocol(Protocol):
+    """Protocol for playlist artifact generation services.
+
+    Enables dependency injection and testing of artifact generation.
+    """
+
+    def compose(
+        self,
+        base_path: Path,
+        playlist_info: PlaylistInfo,
+        results: list[DownloadResult],
+        *,
+        generate_m3u: bool = True,
+        save_cover: bool = True,
+        skip_album_m3u: bool = True,
+    ) -> tuple[Path | None, Path | None]:
+        """Generate playlist artifacts (M3U file and cover image)."""
+        ...
 
 
 class PlaylistArtifactsService:

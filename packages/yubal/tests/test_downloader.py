@@ -300,8 +300,9 @@ class TestDownloadService:
         mock_downloader = MockDownloader()
         service = DownloadService(download_config, mock_downloader)
 
-        with patch(
-            "yubal.services.downloader.tag_track",
+        with patch.object(
+            service._tagger,
+            "apply_metadata_tags",
             side_effect=Exception("Tagging failed"),
         ):
             result = service.download_track(sample_track)
@@ -322,7 +323,7 @@ class TestDownloadService:
         # First download
         service.download_track(sample_track)
 
-        with patch("yubal.services.downloader.tag_track") as mock_tag:
+        with patch.object(service._tagger, "apply_metadata_tags") as mock_tag:
             # Second call should skip - no tagging
             result = service.download_track(sample_track)
 
@@ -371,14 +372,14 @@ class TestDownloadService:
         service = DownloadService(download_config, mock_downloader)
 
         with (
-            patch("yubal.services.downloader.tag_track") as mock_tag,
+            patch.object(service._tagger, "apply_metadata_tags") as mock_tag,
             patch("yubal.services.downloader.fetch_cover", return_value=b"cover data"),
         ):
             result = service.download_track(sample_track)
 
         assert result.status == DownloadStatus.SUCCESS
         mock_tag.assert_called_once()
-        # Verify cover was passed to tag_track
+        # Verify cover was passed to apply_metadata_tags
         call_args = mock_tag.call_args[0]
         assert call_args[1] == sample_track  # track metadata
         assert call_args[2] == b"cover data"  # cover bytes

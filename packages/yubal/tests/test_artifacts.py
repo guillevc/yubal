@@ -7,7 +7,17 @@ import pytest
 from yubal.models.enums import ContentKind, DownloadStatus, VideoType
 from yubal.models.results import DownloadResult
 from yubal.models.track import PlaylistInfo, TrackMetadata
-from yubal.services.artifacts import PlaylistArtifactsService
+from yubal.services.artifacts import PlaylistArtifactsProtocol, PlaylistArtifactsService
+
+
+class TestPlaylistArtifactsProtocol:
+    """Tests for PlaylistArtifactsProtocol conformance."""
+
+    def test_service_conforms_to_protocol(self) -> None:
+        """PlaylistArtifactsService should satisfy PlaylistArtifactsProtocol."""
+        service: PlaylistArtifactsProtocol = PlaylistArtifactsService()
+        # Type check verifies conformance; runtime check verifies instantiation
+        assert service is not None
 
 
 @pytest.fixture

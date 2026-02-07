@@ -6,10 +6,33 @@ import logging
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Protocol
 
 from yubal.config import AudioCodec
 
 logger = logging.getLogger(__name__)
+
+
+class ReplayGainProtocol(Protocol):
+    """Protocol for ReplayGain services.
+
+    Enables dependency injection and testing of ReplayGain functionality.
+    """
+
+    def is_available(self) -> bool:
+        """Check if the ReplayGain backend is available."""
+        ...
+
+    def apply_replaygain(
+        self,
+        files: list[Path],
+        codec: AudioCodec,
+        *,
+        album_mode: bool = True,
+    ) -> bool:
+        """Apply ReplayGain tags to audio files."""
+        ...
+
 
 # Timeout for rsgain execution (5 minutes should be enough for most albums)
 RSGAIN_TIMEOUT = 300
