@@ -28,12 +28,7 @@ logger = logging.getLogger("yubal")
 
 def print_no_tracks_message(console: Console, state: ExtractionState) -> None:
     """Print appropriate message when no tracks were extracted."""
-    if SkipReason.NO_ALBUM_MATCH in state.skipped_by_reason:
-        console.print(
-            "[yellow]Track skipped: Could not find matching album info "
-            "(search results didn't match track title/artist)[/yellow]"
-        )
-    elif SkipReason.UNSUPPORTED_VIDEO_TYPE in state.skipped_by_reason:
+    if SkipReason.UNSUPPORTED_VIDEO_TYPE in state.skipped_by_reason:
         console.print(
             "[yellow]Track skipped: Unsupported video type "
             "(only ATV and OMV are supported)[/yellow]"

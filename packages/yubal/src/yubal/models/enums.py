@@ -27,8 +27,7 @@ class SkipReason(StrEnum):
     """Reason why a track was skipped.
 
     Used in both extraction and download phases:
-    - Extraction: UNSUPPORTED_VIDEO_TYPE, NO_VIDEO_ID, REGION_UNAVAILABLE,
-      NO_ALBUM_MATCH
+    - Extraction: UNSUPPORTED_VIDEO_TYPE, NO_VIDEO_ID, REGION_UNAVAILABLE
     - Download: FILE_EXISTS
     """
 
@@ -36,9 +35,6 @@ class SkipReason(StrEnum):
     UNSUPPORTED_VIDEO_TYPE = "unsupported_video_type"
     NO_VIDEO_ID = "no_video_id"
     REGION_UNAVAILABLE = "region_unavailable"
-    # Historical: no longer produced during extraction (unmatched tracks
-    # download to _Unmatched/ instead). Kept for backward compat with persisted data.
-    NO_ALBUM_MATCH = "no_album_match"
 
     @property
     def label(self) -> str:
@@ -52,8 +48,6 @@ class SkipReason(StrEnum):
                 return "no video ID"
             case SkipReason.REGION_UNAVAILABLE:
                 return "region unavailable"
-            case SkipReason.NO_ALBUM_MATCH:
-                return "no album match"
 
 
 class ContentKind(StrEnum):

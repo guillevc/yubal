@@ -16,7 +16,6 @@ SkipReasonType = Literal[
     "unsupported_video_type",
     "no_video_id",
     "region_unavailable",
-    "no_album_match",
 ]
 
 # Stats type discriminator for frontend rendering

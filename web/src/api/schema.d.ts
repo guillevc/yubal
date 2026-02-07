@@ -787,12 +787,11 @@ export interface components {
          * @description Reason why a track was skipped.
          *
          *     Used in both extraction and download phases:
-         *     - Extraction: UNSUPPORTED_VIDEO_TYPE, NO_VIDEO_ID, REGION_UNAVAILABLE,
-         *       NO_ALBUM_MATCH
+         *     - Extraction: UNSUPPORTED_VIDEO_TYPE, NO_VIDEO_ID, REGION_UNAVAILABLE
          *     - Download: FILE_EXISTS
          * @enum {string}
          */
-        SkipReason: "file_exists" | "unsupported_video_type" | "no_video_id" | "region_unavailable" | "no_album_match";
+        SkipReason: "file_exists" | "unsupported_video_type" | "no_video_id" | "region_unavailable";
         /**
          * SubscriptionCounts
          * @description Subscription count statistics.

@@ -476,9 +476,8 @@ class MetadataExtractorService:
                     metadata = self._create_fallback_metadata(
                         track, video_type, unmatched=True
                     )
-                    if metadata:
-                        return metadata, None
-                    return None, SkipReason.NO_ALBUM_MATCH
+                    assert metadata is not None  # video_type validated above
+                    return metadata, None
                 case AlbumMatch(album_id=aid, atv_video_id=atv_id):
                     album_id = aid
                     search_atv_id = atv_id
