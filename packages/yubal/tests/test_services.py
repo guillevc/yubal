@@ -1105,6 +1105,55 @@ class TestMetadataExtractorService:
         assert tracks[0].title == "Test Song"
         assert tracks[0].album == "Unknown Album"  # Fallback when no album found
 
+    def test_extract_low_artist_match_marks_unmatched(
+        self,
+    ) -> None:
+        """Should mark track as unmatched when artist match is low."""
+
+        class MismatchedArtistClient(MockYTMusicClient):
+            def search_songs(self, query: str) -> list[SearchResult]:
+                return [
+                    SearchResult.model_validate(
+                        {
+                            "videoId": "atv123",
+                            "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                            "title": "Mercury Retrograde",
+                            "artists": [{"name": "Ghostemane"}],
+                            "album": {
+                                "id": "MPREb_wrong",
+                                "name": "Mercury Retrograde",
+                            },
+                        }
+                    )
+                ]
+
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "omv123",
+                        "videoType": "MUSIC_VIDEO_TYPE_OMV",
+                        "title": "Mercury Retrograde",
+                        "artists": [{"name": "Wiz Khalifa"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 200,
+                    }
+                ]
+            }
+        )
+
+        mock = MismatchedArtistClient(playlist=playlist, album=None, search_results=[])
+        service = MetadataExtractorService(mock)
+        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+
+        assert len(tracks) == 1
+        assert tracks[0].unmatched is True
+        assert tracks[0].title == "Mercury Retrograde"
+        assert tracks[0].year is None
+        assert tracks[0].track_number is None
+
     def test_extract_matches_track_by_video_id(
         self,
     ) -> None:

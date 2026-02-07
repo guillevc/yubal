@@ -114,15 +114,6 @@ def aggregate_skip_reasons(
     return counts
 
 
-class SingleTrackResult(BaseModel):
-    """Result of extracting a single track."""
-
-    model_config = ConfigDict(frozen=True)
-
-    track: TrackMetadata
-    playlist_info: PlaylistInfo
-
-
 class PlaylistDownloadResult(BaseModel):
     """Complete result of a playlist download operation.
 
