@@ -69,3 +69,39 @@ def build_track_path(
         track_name = safe_title
 
     return base / safe_artist / album_folder / track_name
+
+
+def build_unmatched_track_path(
+    base: Path,
+    artist: str,
+    title: str,
+    video_id: str,
+) -> Path:
+    """Build a filesystem path for an unmatched track.
+
+    Unmatched tracks are OMVs where no confident ATV album match was found.
+    They are stored in a flat ``_Unmatched`` folder with the video ID appended
+    to guarantee uniqueness.
+
+    Path structure: base/_Unmatched/Artist - Title [videoId]
+
+    Args:
+        base: Base directory for downloads.
+        artist: Artist name from the video listing.
+        title: Track title from the video listing.
+        video_id: YouTube video ID (ensures filename uniqueness).
+
+    Returns:
+        Full path to the track file (without extension).
+
+    Example:
+        >>> build_unmatched_track_path(
+        ...     Path("/music"), "Wiz Khalifa", "Mercury Retrograde", "-HJ0ZGkdlTk"
+        ... )
+        PosixPath('/music/_Unmatched/Wiz Khalifa - Mercury Retrograde [-HJ0ZGkdlTk]')
+    """
+    safe_artist = clean_filename(artist) or "Unknown Artist"
+    safe_title = clean_filename(title) or "Unknown Track"
+    track_name = f"{safe_artist} - {safe_title} [{video_id}]"
+
+    return base / "_Unmatched" / track_name

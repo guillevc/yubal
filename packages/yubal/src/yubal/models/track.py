@@ -48,6 +48,7 @@ class TrackMetadata(BaseModel):
     cover_url: str | None = None
     video_type: VideoType | None = None
     duration_seconds: int | None = None
+    unmatched: bool = False
 
     @field_validator("title", "album")
     @classmethod

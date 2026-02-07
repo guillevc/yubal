@@ -36,6 +36,8 @@ class SkipReason(StrEnum):
     UNSUPPORTED_VIDEO_TYPE = "unsupported_video_type"
     NO_VIDEO_ID = "no_video_id"
     REGION_UNAVAILABLE = "region_unavailable"
+    # Historical: no longer produced during extraction (unmatched tracks
+    # download to _Unmatched/ instead). Kept for backward compat with persisted data.
     NO_ALBUM_MATCH = "no_album_match"
 
     @property
