@@ -9,6 +9,7 @@ from yubal.models.enums import ContentKind, DownloadStatus, VideoType
 from yubal.models.progress import DownloadProgress, ExtractProgress
 from yubal.models.results import DownloadResult
 from yubal.models.track import PlaylistInfo, TrackMetadata
+from yubal.services.artifacts import ArtifactPaths
 from yubal.services.pipeline import PlaylistDownloadService
 
 
@@ -84,7 +85,7 @@ class TestDownloadTrack:
         mock_downloader.download_tracks.return_value = iter([download_progress])
 
         mock_composer = MagicMock()
-        mock_composer.compose.return_value = (None, None)
+        mock_composer.compose.return_value = ArtifactPaths()
 
         service = PlaylistDownloadService(
             config=config,

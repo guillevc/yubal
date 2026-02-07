@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Protocol
+from typing import NamedTuple, Protocol
 
 from yubal.models.enums import ContentKind, DownloadStatus
 from yubal.models.results import DownloadResult
@@ -10,6 +10,16 @@ from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.utils.m3u import write_m3u, write_playlist_cover
 
 logger = logging.getLogger(__name__)
+
+
+class ArtifactPaths(NamedTuple):
+    """Paths to generated playlist artifacts.
+
+    NamedTuple so callers can destructure: ``m3u, cover = composer.compose(...)``
+    """
+
+    m3u: Path | None = None
+    cover: Path | None = None
 
 
 class PlaylistArtifactsProtocol(Protocol):
@@ -27,7 +37,7 @@ class PlaylistArtifactsProtocol(Protocol):
         generate_m3u: bool = True,
         save_cover: bool = True,
         skip_album_m3u: bool = True,
-    ) -> tuple[Path | None, Path | None]:
+    ) -> ArtifactPaths:
         """Generate playlist artifacts (M3U file and cover image)."""
         ...
 
@@ -50,11 +60,13 @@ class PlaylistArtifactsService:
 
     Example:
         >>> composer = PlaylistArtifactsService()
-        >>> m3u_path, cover_path = composer.compose(
+        >>> artifacts = composer.compose(
         ...     base_path=Path("./music"),
         ...     playlist_info=playlist_info,
         ...     results=download_results,
         ... )
+        >>> artifacts.m3u   # Path or None
+        >>> artifacts.cover  # Path or None
     """
 
     # ============================================================================
@@ -70,7 +82,7 @@ class PlaylistArtifactsService:
         generate_m3u: bool = True,
         save_cover: bool = True,
         skip_album_m3u: bool = True,
-    ) -> tuple[Path | None, Path | None]:
+    ) -> ArtifactPaths:
         """Generate playlist artifacts (M3U file and cover image) from downloads.
 
         This is the main composition pipeline. It takes completed download results
@@ -97,7 +109,7 @@ class PlaylistArtifactsService:
                 (they already have their own folder structure).
 
         Returns:
-            Tuple of (m3u_path, cover_path). Either may be None if
+            ArtifactPaths with m3u and cover paths. Either may be None if
             not generated, not configured, or if generation failed.
         """
         m3u_path: Path | None = None
@@ -123,7 +135,7 @@ class PlaylistArtifactsService:
                 playlist_info=playlist_info,
             )
 
-        return m3u_path, cover_path
+        return ArtifactPaths(m3u=m3u_path, cover=cover_path)
 
     # ============================================================================
     # M3U GENERATION - Create playlist file with track paths

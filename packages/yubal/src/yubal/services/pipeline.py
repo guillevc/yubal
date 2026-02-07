@@ -16,7 +16,11 @@ from yubal.models.results import (
     aggregate_skip_reasons,
 )
 from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
-from yubal.services.artifacts import PlaylistArtifactsProtocol, PlaylistArtifactsService
+from yubal.services.artifacts import (
+    ArtifactPaths,
+    PlaylistArtifactsProtocol,
+    PlaylistArtifactsService,
+)
 from yubal.services.downloader import DownloadService
 from yubal.services.extractor import MetadataExtractorService
 from yubal.services.replaygain import ReplayGainProtocol, ReplayGainService
@@ -216,13 +220,12 @@ class PlaylistDownloadService:
         self._log_download_stats(download_results)
 
         # Phase 3: Generate playlist artifacts
-        m3u_path: Path | None = None
-        cover_path: Path | None = None
+        artifacts = ArtifactPaths()
 
-        for progress, paths in self._compose_phase(
+        for progress, phase_artifacts in self._compose_phase(
             playlist_info, download_results, cancel_token
         ):
-            m3u_path, cover_path = paths
+            artifacts = phase_artifacts
             yield progress
 
         # Phase 4: Apply ReplayGain tags (optional)
@@ -236,7 +239,7 @@ class PlaylistDownloadService:
 
         # Store complete result for retrieval via get_result()
         self._last_result = self._build_final_result(
-            playlist_info, download_results, m3u_path, cover_path
+            playlist_info, download_results, artifacts
         )
 
         kind = playlist_info.kind.value.capitalize()
@@ -460,11 +463,11 @@ class PlaylistDownloadService:
         playlist_info: PlaylistInfo,
         results: list[DownloadResult],
         cancel_token: CancelToken | None,
-    ) -> Iterator[tuple[PlaylistProgress, tuple[Path | None, Path | None]]]:
+    ) -> Iterator[tuple[PlaylistProgress, ArtifactPaths]]:
         """Execute playlist composition phase with progress updates.
 
         Generates M3U playlist files and saves cover art to disk. Yields
-        (progress, (m3u_path, cover_path)) tuples so the caller can collect
+        (progress, ArtifactPaths) tuples so the caller can collect
         the artifact paths.
 
         Args:
@@ -473,7 +476,7 @@ class PlaylistDownloadService:
             cancel_token: Optional cancellation token.
 
         Yields:
-            Tuples of (PlaylistProgress, (m3u_path, cover_path)).
+            Tuples of (PlaylistProgress, ArtifactPaths).
         """
         self._check_cancellation(cancel_token)
 
@@ -507,10 +510,10 @@ class PlaylistDownloadService:
                 total=1,
                 message=message,
             ),
-            (None, None),
+            ArtifactPaths(),
         )
 
-        m3u_path, cover_path = self._composer.compose(
+        artifact_paths = self._composer.compose(
             self._config.download.base_path,
             playlist_info,
             results,
@@ -526,7 +529,7 @@ class PlaylistDownloadService:
                 total=1,
                 message="Done",
             ),
-            (m3u_path, cover_path),
+            artifact_paths,
         )
 
     # ============================================================================
@@ -625,16 +628,14 @@ class PlaylistDownloadService:
         self,
         playlist_info: PlaylistInfo,
         results: list[DownloadResult],
-        m3u_path: Path | None,
-        cover_path: Path | None,
+        artifacts: ArtifactPaths,
     ) -> PlaylistDownloadResult:
         """Construct final result object with all download outcomes.
 
         Args:
             playlist_info: Metadata about the playlist.
             results: All download results from phase 2.
-            m3u_path: Path to generated M3U file (or None).
-            cover_path: Path to saved cover image (or None).
+            artifacts: Paths to generated playlist artifacts.
 
         Returns:
             Complete playlist download result.
@@ -642,6 +643,6 @@ class PlaylistDownloadService:
         return PlaylistDownloadResult(
             playlist_info=playlist_info,
             download_results=results,
-            m3u_path=m3u_path,
-            cover_path=cover_path,
+            m3u_path=artifacts.m3u,
+            cover_path=artifacts.cover,
         )
