@@ -451,13 +451,19 @@ class MetadataExtractorService:
         so we search YouTube Music to find the corresponding album. This ensures
         we get complete metadata (track numbers, year, album artists, etc).
 
+        Tracks where no confident album match is found are marked as unmatched
+        and routed to the ``_Unmatched/`` folder by the downloader.
+
         Args:
             track: Playlist track to process.
 
         Returns:
             Tuple of (metadata, skip_reason):
-            - (TrackMetadata, None) on success
+            - (TrackMetadata, None) on success (including unmatched tracks)
             - (None, SkipReason) if track should be skipped
+
+        Raises:
+            Exception: Search API failures propagate to the caller.
         """
         video_type = self._determine_video_type(track)
 
@@ -566,8 +572,11 @@ class MetadataExtractorService:
 
         Returns:
             AlbumMatch if a confident match was found, or None if no album
-            could be confidently associated (low similarity, no results,
-            or search failure).
+            could be confidently associated (low similarity or no results).
+
+        Raises:
+            TrackParseError: If the track has no searchable metadata.
+            Exception: If the search API call fails (propagated to caller).
         """
         artists = format_artists(track.artists)
         query = f"{artists} {track.title}".strip()
@@ -829,10 +838,10 @@ class MetadataExtractorService:
     ) -> TrackMetadata | None:
         """Create basic metadata when album information is unavailable.
 
-        Why fallback: If we can't find album info (search failed, album doesn't
-        exist, API errors), we still want to extract what we can from the
-        playlist track itself. This ensures the user gets something rather than
-        nothing.
+        Why fallback: If we can't find album info (no search results, low
+        confidence match, album doesn't exist), we still want to extract what
+        we can from the playlist track itself. This ensures the user gets
+        something rather than nothing.
 
         Fallback limitations (missing data):
         - No track numbers
