@@ -68,18 +68,25 @@ class DownloadResult(BaseModel):
     video_id_used: str | None = None
     skip_reason: SkipReason | None = None
 
-    @property
-    def bitrate(self) -> int | None:
-        """Get audio bitrate in kbps from downloaded file."""
-        if not self.output_path or not self.output_path.exists():
-            return None
-        try:
-            from mediafile import MediaFile
 
-            audio = MediaFile(self.output_path)
-            return audio.bitrate // 1000 if audio.bitrate else None
-        except Exception:
-            return None
+def get_audio_bitrate(path: Path | None) -> int | None:
+    """Get audio bitrate in kbps from a file on disk.
+
+    Args:
+        path: Path to the audio file.
+
+    Returns:
+        Bitrate in kbps, or None if the file doesn't exist or can't be read.
+    """
+    if not path or not path.exists():
+        return None
+    try:
+        from mediafile import MediaFile
+
+        audio = MediaFile(path)
+        return audio.bitrate // 1000 if audio.bitrate else None
+    except Exception:
+        return None
 
 
 def aggregate_skip_reasons(

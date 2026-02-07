@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from yubal import parse_playlist_id
 from yubal.client import YTMusicClient
-from yubal.utils.url import parse_playlist_id
 
 
 @dataclass(frozen=True)

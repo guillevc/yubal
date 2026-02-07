@@ -26,6 +26,26 @@ def clean_filename(s: str) -> str:
     return sanitize_filename(s)
 
 
+def format_playlist_filename(playlist_name: str, playlist_id: str) -> str:
+    """Format playlist filename with ID suffix to avoid collisions.
+
+    Args:
+        playlist_name: Name of the playlist (will be sanitized).
+        playlist_id: Unique playlist ID (last 8 chars used as suffix).
+
+    Returns:
+        Formatted filename without extension, e.g., "My Favorites [abcd1234]".
+    """
+    safe_name = clean_filename(playlist_name)
+    if not safe_name or not safe_name.strip():
+        safe_name = "Untitled Playlist"
+
+    # Use last 8 chars of playlist_id (or full ID if shorter)
+    id_suffix = playlist_id[-8:] if len(playlist_id) > 8 else playlist_id
+
+    return f"{safe_name} [{id_suffix}]"
+
+
 def build_track_path(
     base: Path,
     artist: str,

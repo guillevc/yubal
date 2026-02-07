@@ -7,7 +7,8 @@ from typing import NamedTuple, Protocol
 from yubal.models.enums import ContentKind, DownloadStatus
 from yubal.models.results import DownloadResult
 from yubal.models.track import PlaylistInfo, TrackMetadata
-from yubal.utils.m3u import write_m3u, write_playlist_cover
+from yubal.utils.cover import write_playlist_cover
+from yubal.utils.m3u import write_m3u
 
 logger = logging.getLogger(__name__)
 

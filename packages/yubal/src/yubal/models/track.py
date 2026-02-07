@@ -34,6 +34,8 @@ class UnavailableTrack(BaseModel):
 class TrackMetadata(BaseModel):
     """Metadata for a single track."""
 
+    model_config = ConfigDict(frozen=True)
+
     omv_video_id: str | None = None
     atv_video_id: str | None = None
     title: str

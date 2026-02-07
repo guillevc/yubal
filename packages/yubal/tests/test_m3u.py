@@ -1,16 +1,13 @@
 """Tests for M3U playlist generation utilities."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 import pytest
 from yubal.models.enums import VideoType
 from yubal.models.track import TrackMetadata
 from yubal.utils.m3u import (
-    _format_playlist_filename,
     generate_m3u,
     write_m3u,
-    write_playlist_cover,
 )
 
 
@@ -144,39 +141,6 @@ class TestGenerateM3U:
         content = generate_m3u([(sample_track, track_path)], m3u_path)
 
         assert content.endswith("\n")
-
-
-class TestFormatPlaylistFilename:
-    """Tests for _format_playlist_filename function."""
-
-    def test_appends_last_8_chars_of_id(self) -> None:
-        """Should append last 8 characters of playlist ID."""
-        result = _format_playlist_filename(
-            "My Playlist", "PLrAXtmErZgOeiKm4sgNOknGvNjby9effbd"
-        )
-        assert result == "My Playlist [by9effbd]"
-
-    def test_uses_full_id_when_short(self) -> None:
-        """Should use full ID when it's 8 chars or less."""
-        result = _format_playlist_filename("My Playlist", "abc123")
-        assert result == "My Playlist [abc123]"
-
-    def test_exactly_8_chars_uses_full_id(self) -> None:
-        """Should use full ID when it's exactly 8 characters."""
-        result = _format_playlist_filename("My Playlist", "12345678")
-        assert result == "My Playlist [12345678]"
-
-    def test_sanitizes_playlist_name(self) -> None:
-        """Should sanitize playlist name but preserve ID suffix."""
-        result = _format_playlist_filename("My/Invalid:Name", "abc12345678")
-        assert "[12345678]" in result
-        assert "/" not in result
-        assert ":" not in result
-
-    def test_empty_name_uses_fallback(self) -> None:
-        """Should use fallback name for empty playlist name."""
-        result = _format_playlist_filename("", "abc12345678")
-        assert result == "Untitled Playlist [12345678]"
 
 
 class TestWriteM3U:
@@ -337,154 +301,3 @@ class TestWriteM3U:
         assert m3u_path2.exists()
         assert "abc123" in m3u_path1.name
         assert "xyz789" in m3u_path2.name
-
-
-class TestWritePlaylistCover:
-    """Tests for write_playlist_cover function."""
-
-    def test_returns_none_when_no_cover_url(self, tmp_path: Path) -> None:
-        """Should return None when cover_url is None."""
-        result = write_playlist_cover(tmp_path, "My Playlist", "PLtest12345678", None)
-
-        assert result is None
-
-    def test_returns_none_when_empty_cover_url(self, tmp_path: Path) -> None:
-        """Should return None when cover_url is empty string."""
-        result = write_playlist_cover(tmp_path, "My Playlist", "PLtest12345678", "")
-
-        assert result is None
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_returns_none_when_fetch_fails(
-        self, mock_fetch: MagicMock, tmp_path: Path
-    ) -> None:
-        """Should return None when fetch_cover returns None."""
-        mock_fetch.return_value = None
-
-        result = write_playlist_cover(
-            tmp_path, "My Playlist", "PLtest12345678", "https://example.com/cover.jpg"
-        )
-
-        assert result is None
-        mock_fetch.assert_called_once_with("https://example.com/cover.jpg")
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_creates_playlists_directory(
-        self, mock_fetch: MagicMock, tmp_path: Path
-    ) -> None:
-        """Should create Playlists directory if it doesn't exist."""
-        mock_fetch.return_value = b"\xff\xd8\xff\xe0"  # JPEG magic bytes
-
-        write_playlist_cover(
-            tmp_path, "My Playlist", "PLtest12345678", "https://example.com/cover.jpg"
-        )
-
-        assert (tmp_path / "Playlists").exists()
-        assert (tmp_path / "Playlists").is_dir()
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_writes_cover_file(self, mock_fetch: MagicMock, tmp_path: Path) -> None:
-        """Should write cover image as JPEG sidecar file."""
-        cover_bytes = b"\xff\xd8\xff\xe0\x00\x10JFIF"
-        mock_fetch.return_value = cover_bytes
-
-        cover_path = write_playlist_cover(
-            tmp_path, "My Favorites", "PLtest12345678", "https://example.com/cover.jpg"
-        )
-
-        assert cover_path is not None
-        assert cover_path.exists()
-        assert cover_path.read_bytes() == cover_bytes
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_returns_correct_path_with_id_suffix(
-        self, mock_fetch: MagicMock, tmp_path: Path
-    ) -> None:
-        """Should return path with playlist ID suffix."""
-        mock_fetch.return_value = b"\xff\xd8\xff\xe0"
-
-        cover_path = write_playlist_cover(
-            tmp_path, "My Favorites", "PLtest12345678", "https://example.com/cover.jpg"
-        )
-
-        assert cover_path == tmp_path / "Playlists" / "My Favorites [12345678].jpg"
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_sanitizes_playlist_name(
-        self, mock_fetch: MagicMock, tmp_path: Path
-    ) -> None:
-        """Should sanitize playlist name for safe filename."""
-        mock_fetch.return_value = b"\xff\xd8\xff\xe0"
-
-        cover_path = write_playlist_cover(
-            tmp_path,
-            "My/Favorites: Best<Songs>",
-            "PLtest12345678",
-            "https://example.com/cover.jpg",
-        )
-
-        assert cover_path is not None
-        assert cover_path.exists()
-        # Should not contain invalid characters (except the ID suffix brackets)
-        name_without_suffix = cover_path.stem.rsplit(" [", 1)[0]
-        assert "/" not in name_without_suffix
-        assert ":" not in name_without_suffix
-        assert "<" not in name_without_suffix
-        assert ">" not in name_without_suffix
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_handles_empty_playlist_name(
-        self, mock_fetch: MagicMock, tmp_path: Path
-    ) -> None:
-        """Should use fallback name for empty playlist name."""
-        mock_fetch.return_value = b"\xff\xd8\xff\xe0"
-
-        cover_path = write_playlist_cover(
-            tmp_path, "", "PLtest12345678", "https://example.com/cover.jpg"
-        )
-
-        assert cover_path is not None
-        assert cover_path.name == "Untitled Playlist [12345678].jpg"
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_sidecar_matches_m3u_name(
-        self, mock_fetch: MagicMock, sample_track: TrackMetadata, tmp_path: Path
-    ) -> None:
-        """Should create cover with same base name as M3U file."""
-        mock_fetch.return_value = b"\xff\xd8\xff\xe0"
-        track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
-        playlist_id = "PLtest12345678"
-
-        m3u_path = write_m3u(
-            tmp_path, "My Favorites", playlist_id, [(sample_track, track_path)]
-        )
-        cover_path = write_playlist_cover(
-            tmp_path, "My Favorites", playlist_id, "https://example.com/cover.jpg"
-        )
-
-        assert cover_path is not None
-        assert m3u_path.stem == cover_path.stem  # Same base name
-        assert m3u_path.suffix == ".m3u"
-        assert cover_path.suffix == ".jpg"
-
-    @patch("yubal.utils.m3u.fetch_cover")
-    def test_different_ids_create_different_files(
-        self, mock_fetch: MagicMock, tmp_path: Path
-    ) -> None:
-        """Should create separate covers for same-name playlists with different IDs."""
-        mock_fetch.return_value = b"\xff\xd8\xff\xe0"
-
-        cover_path1 = write_playlist_cover(
-            tmp_path, "Favorites", "PLuser1_abc123", "https://example.com/cover1.jpg"
-        )
-        cover_path2 = write_playlist_cover(
-            tmp_path, "Favorites", "PLuser2_xyz789", "https://example.com/cover2.jpg"
-        )
-
-        assert cover_path1 is not None
-        assert cover_path2 is not None
-        assert cover_path1 != cover_path2
-        assert cover_path1.exists()
-        assert cover_path2.exists()
-        assert "abc123" in cover_path1.name
-        assert "xyz789" in cover_path2.name

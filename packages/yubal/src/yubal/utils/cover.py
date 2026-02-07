@@ -4,7 +4,10 @@ import logging
 import threading
 import urllib.request
 from importlib.metadata import version
+from pathlib import Path
 from urllib.error import HTTPError, URLError
+
+from yubal.utils.filename import format_playlist_filename
 
 logger = logging.getLogger(__name__)
 
@@ -120,3 +123,57 @@ def get_cover_cache_size() -> int:
         Number of URLs currently cached.
     """
     return len(_default_cache)
+
+
+def write_playlist_cover(
+    base_path: Path,
+    playlist_name: str,
+    playlist_id: str,
+    cover_url: str | None,
+) -> Path | None:
+    """Write a playlist cover image as a sidecar file.
+
+    Creates a JPEG file with the same name as the playlist M3U file.
+    Most media players (Jellyfin, Plex, foobar2000) will automatically
+    pick up this sidecar image.
+
+    Args:
+        base_path: Base directory for downloads (e.g., /music or ./data).
+        playlist_name: Name of the playlist (will be sanitized for filename).
+        playlist_id: Unique playlist ID (last 8 chars appended to filename).
+        cover_url: URL of the cover image to download.
+
+    Returns:
+        Path to the written cover file, or None if no cover URL provided
+        or download failed.
+
+    Example:
+        >>> from pathlib import Path
+        >>> cover_path = write_playlist_cover(
+        ...     Path("/music"),
+        ...     "My Favorites",
+        ...     "PLxyz123abc",
+        ...     "https://example.com/cover.jpg"
+        ... )
+        >>> print(cover_path)
+        /music/Playlists/My Favorites [z123abc].jpg
+    """
+    if not cover_url:
+        return None
+
+    cover_data = fetch_cover(cover_url)
+    if not cover_data:
+        return None
+
+    # Create Playlists directory
+    playlists_dir = base_path / "Playlists"
+    playlists_dir.mkdir(parents=True, exist_ok=True)
+
+    # Build cover file path with ID suffix
+    filename = format_playlist_filename(playlist_name, playlist_id)
+    cover_path = playlists_dir / f"{filename}.jpg"
+    cover_path.write_bytes(cover_data)
+
+    logger.debug("Wrote playlist cover: %s", cover_path)
+
+    return cover_path

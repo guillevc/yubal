@@ -7,6 +7,7 @@ from yubal.utils.filename import (
     build_track_path,
     build_unmatched_track_path,
     clean_filename,
+    format_playlist_filename,
 )
 
 
@@ -750,3 +751,36 @@ class TestBuildUnmatchedTrackPath:
             video_id="abc123",
         )
         assert isinstance(result, Path)
+
+
+class TestFormatPlaylistFilename:
+    """Tests for format_playlist_filename function."""
+
+    def test_appends_last_8_chars_of_id(self) -> None:
+        """Should append last 8 characters of playlist ID."""
+        result = format_playlist_filename(
+            "My Playlist", "PLrAXtmErZgOeiKm4sgNOknGvNjby9effbd"
+        )
+        assert result == "My Playlist [by9effbd]"
+
+    def test_uses_full_id_when_short(self) -> None:
+        """Should use full ID when it's 8 chars or less."""
+        result = format_playlist_filename("My Playlist", "abc123")
+        assert result == "My Playlist [abc123]"
+
+    def test_exactly_8_chars_uses_full_id(self) -> None:
+        """Should use full ID when it's exactly 8 characters."""
+        result = format_playlist_filename("My Playlist", "12345678")
+        assert result == "My Playlist [12345678]"
+
+    def test_sanitizes_playlist_name(self) -> None:
+        """Should sanitize playlist name but preserve ID suffix."""
+        result = format_playlist_filename("My/Invalid:Name", "abc12345678")
+        assert "[12345678]" in result
+        assert "/" not in result
+        assert ":" not in result
+
+    def test_empty_name_uses_fallback(self) -> None:
+        """Should use fallback name for empty playlist name."""
+        result = format_playlist_filename("", "abc12345678")
+        assert result == "Untitled Playlist [12345678]"

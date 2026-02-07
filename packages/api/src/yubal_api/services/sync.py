@@ -24,6 +24,7 @@ from yubal import (
     create_playlist_downloader,
 )
 from yubal.models.enums import ContentKind
+from yubal.models.results import get_audio_bitrate
 from yubal.models.track import PlaylistInfo
 from yubal.services.pipeline import PlaylistDownloadService
 
@@ -526,8 +527,10 @@ class _SyncWorkflow:
             return
 
         result = progress.download_progress.result
-        if result.status == DownloadStatus.SUCCESS and result.bitrate:
-            self.content_info.audio_bitrate = result.bitrate
+        if result.status == DownloadStatus.SUCCESS:
+            bitrate = get_audio_bitrate(result.output_path)
+            if bitrate:
+                self.content_info.audio_bitrate = bitrate
 
     def _build_result(self, downloader: PlaylistDownloadService) -> SyncResult:
         """Construct final result from downloader state."""

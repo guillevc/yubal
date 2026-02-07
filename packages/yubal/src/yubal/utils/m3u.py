@@ -9,8 +9,7 @@ from os.path import relpath
 from pathlib import Path
 
 from yubal.models.track import TrackMetadata
-from yubal.utils.cover import fetch_cover
-from yubal.utils.filename import clean_filename
+from yubal.utils.filename import format_playlist_filename
 
 logger = logging.getLogger(__name__)
 
@@ -63,26 +62,6 @@ def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> st
     return "\n".join(lines) + "\n"
 
 
-def _format_playlist_filename(playlist_name: str, playlist_id: str) -> str:
-    """Format playlist filename with ID suffix to avoid collisions.
-
-    Args:
-        playlist_name: Name of the playlist (will be sanitized).
-        playlist_id: Unique playlist ID (last 8 chars used as suffix).
-
-    Returns:
-        Formatted filename without extension, e.g., "My Favorites [abcd1234]".
-    """
-    safe_name = clean_filename(playlist_name)
-    if not safe_name or not safe_name.strip():
-        safe_name = "Untitled Playlist"
-
-    # Use last 8 chars of playlist_id (or full ID if shorter)
-    id_suffix = playlist_id[-8:] if len(playlist_id) > 8 else playlist_id
-
-    return f"{safe_name} [{id_suffix}]"
-
-
 def write_m3u(
     base_path: Path,
     playlist_name: str,
@@ -116,7 +95,7 @@ def write_m3u(
     playlists_dir.mkdir(parents=True, exist_ok=True)
 
     # Build M3U file path with ID suffix
-    filename = _format_playlist_filename(playlist_name, playlist_id)
+    filename = format_playlist_filename(playlist_name, playlist_id)
     m3u_path = playlists_dir / f"{filename}.m3u"
 
     # Generate and write content
@@ -124,57 +103,3 @@ def write_m3u(
     m3u_path.write_text(content, encoding="utf-8")
 
     return m3u_path
-
-
-def write_playlist_cover(
-    base_path: Path,
-    playlist_name: str,
-    playlist_id: str,
-    cover_url: str | None,
-) -> Path | None:
-    """Write a playlist cover image as a sidecar file.
-
-    Creates a JPEG file with the same name as the playlist M3U file.
-    Most media players (Jellyfin, Plex, foobar2000) will automatically
-    pick up this sidecar image.
-
-    Args:
-        base_path: Base directory for downloads (e.g., /music or ./data).
-        playlist_name: Name of the playlist (will be sanitized for filename).
-        playlist_id: Unique playlist ID (last 8 chars appended to filename).
-        cover_url: URL of the cover image to download.
-
-    Returns:
-        Path to the written cover file, or None if no cover URL provided
-        or download failed.
-
-    Example:
-        >>> from pathlib import Path
-        >>> cover_path = write_playlist_cover(
-        ...     Path("/music"),
-        ...     "My Favorites",
-        ...     "PLxyz123abc",
-        ...     "https://example.com/cover.jpg"
-        ... )
-        >>> print(cover_path)
-        /music/Playlists/My Favorites [z123abc].jpg
-    """
-    if not cover_url:
-        return None
-
-    cover_data = fetch_cover(cover_url)
-    if not cover_data:
-        return None
-
-    # Create Playlists directory
-    playlists_dir = base_path / "Playlists"
-    playlists_dir.mkdir(parents=True, exist_ok=True)
-
-    # Build cover file path with ID suffix
-    filename = _format_playlist_filename(playlist_name, playlist_id)
-    cover_path = playlists_dir / f"{filename}.jpg"
-    cover_path.write_bytes(cover_data)
-
-    logger.debug("Wrote playlist cover: %s", cover_path)
-
-    return cover_path
