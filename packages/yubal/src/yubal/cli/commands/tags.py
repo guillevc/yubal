@@ -13,16 +13,6 @@ from rich.table import Table
 
 from yubal.cli.formatting import print_section_header
 
-# ReplayGain/R128 field names for special highlighting
-REPLAYGAIN_FIELDS = (
-    "rg_track_gain",
-    "rg_track_peak",
-    "rg_album_gain",
-    "rg_album_peak",
-    "r128_track_gain",
-    "r128_album_gain",
-)
-
 
 def format_replaygain_value(value: float | int | None, is_gain: bool = True) -> str:
     """Format a ReplayGain value for display.

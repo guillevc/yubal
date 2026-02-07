@@ -211,30 +211,6 @@ class MetadataExtractorService:
             sum(skipped_by_reason.values()),
         )
 
-    def extract_all(
-        self, url: str, max_items: int | None = None
-    ) -> list[TrackMetadata]:
-        """Extract metadata for all tracks, returning complete results at once.
-
-        Convenience wrapper around extract() for cases where you don't need
-        incremental progress updates. Simply collects all results and returns
-        them as a list.
-
-        Args:
-            url: YouTube Music playlist URL.
-            max_items: Maximum number of tracks to extract. If None, extracts
-                all tracks.
-
-        Returns:
-            List of extracted track metadata.
-
-        Raises:
-            PlaylistParseError: If URL is invalid.
-            PlaylistNotFoundError: If playlist doesn't exist.
-            APIError: If API requests fail.
-        """
-        return [p.track for p in self.extract(url, max_items=max_items) if p.track]
-
     def _extract_single_track_as_progress(self, url: str) -> Iterator[ExtractProgress]:
         """Extract a single track and yield it as ExtractProgress.
 

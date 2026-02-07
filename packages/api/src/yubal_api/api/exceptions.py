@@ -91,27 +91,6 @@ class CookieValidationError(YubalError):
     error_code = "invalid_cookies"
 
 
-# -- Sync Playlist Exceptions --
-
-
-class SyncedPlaylistNotFoundError(YubalError):
-    """Raised when a synced playlist is not found."""
-
-    status_code = status.HTTP_404_NOT_FOUND
-    error_code = "synced_playlist_not_found"
-
-    def __init__(self, playlist_id: str) -> None:
-        self.playlist_id = playlist_id
-        super().__init__(f"Synced playlist {playlist_id} not found")
-
-
-class SyncedPlaylistConflictError(YubalError):
-    """Raised when a playlist URL already exists."""
-
-    status_code = status.HTTP_409_CONFLICT
-    error_code = "synced_playlist_conflict"
-
-
 # -- Exception Handlers --
 
 

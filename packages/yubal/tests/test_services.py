@@ -8,8 +8,18 @@ import pytest
 from conftest import MockYTMusicClient
 from pydantic import ValidationError
 from yubal.models.enums import VideoType
+from yubal.models.track import TrackMetadata
 from yubal.models.ytmusic import Album, Playlist, SearchResult
 from yubal.services import MetadataExtractorService
+
+
+def extract_all(
+    service: MetadataExtractorService,
+    url: str,
+    max_items: int | None = None,
+) -> list[TrackMetadata]:
+    """Collect all extracted tracks into a list (test convenience helper)."""
+    return [p.track for p in service.extract(url, max_items=max_items) if p.track]
 
 
 class TestMetadataExtractorService:
@@ -36,8 +46,8 @@ class TestMetadataExtractorService:
     ) -> None:
         """Should extract all tracks using convenience method."""
         service = MetadataExtractorService(mock_client)
-        tracks = service.extract_all(
-            "https://music.youtube.com/playlist?list=PLtest123"
+        tracks = extract_all(
+            service, "https://music.youtube.com/playlist?list=PLtest123"
         )
 
         assert len(tracks) == 1
@@ -51,7 +61,7 @@ class TestMetadataExtractorService:
     ) -> None:
         """Should look up album details."""
         service = MetadataExtractorService(mock_client)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have called get_album for the track's album
         assert len(mock_client.get_album_calls) == 1
@@ -64,7 +74,7 @@ class TestMetadataExtractorService:
     ) -> None:
         """Should detect ATV video type."""
         service = MetadataExtractorService(mock_client)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Sample playlist track has MUSIC_VIDEO_TYPE_ATV
         assert tracks[0].video_type == VideoType.ATV
@@ -130,7 +140,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have searched for the song
         assert len(mock.search_songs_calls) == 1
@@ -166,7 +176,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         assert len(tracks) == 1
         assert tracks[0].title == "Unknown Song"
@@ -213,7 +223,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Both tracks should be returned (with fallback for the one without album)
         assert len(tracks) == 2
@@ -231,7 +241,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have gotten track number from album track
         assert tracks[0].track_number == 5
@@ -291,7 +301,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have captured the ATV ID from search
         assert tracks[0].atv_video_id == "atv456"
@@ -350,7 +360,7 @@ class TestMetadataExtractorService:
         )
 
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # ATV ID should be set
         assert tracks[0].atv_video_id == "atv123"
@@ -399,7 +409,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         assert tracks[0].video_type == VideoType.OMV
         assert tracks[0].omv_video_id == "omv123"
@@ -453,7 +463,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have matched by duration and gotten track number
         assert tracks[0].track_number == 3
@@ -507,7 +517,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should NOT have matched - track_number should be None
         assert tracks[0].track_number is None
@@ -555,7 +565,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have matched despite case difference
         assert tracks[0].track_number == 7
@@ -602,7 +612,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have matched after stripping whitespace
         assert tracks[0].track_number == 2
@@ -661,7 +671,7 @@ class TestMetadataExtractorService:
             playlist=playlist, album=album, search_results=[search_result]
         )
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # ATV should be None since search returned OMV
         assert tracks[0].atv_video_id is None
@@ -692,7 +702,7 @@ class TestMetadataExtractorService:
         # No album found anywhere
         mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should use fallback with ATV ID set correctly
         assert tracks[0].atv_video_id == "atv123"
@@ -741,7 +751,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Both IDs should be set and different
         assert tracks[0].atv_video_id == "atv123"
@@ -775,8 +785,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # Track should be skipped due to missing video type
@@ -824,7 +834,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have matched via fuzzy matching
         assert tracks[0].track_number == 3
@@ -874,8 +884,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # Should match but with warning
@@ -926,8 +936,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # Should NOT have matched - track_number should be None
@@ -989,7 +999,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have selected "Love Song (Live)" as best match
         assert tracks[0].track_number == 2
@@ -1028,7 +1038,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should fall back to original track info
         assert tracks[0].track_number is None
@@ -1063,7 +1073,7 @@ class TestMetadataExtractorService:
 
         mock = FailingAlbumClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have used fallback (album name from track, not full album)
         assert tracks[0].album == "My Album"
@@ -1098,7 +1108,7 @@ class TestMetadataExtractorService:
 
         mock = FailingSearchClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have returned fallback metadata
         assert len(tracks) == 1
@@ -1146,7 +1156,7 @@ class TestMetadataExtractorService:
 
         mock = MismatchedArtistClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         assert len(tracks) == 1
         assert tracks[0].unmatched is True
@@ -1195,7 +1205,7 @@ class TestMetadataExtractorService:
 
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
-        tracks = service.extract_all("https://music.youtube.com/playlist?list=PLtest")
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have matched by video_id and gotten track number
         assert tracks[0].track_number == 5
@@ -1228,8 +1238,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # UGC track should be skipped
@@ -1262,8 +1272,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # OFFICIAL_SOURCE_MUSIC track should be skipped
@@ -1296,8 +1306,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # Unknown type track should be skipped
@@ -1369,8 +1379,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock)
 
         with caplog.at_level(logging.WARNING):
-            tracks = service.extract_all(
-                "https://music.youtube.com/playlist?list=PLtest"
+            tracks = extract_all(
+                service, "https://music.youtube.com/playlist?list=PLtest"
             )
 
         # Should have 2 tracks (ATV and OMV), UGC skipped

@@ -48,11 +48,6 @@ class PhaseStats(BaseModel):
         """Total items processed (success + failed + skipped)."""
         return self.success + self.failed + self.skipped
 
-    @property
-    def success_rate(self) -> float:
-        """Success rate as percentage (0.0-100.0). Returns 0.0 if no items."""
-        return (self.success / self.total * 100) if self.total > 0 else 0.0
-
 
 class DownloadResult(BaseModel):
     """Result of a single track download.
