@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError, URLError
 
 import pytest
+from yubal.lib.m3u import write_m3u
 from yubal.models.enums import VideoType
 from yubal.models.track import TrackMetadata
 from yubal.utils.cover import (
@@ -15,7 +16,6 @@ from yubal.utils.cover import (
     get_cover_cache_size,
     write_playlist_cover,
 )
-from yubal.utils.m3u import write_m3u
 
 
 @pytest.fixture(autouse=True)

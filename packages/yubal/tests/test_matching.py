@@ -6,8 +6,7 @@ search results.
 """
 
 import pytest
-from yubal.models.ytmusic import AlbumTrack, Artist, SearchResult
-from yubal.utils.matching import (
+from yubal.lib.matching import (
     extract_base_title,
     find_best_album_match,
     find_track_by_fuzzy_title,
@@ -15,6 +14,7 @@ from yubal.utils.matching import (
     match_title,
     normalize_title,
 )
+from yubal.models.ytmusic import AlbumTrack, Artist, SearchResult
 
 # ============================================================================
 # Fixtures

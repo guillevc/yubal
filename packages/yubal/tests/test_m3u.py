@@ -3,12 +3,12 @@
 from pathlib import Path
 
 import pytest
-from yubal.models.enums import VideoType
-from yubal.models.track import TrackMetadata
-from yubal.utils.m3u import (
+from yubal.lib.m3u import (
     generate_m3u,
     write_m3u,
 )
+from yubal.models.enums import VideoType
+from yubal.models.track import TrackMetadata
 
 
 @pytest.fixture

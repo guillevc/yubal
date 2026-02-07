@@ -6,19 +6,34 @@ from dataclasses import dataclass
 
 from yubal.client import YTMusicProtocol
 from yubal.exceptions import TrackParseError
+from yubal.lib.matching import find_best_album_match, find_track_by_fuzzy_title
 from yubal.models.enums import ContentKind, SkipReason, VideoType
 from yubal.models.progress import ExtractProgress
 from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
-from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
-from yubal.utils.artists import format_artists
-from yubal.utils.matching import find_best_album_match, find_track_by_fuzzy_title
-from yubal.utils.thumbnails import get_square_thumbnail
+from yubal.models.ytmusic import Album, AlbumTrack, Artist, PlaylistTrack, Thumbnail
 from yubal.utils.url import parse_playlist_id, parse_video_id
 
 logger = logging.getLogger(__name__)
 
 # Supported video types for download (Audio Track Video and Official Music Video)
 SUPPORTED_VIDEO_TYPES = frozenset({VideoType.ATV, VideoType.OMV})
+
+
+def _format_artists(artists: list[Artist]) -> str:
+    """Format artists list as 'Artist One; Artist Two'."""
+    if not artists:
+        return ""
+    return "; ".join(a.name for a in artists if a.name)
+
+
+def _get_square_thumbnail(thumbnails: list[Thumbnail]) -> str | None:
+    """Get the largest square thumbnail URL."""
+    if not thumbnails:
+        return None
+    square = [t for t in thumbnails if t.width == t.height]
+    if square:
+        return max(square, key=lambda t: t.width).url
+    return thumbnails[-1].url
 
 
 @dataclass(frozen=True)
@@ -154,7 +169,7 @@ class MetadataExtractorService:
         playlist_info = PlaylistInfo(
             playlist_id=playlist_id,
             title=playlist.title,
-            cover_url=get_square_thumbnail(playlist.thumbnails),
+            cover_url=_get_square_thumbnail(playlist.thumbnails),
             kind=kind,
             author=playlist.author.name if playlist.author else None,
             unavailable_tracks=unavailable_for_info,
@@ -249,7 +264,7 @@ class MetadataExtractorService:
             cover_url=(
                 metadata.cover_url
                 if metadata
-                else get_square_thumbnail(track.thumbnails)
+                else _get_square_thumbnail(track.thumbnails)
             ),
             kind=ContentKind.TRACK,
             author=None,
@@ -508,7 +523,7 @@ class MetadataExtractorService:
             TrackParseError: If the track has no searchable metadata.
             Exception: If the search API call fails (propagated to caller).
         """
-        artists = format_artists(track.artists)
+        artists = _format_artists(track.artists)
         query = f"{artists} {track.title}".strip()
 
         if not query:
@@ -754,7 +769,7 @@ class MetadataExtractorService:
             track_number=track_number,
             total_tracks=len(album.tracks) if album.tracks else None,
             year=album.year,
-            cover_url=get_square_thumbnail(album.thumbnails),
+            cover_url=_get_square_thumbnail(album.thumbnails),
             video_type=video_type,
             duration_seconds=track.duration_seconds,
         )
@@ -815,7 +830,7 @@ class MetadataExtractorService:
             track_number=None,
             total_tracks=None,
             year=None,
-            cover_url=get_square_thumbnail(track.thumbnails),
+            cover_url=_get_square_thumbnail(track.thumbnails),
             video_type=video_type,
             duration_seconds=track.duration_seconds,
             unmatched=unmatched,
