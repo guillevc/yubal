@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Iterator
+from dataclasses import dataclass
 
 from yubal.client import YTMusicProtocol
 from yubal.exceptions import TrackParseError
@@ -19,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 # Supported video types for download (Audio Track Video and Official Music Video)
 SUPPORTED_VIDEO_TYPES = frozenset({VideoType.ATV, VideoType.OMV})
+
+
+@dataclass(frozen=True)
+class AlbumMatch:
+    """Search found a confident album match."""
+
+    album_id: str
+    atv_video_id: str | None = None
 
 
 class MetadataExtractorService:
@@ -461,11 +470,18 @@ class MetadataExtractorService:
 
         # For tracks without album, search for album info
         if not album_id:
-            album_id, search_atv_id, no_match_found = self._search_for_album(track)
-
-            # Skip track if search found results but none matched
-            if no_match_found:
-                return None, SkipReason.NO_ALBUM_MATCH
+            match self._search_for_album(track):
+                case None:
+                    # Download as unmatched instead of skipping
+                    metadata = self._create_fallback_metadata(
+                        track, video_type, unmatched=True
+                    )
+                    if metadata:
+                        return metadata, None
+                    return None, SkipReason.NO_ALBUM_MATCH
+                case AlbumMatch(album_id=aid, atv_video_id=atv_id):
+                    album_id = aid
+                    search_atv_id = atv_id
 
         # Fetch album details if we have an ID
         album: Album | None = None
@@ -535,9 +551,7 @@ class MetadataExtractorService:
     # ALBUM DISCOVERY - Search for album info when not directly available
     # ============================================================================
 
-    def _search_for_album(
-        self, track: PlaylistTrack
-    ) -> tuple[str | None, str | None, bool]:
+    def _search_for_album(self, track: PlaylistTrack) -> AlbumMatch | None:
         """Search YouTube Music to find album information for a track.
 
         Why search: Some playlist tracks don't include album IDs in their metadata.
@@ -552,25 +566,20 @@ class MetadataExtractorService:
             track: Track to search for.
 
         Returns:
-            Tuple of (album_id, atv_video_id, no_match_found):
-            - (album_id, atv_id, False) if matching album found
-            - (None, None, False) if search failed or no results
-            - (None, None, True) if results found but none matched track title
+            AlbumMatch if a confident match was found, or None if no album
+            could be confidently associated (low similarity, no results,
+            or search failure).
         """
         artists = format_artists(track.artists)
         query = f"{artists} {track.title}".strip()
 
         if not query:
-            return None, None, False
+            raise TrackParseError("Empty search query: no artists or title")
 
-        try:
-            results = self._client.search_songs(query)
-        except Exception as e:
-            logger.debug("Search failed for '%s': %s", query, e)
-            return None, None, False
+        results = self._client.search_songs(query)
 
         if not results:
-            return None, None, False
+            return None
 
         # Use the matching module to find the best album match
         match, had_results_with_album = find_best_album_match(
@@ -581,18 +590,21 @@ class MetadataExtractorService:
         )
 
         if match:
-            # Log match quality based on the result
             title_match = match.title_match
             artist_match = match.artist_match
 
+            # Reject low-confidence title matches
             if not title_match.is_good_match:
                 logger.warning(
-                    "Low confidence album search: '%s' -> '%s' (%.0f%%)",
+                    "Low confidence album search: '%s' -> '%s' (%.0f%%) - unmatched",
                     track.title,
                     title_match.candidate_normalized,
                     title_match.similarity,
                 )
-            elif title_match.is_base_match:
+                return None
+
+            # Log base title match info (title is acceptable)
+            if title_match.is_base_match:
                 logger.debug(
                     "Base title match for '%s': '%s' (base: %.0f%%, full: %.0f%%)",
                     track.title,
@@ -600,34 +612,37 @@ class MetadataExtractorService:
                     title_match.base_similarity,
                     title_match.similarity,
                 )
-            elif not artist_match.is_good_match:
+
+            # Reject low-confidence artist matches
+            if not artist_match.is_good_match:
                 logger.warning(
-                    "Low artist match for '%s': %s vs %s (%.0f%%) - using anyway",
+                    "Low artist match for '%s': %s vs %s (%.0f%%) - unmatched",
                     title_match.candidate_normalized,
                     artist_match.target_artists,
                     artist_match.candidate_artists,
                     artist_match.best_score,
                 )
-            else:
-                logger.debug(
-                    "Album search match: '%s' (title: %.0f%%, artist: %.0f%%)",
-                    title_match.candidate_normalized,
-                    title_match.similarity,
-                    artist_match.best_score,
-                )
+                return None
 
-            return match.album_id, match.atv_video_id, False
+            # Good match
+            logger.debug(
+                "Album search match: '%s' (title: %.0f%%, artist: %.0f%%)",
+                title_match.candidate_normalized,
+                title_match.similarity,
+                artist_match.best_score,
+            )
+            return AlbumMatch(album_id=match.album_id, atv_video_id=match.atv_video_id)
 
         # Had results with album info but none matched title
         if had_results_with_album:
             logger.warning(
-                "No matching album found for '%s' by %s - search results didn't match",
+                "No matching album found for '%s' by %s - unmatched",
                 track.title,
                 artists,
             )
-            return None, None, True
+            return None
 
-        return None, None, False
+        return None
 
     # ============================================================================
     # TRACK MATCHING - Four-tier strategy to match playlist tracks to album tracks
@@ -810,6 +825,8 @@ class MetadataExtractorService:
         self,
         track: PlaylistTrack,
         video_type: VideoType | None = None,
+        *,
+        unmatched: bool = False,
     ) -> TrackMetadata | None:
         """Create basic metadata when album information is unavailable.
 
@@ -828,6 +845,8 @@ class MetadataExtractorService:
         Args:
             track: Playlist track to create fallback from.
             video_type: Optional video type (determined if not provided).
+            unmatched: If True, marks the track as unmatched so the downloader
+                routes it to the ``_Unmatched/`` folder.
 
         Returns:
             Basic track metadata, or None if video type is unsupported.
@@ -861,4 +880,5 @@ class MetadataExtractorService:
             cover_url=get_square_thumbnail(track.thumbnails),
             video_type=video_type,
             duration_seconds=track.duration_seconds,
+            unmatched=unmatched,
         )

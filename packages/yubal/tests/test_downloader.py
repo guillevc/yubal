@@ -329,6 +329,38 @@ class TestDownloadService:
         assert result.status == DownloadStatus.SKIPPED
         mock_tag.assert_not_called()
 
+    def test_download_unmatched_track_routes_to_unmatched_folder(
+        self,
+        download_config: DownloadConfig,
+        tmp_path: Path,
+    ) -> None:
+        """Should route unmatched tracks to _Unmatched/ folder."""
+        track = TrackMetadata(
+            omv_video_id="omv123",
+            atv_video_id=None,
+            title="Mercury Retrograde",
+            artists=["Wiz Khalifa"],
+            album="Unknown Album",
+            album_artists=["Wiz Khalifa"],
+            unmatched=True,
+        )
+        mock_downloader = MockDownloader()
+        service = DownloadService(download_config, mock_downloader)
+
+        result = service.download_track(track)
+
+        assert result.status == DownloadStatus.SUCCESS
+        _, output_path = mock_downloader.downloads[0]
+        assert "_Unmatched" in str(output_path)
+        assert "Wiz Khalifa - Mercury Retrograde [omv123]" in str(output_path)
+
+    def test_track_metadata_unmatched_defaults_to_false(
+        self,
+        sample_track: TrackMetadata,
+    ) -> None:
+        """TrackMetadata.unmatched should default to False."""
+        assert sample_track.unmatched is False
+
     def test_tagging_called_on_success(
         self,
         sample_track: TrackMetadata,

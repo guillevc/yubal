@@ -216,6 +216,65 @@ class TestExtractTrack:
         assert client.search_songs_calls == ["The Weeknd Starboy"]
         assert client.get_album_calls == ["MPREb_starboy"]
 
+    def test_omv_track_with_low_artist_match_is_unmatched(self) -> None:
+        """Should mark OMV track as unmatched when artist match is low."""
+        omv_track = PlaylistTrack.model_validate(
+            {
+                "videoId": "-HJ0ZGkdlTk",
+                "videoType": "MUSIC_VIDEO_TYPE_OMV",
+                "title": "Mercury Retrograde",
+                "artists": [{"name": "Wiz Khalifa", "id": "UC789"}],
+                "album": None,
+                "thumbnails": [
+                    {
+                        "url": "https://example.com/thumb.jpg",
+                        "width": 544,
+                        "height": 544,
+                    }
+                ],
+                "duration_seconds": 200,
+            }
+        )
+
+        class MockClientWithSearch(MockClientForTrack):
+            """Mock that returns search results with mismatched artist."""
+
+            def __init__(self, track: PlaylistTrack) -> None:
+                super().__init__(track=track)
+
+            def search_songs(self, query: str) -> list[SearchResult]:
+                self.search_songs_calls.append(query)
+                return [
+                    SearchResult.model_validate(
+                        {
+                            "videoId": "abc123",
+                            "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                            "title": "Mercury Retrograde",
+                            "artists": [{"name": "Ghostemane", "id": "UC999"}],
+                            "album": {
+                                "id": "MPREb_wrong",
+                                "name": "Mercury Retrograde",
+                            },
+                        }
+                    )
+                ]
+
+        client = MockClientWithSearch(track=omv_track)
+        extractor = MetadataExtractorService(client)
+
+        result = extractor.extract_track(
+            "https://music.youtube.com/watch?v=-HJ0ZGkdlTk"
+        )
+
+        assert result is not None
+        assert result.track.unmatched is True
+        assert result.track.title == "Mercury Retrograde"
+        # Fallback metadata: no album enrichment
+        assert result.track.year is None
+        assert result.track.track_number is None
+        assert result.track.atv_video_id is None
+        assert client.get_album_calls == []
+
     def test_raises_for_invalid_url(self) -> None:
         """Should raise TrackParseError for invalid URL."""
         client = MockClientForTrack()

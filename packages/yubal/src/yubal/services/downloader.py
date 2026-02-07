@@ -23,7 +23,7 @@ from yubal.models.track import TrackMetadata
 from yubal.services.lyrics import LyricsService, LyricsServiceProtocol
 from yubal.services.tagger import tag_track
 from yubal.utils.cover import fetch_cover
-from yubal.utils.filename import build_track_path
+from yubal.utils.filename import build_track_path, build_unmatched_track_path
 
 logger = logging.getLogger(__name__)
 
@@ -527,15 +527,10 @@ class DownloadService:
     def _build_output_path_for_track(self, track: TrackMetadata) -> Path:
         """Build output path for a track using organized directory structure.
 
-        Creates a hierarchical path structure that organizes tracks by artist
-        and album, making it easy to browse the music library in a file manager.
+        Matched tracks use: base_path/Artist/YEAR - Album/NN - Title
+        Unmatched tracks use: base_path/_Unmatched/Artist - Title [videoId]
 
-        Path structure: base_path/Artist/YEAR - Album/NN - Title
-        Example: Music/Pink Floyd/1973 - The Dark Side of the Moon/01 - Speak to Me
-
-        Why this structure: Standard music library organization that's intuitive
-        for users and compatible with most music players. The extension is added
-        by yt-dlp during post-processing.
+        The extension is added by yt-dlp during post-processing.
 
         Args:
             track: Track metadata.
@@ -543,6 +538,13 @@ class DownloadService:
         Returns:
             Output path (without extension, yt-dlp adds it during download).
         """
+        if track.unmatched:
+            return build_unmatched_track_path(
+                base=self._config.base_path,
+                artist=track.primary_album_artist,
+                title=track.title,
+                video_id=track.omv_video_id or track.atv_video_id or "unknown",
+            )
         return build_track_path(
             base=self._config.base_path,
             artist=track.primary_album_artist,

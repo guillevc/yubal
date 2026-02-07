@@ -3,7 +3,11 @@
 from pathlib import Path
 
 import pytest
-from yubal.utils.filename import build_track_path, clean_filename
+from yubal.utils.filename import (
+    build_track_path,
+    build_unmatched_track_path,
+    clean_filename,
+)
 
 
 class TestCleanFilename:
@@ -586,5 +590,163 @@ class TestBuildTrackPath:
             album="Album",
             track_number=1,
             title="Song",
+        )
+        assert isinstance(result, Path)
+
+
+class TestBuildUnmatchedTrackPath:
+    """Tests for build_unmatched_track_path function."""
+
+    # === Docstring Example ===
+
+    def test_docstring_example(self) -> None:
+        """Should pass docstring example."""
+        result = build_unmatched_track_path(
+            Path("/music"), "Wiz Khalifa", "Mercury Retrograde", "-HJ0ZGkdlTk"
+        )
+        assert result == Path(
+            "/music/_Unmatched/Wiz Khalifa - Mercury Retrograde [-HJ0ZGkdlTk]"
+        )
+
+    # === Normal Inputs ===
+
+    def test_basic_path_construction(self) -> None:
+        """Should build complete path with all components."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="Test Artist",
+            title="Test Song",
+            video_id="abc123",
+        )
+        assert result == Path("/music/_Unmatched/Test Artist - Test Song [abc123]")
+
+    def test_build_path_preserves_unicode(self) -> None:
+        """Should preserve unicode characters in path components."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="Björk",
+            title="Jóga",
+            video_id="xyz789",
+        )
+        assert result == Path("/music/_Unmatched/Björk - Jóga [xyz789]")
+
+    # === Sanitization of Components ===
+
+    @pytest.mark.parametrize(
+        ("artist", "invalid_char"),
+        [
+            ("AC/DC", "/"),
+            ("Artist: Name", ":"),
+            ("Artist?", "?"),
+        ],
+        ids=["slash_in_artist", "colon_in_artist", "question_in_artist"],
+    )
+    def test_sanitizes_artist(self, artist: str, invalid_char: str) -> None:
+        """Should sanitize invalid characters in artist name."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist=artist,
+            title="Song",
+            video_id="abc123",
+        )
+        # Check that invalid chars don't appear in non-base parts
+        path_after_base = str(result).replace("/music/", "")
+        if invalid_char == "/":
+            # Only the directory separator between _Unmatched and filename
+            assert path_after_base.count("/") == 1
+        else:
+            assert invalid_char not in path_after_base
+
+    @pytest.mark.parametrize(
+        ("title", "invalid_char"),
+        [
+            ("Song: Remix", ":"),
+            ("Song <Live>", "<"),
+            ("Song?", "?"),
+        ],
+        ids=["colon_in_title", "angle_bracket_in_title", "question_in_title"],
+    )
+    def test_sanitizes_title(self, title: str, invalid_char: str) -> None:
+        """Should sanitize invalid characters in title."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="Artist",
+            title=title,
+            video_id="abc123",
+        )
+        path_after_base = str(result).replace("/music/", "")
+        assert invalid_char not in path_after_base
+
+    def test_sanitizes_all_components_together(self) -> None:
+        """Should sanitize multiple components with invalid chars."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="AC/DC",
+            title="Song <Remix>",
+            video_id="abc123",
+        )
+        path_after_base = str(result).replace("/music/", "")
+        # No invalid filesystem chars in the result
+        for char in ':*?"<>|':
+            assert char not in path_after_base
+        # Should have exactly 1 slash (directory separator for _Unmatched/)
+        assert path_after_base.count("/") == 1
+
+    # === Empty String Fallbacks ===
+
+    @pytest.mark.parametrize(
+        ("artist", "title", "expected_artist", "expected_title"),
+        [
+            ("", "Song", "Unknown Artist", "Song"),
+            ("Artist", "", "Artist", "Unknown Track"),
+            ("", "", "Unknown Artist", "Unknown Track"),
+        ],
+        ids=[
+            "empty_artist",
+            "empty_title",
+            "all_empty",
+        ],
+    )
+    def test_empty_component_fallbacks(
+        self,
+        artist: str,
+        title: str,
+        expected_artist: str,
+        expected_title: str,
+    ) -> None:
+        """Should use fallback values for empty strings."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist=artist,
+            title=title,
+            video_id="abc123",
+        )
+        assert expected_artist in str(result)
+        assert expected_title in str(result)
+
+    # === Path Structure Verification ===
+
+    def test_path_structure(self) -> None:
+        """Should follow convention: base/_Unmatched/Artist - Title [videoId]."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="The Beatles",
+            title="Here Comes The Sun",
+            video_id="dQw4w9WgXcQ",
+        )
+        parts = result.parts
+        assert parts[-3] == "music"
+        assert parts[-2] == "_Unmatched"
+        assert parts[-1] == "The Beatles - Here Comes The Sun [dQw4w9WgXcQ]"
+
+    # === Return Type ===
+
+    def test_returns_path_object(self) -> None:
+        """Should return a Path object, not a string."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="Artist",
+            title="Song",
+            video_id="abc123",
         )
         assert isinstance(result, Path)

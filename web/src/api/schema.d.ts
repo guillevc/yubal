@@ -619,13 +619,13 @@ export interface components {
             message: string;
             /**
              * Phase
-             * @description Current operation phase: extracting, downloading, composing
+             * @description Current operation phase
              * @default null
              */
             phase: string | null;
             /**
              * Phase Num
-             * @description Phase number (1, 2, 3)
+             * @description Phase number (1-4)
              * @default null
              */
             phase_num: number | null;
