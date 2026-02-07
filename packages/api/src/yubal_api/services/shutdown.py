@@ -6,13 +6,9 @@ Handles Ctrl+C (SIGINT) and SIGTERM signals by:
 3. Suppressing log output during shutdown to prevent post-prompt messages
 """
 
-from __future__ import annotations
-
 import threading
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from yubal_api.services.job_executor import JobExecutor
+from yubal_api.services.job_executor import JobExecutor
 
 
 class ShutdownCoordinator:

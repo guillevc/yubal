@@ -1,4 +1,4 @@
-"""Tests for single track download support."""
+"""Tests for PlaylistDownloadService pipeline."""
 
 from pathlib import Path
 from unittest.mock import MagicMock

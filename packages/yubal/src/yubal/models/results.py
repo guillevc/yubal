@@ -1,7 +1,5 @@
 """Download result models and statistics."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field

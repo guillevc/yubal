@@ -1,7 +1,5 @@
 """Download service for YouTube Music tracks using yt-dlp."""
 
-from __future__ import annotations
-
 import logging
 import os
 import shutil

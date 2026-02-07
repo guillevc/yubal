@@ -6,11 +6,8 @@ This module provides shared fixtures organized into:
 - Factory fixtures: Builders for test data
 """
 
-from __future__ import annotations
-
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from datetime import UTC, datetime, timedelta
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
 
@@ -18,10 +15,6 @@ import pytest
 from sqlalchemy.engine import Engine
 from sqlmodel import SQLModel, create_engine
 from yubal_api.db.repository import SubscriptionRepository
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 
 # =============================================================================
 # Database Fixtures

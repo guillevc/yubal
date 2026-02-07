@@ -1,7 +1,5 @@
 """Cleanup utilities for partial downloads and temporary files."""
 
-from __future__ import annotations
-
 from pathlib import Path
 
 

@@ -1,25 +1,19 @@
 """Event bus for job state changes."""
 
-from __future__ import annotations
-
 import asyncio
 import threading
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from yubal_api.domain.job import Job
 from yubal_api.schemas.jobs import (
     ClearedEvent,
     CreatedEvent,
     DeletedEvent,
     UpdatedEvent,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import AsyncIterator
-
-    from yubal_api.domain.job import Job
 
 
 class JobEventBus:

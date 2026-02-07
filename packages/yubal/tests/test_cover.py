@@ -2,15 +2,11 @@
 
 from collections.abc import Callable
 from email.message import Message
-from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 from urllib.error import HTTPError, URLError
 
 import pytest
 from yubal.utils.cover import clear_cover_cache, fetch_cover, get_cover_cache_size
-
-if TYPE_CHECKING:
-    pass
 
 
 @pytest.fixture(autouse=True)

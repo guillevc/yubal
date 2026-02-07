@@ -1,7 +1,5 @@
 """In-memory job store with thread-safe operations."""
 
-from __future__ import annotations
-
 import logging
 import threading
 from collections import OrderedDict

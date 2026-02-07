@@ -1,7 +1,5 @@
 """Background scheduler for periodic subscription syncing."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from datetime import UTC, datetime

@@ -5,8 +5,6 @@ and artist names when matching playlist tracks to album tracks or validating
 search results.
 """
 
-from __future__ import annotations
-
 import pytest
 from yubal.models.ytmusic import AlbumTrack, Artist, SearchResult
 from yubal.utils.matching import (

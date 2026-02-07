@@ -6,18 +6,16 @@ utilities for accessing services from FastAPI routes via app.state.
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from fastapi import Request
 
-logger = logging.getLogger(__name__)
+from yubal_api.db.repository import SubscriptionRepository
+from yubal_api.services.job_executor import JobExecutor
+from yubal_api.services.job_store import JobStore
+from yubal_api.services.scheduler import Scheduler
+from yubal_api.services.shutdown import ShutdownCoordinator
 
-if TYPE_CHECKING:
-    from yubal_api.db.repository import SubscriptionRepository
-    from yubal_api.services.job_executor import JobExecutor
-    from yubal_api.services.job_store import JobStore
-    from yubal_api.services.scheduler import Scheduler
-    from yubal_api.services.shutdown import ShutdownCoordinator
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -28,11 +26,11 @@ class Services:
     Stored in FastAPI's app.state for proper request scoping.
     """
 
-    job_store: "JobStore"
-    job_executor: "JobExecutor"
-    shutdown_coordinator: "ShutdownCoordinator"
-    repository: "SubscriptionRepository"
-    scheduler: "Scheduler"
+    job_store: JobStore
+    job_executor: JobExecutor
+    shutdown_coordinator: ShutdownCoordinator
+    repository: SubscriptionRepository
+    scheduler: Scheduler
 
     def close(self) -> None:
         """Clean up resources. Called at application shutdown."""

@@ -5,13 +5,11 @@ translating yubal's progress model to the API's job progress system.
 Handles playlists, albums, and single tracks.
 """
 
-from __future__ import annotations
-
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from yubal import (
     AudioCodec,
@@ -27,12 +25,10 @@ from yubal import (
 )
 from yubal.models.enums import ContentKind
 from yubal.models.track import PlaylistInfo
+from yubal.services.pipeline import PlaylistDownloadService
 
 from yubal_api.domain.enums import ProgressStep
 from yubal_api.domain.job import ContentInfo
-
-if TYPE_CHECKING:
-    from yubal.services.pipeline import PlaylistDownloadService
 
 logger = logging.getLogger(__name__)
 

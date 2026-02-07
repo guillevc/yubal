@@ -1,7 +1,5 @@
 """Audio file tagging service using mediafile."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 

@@ -1,7 +1,5 @@
 """Track and playlist metadata models."""
 
-from __future__ import annotations
-
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from yubal.models.enums import ContentKind, SkipReason, VideoType

@@ -6,9 +6,7 @@ This module provides shared fixtures for the yubal test suite, organized into:
 - Factory fixtures: Builders for creating customized test data
 """
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from collections.abc import Callable
 from unittest.mock import MagicMock
 
 import pytest
@@ -22,10 +20,6 @@ from yubal.models.ytmusic import (
     SearchResult,
     Thumbnail,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
 
 # =============================================================================
 # Model Fixtures - Basic building blocks

@@ -9,17 +9,13 @@ high-level result types (TitleMatchResult, ArtistMatchResult) rather than
 working with raw similarity scores and thresholds directly.
 """
 
-from __future__ import annotations
-
 import logging
 import re
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from rapidfuzz import fuzz, process
 
-if TYPE_CHECKING:
-    from yubal.models.ytmusic import AlbumTrack, Artist, SearchResult
+from yubal.models.ytmusic import AlbumTrack, Artist, SearchResult
 
 logger = logging.getLogger(__name__)
 
