@@ -21,7 +21,7 @@ from yubal.models.progress import DownloadProgress
 from yubal.models.results import DownloadResult
 from yubal.models.track import TrackMetadata
 from yubal.services.lyrics import LyricsService, LyricsServiceProtocol
-from yubal.services.tagger import tag_track
+from yubal.services.tagger import AudioFileTaggingService
 from yubal.utils.cover import fetch_cover
 from yubal.utils.filename import build_track_path, build_unmatched_track_path
 
@@ -351,6 +351,7 @@ class DownloadService:
         """
         self._config = config
         self._downloader = downloader or YTDLPDownloader(config, cookies_path)
+        self._tagger = AudioFileTaggingService()
         self._lyrics_service: LyricsServiceProtocol | None = (
             lyrics_service
             if lyrics_service is not None
@@ -575,7 +576,7 @@ class DownloadService:
         """
         try:
             cover = fetch_cover(track.cover_url)
-            tag_track(path, track, cover)
+            self._tagger.apply_metadata_tags(path, track, cover)
         except Exception as e:
             logger.exception("Failed to tag %s: %s", path, e)
 

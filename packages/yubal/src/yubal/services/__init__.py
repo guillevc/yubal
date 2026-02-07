@@ -4,11 +4,18 @@ Public API:
     MetadataExtractorService - Extract metadata from YouTube Music playlists
     PlaylistDownloadService - Full pipeline: extract + download + compose
 
+Protocols (for dependency injection):
+    ReplayGainProtocol - ReplayGain tagging abstraction
+    PlaylistArtifactsProtocol - Playlist artifact generation abstraction
+    DownloaderProtocol - Download backend abstraction
+    LyricsServiceProtocol - Lyrics fetching abstraction
+
 Internal (not exported):
     DownloadService, PlaylistArtifactsService - Used internally
-    DownloaderProtocol, YTDLPDownloader - Download backend implementation
-    LyricsService, LyricsServiceProtocol - Lyrics fetching from lrclib.net
-    tag_track - Audio file tagging
+    ReplayGainService - rsgain-based ReplayGain implementation
+    YTDLPDownloader - yt-dlp download backend implementation
+    LyricsService - lrclib.net lyrics fetching
+    AudioFileTaggingService, tag_track - Audio file tagging
 """
 
 from yubal.services.extractor import MetadataExtractorService

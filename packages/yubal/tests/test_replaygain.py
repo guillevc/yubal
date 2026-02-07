@@ -5,7 +5,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from yubal.config import AudioCodec
-from yubal.services.replaygain import ReplayGainService
+from yubal.services.replaygain import ReplayGainProtocol, ReplayGainService
+
+
+class TestReplayGainProtocol:
+    """Tests for ReplayGainProtocol conformance."""
+
+    def test_service_conforms_to_protocol(self) -> None:
+        """ReplayGainService should satisfy ReplayGainProtocol."""
+        service: ReplayGainProtocol = ReplayGainService()
+        # Type check verifies conformance; runtime check verifies instantiation
+        assert service is not None
 
 
 class TestReplayGainServiceAvailability:

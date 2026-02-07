@@ -9,17 +9,17 @@ from yubal.config import PlaylistDownloadConfig
 from yubal.exceptions import CancellationError
 from yubal.models.cancel import CancelToken
 from yubal.models.enums import ContentKind, DownloadStatus, SkipReason
-from yubal.models.progress import PlaylistProgress
+from yubal.models.progress import ExtractProgress, PlaylistProgress
 from yubal.models.results import (
     DownloadResult,
     PlaylistDownloadResult,
     aggregate_skip_reasons,
 )
 from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
-from yubal.services.artifacts import PlaylistArtifactsService
+from yubal.services.artifacts import PlaylistArtifactsProtocol, PlaylistArtifactsService
 from yubal.services.downloader import DownloadService
 from yubal.services.extractor import MetadataExtractorService
-from yubal.services.replaygain import ReplayGainService
+from yubal.services.replaygain import ReplayGainProtocol, ReplayGainService
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,8 @@ class PlaylistDownloadService:
         client: YTMusicProtocol | None = None,
         extractor: MetadataExtractorService | None = None,
         downloader: DownloadService | None = None,
-        composer: PlaylistArtifactsService | None = None,
+        composer: PlaylistArtifactsProtocol | None = None,
+        replaygain: ReplayGainProtocol | None = None,
         cookies_path: Path | None = None,
     ) -> None:
         """Initialize the service.
@@ -108,6 +109,7 @@ class PlaylistDownloadService:
             extractor: Optional extractor (creates from client if not provided).
             downloader: Optional downloader (creates from config if not provided).
             composer: Optional composer (creates default if not provided).
+            replaygain: Optional ReplayGain service (creates default if not provided).
             cookies_path: Optional path to cookies.txt for authentication.
         """
         self._config = config
@@ -122,17 +124,10 @@ class PlaylistDownloadService:
             config.download, cookies_path=cookies_path
         )
         self._composer = composer or PlaylistArtifactsService()
-        self._replaygain = ReplayGainService()
+        self._replaygain = replaygain or ReplayGainService()
 
         # Store last result for retrieval after iteration
         self._last_result: PlaylistDownloadResult | None = None
-
-        # Phase state (reset per download)
-        self._extracted_tracks: list[TrackMetadata] = []
-        self._playlist_info: PlaylistInfo | None = None
-        self._download_results: list[DownloadResult] = []
-        self._m3u_path: Path | None = None
-        self._cover_path: Path | None = None
 
     # ============================================================================
     # PUBLIC API - Main entry points for playlist downloads
@@ -145,7 +140,7 @@ class PlaylistDownloadService:
     ) -> Iterator[PlaylistProgress]:
         """Execute complete playlist download pipeline with progress updates.
 
-        This is the main orchestration method that runs all three phases
+        This is the main orchestration method that runs all four phases
         sequentially while yielding progress updates. Each phase checks for
         cancellation before starting, allowing graceful cancellation between
         phases rather than mid-operation.
@@ -160,11 +155,6 @@ class PlaylistDownloadService:
         2. "downloading" - Download audio files via yt-dlp (respects skip logic)
         3. "composing" - Generate M3U playlist files and save cover art
         4. "normalizing" - Apply ReplayGain tags (optional, if enabled)
-
-        Why three phases: Separating concerns allows better error handling,
-        progress reporting, and cancellation. If extraction fails, we don't
-        attempt downloads. If downloads fail, we still generate playlists
-        from successful downloads.
 
         Args:
             url: YouTube Music playlist URL.
@@ -200,32 +190,53 @@ class PlaylistDownloadService:
         logger.info("URL: %s", url)
 
         # Phase 1: Extract metadata (handles all URL types: track, album, playlist)
-        yield from self._execute_extraction_phase(url, cancel_token)
-        tracks, playlist_info = self._get_extraction_results()
+        extracted_tracks: list[TrackMetadata] = []
+        playlist_info: PlaylistInfo | None = None
+
+        for progress, extract_progress in self._extract_phase(url, cancel_token):
+            if extract_progress.track is not None:
+                extracted_tracks.append(extract_progress.track)
+            playlist_info = extract_progress.playlist_info
+            yield progress
 
         # Early exit if no tracks found
-        if not tracks or not playlist_info:
+        if not extracted_tracks or not playlist_info:
             logger.warning("No tracks extracted, nothing to download")
             self._last_result = None
             return
 
         # Phase 2: Download tracks to disk
-        yield from self._execute_download_phase(tracks, cancel_token)
-        results = self._get_download_results()
+        download_results: list[DownloadResult] = []
+
+        for progress, result in self._download_phase(extracted_tracks, cancel_token):
+            download_results.append(result)
+            yield progress
+
+        # Log download statistics
+        self._log_download_stats(download_results)
 
         # Phase 3: Generate playlist artifacts
-        yield from self._execute_composition_phase(playlist_info, results, cancel_token)
-        m3u_path, cover_path = self._get_composition_results()
+        m3u_path: Path | None = None
+        cover_path: Path | None = None
+
+        for progress, paths in self._compose_phase(
+            playlist_info, download_results, cancel_token
+        ):
+            m3u_path, cover_path = paths
+            yield progress
 
         # Phase 4: Apply ReplayGain tags (optional)
         if self._config.apply_replaygain:
-            yield from self._execute_normalization_phase(
-                playlist_info, results, cancel_token
+            yield from self._normalize_phase(
+                playlist_info,
+                download_results,
+                expected_count=len(extracted_tracks),
+                cancel_token=cancel_token,
             )
 
         # Store complete result for retrieval via get_result()
         self._last_result = self._build_final_result(
-            playlist_info, results, m3u_path, cover_path
+            playlist_info, download_results, m3u_path, cover_path
         )
 
         kind = playlist_info.kind.value.capitalize()
@@ -298,10 +309,6 @@ class PlaylistDownloadService:
     def _check_cancellation(self, cancel_token: CancelToken | None) -> None:
         """Check if operation has been cancelled and raise exception if so.
 
-        Why centralized: Ensures consistent cancellation behavior across all
-        phases. Raises early to prevent starting expensive operations that
-        will be cancelled.
-
         Args:
             cancel_token: Optional cancellation token to check.
 
@@ -315,63 +322,53 @@ class PlaylistDownloadService:
     # PHASE 1: EXTRACTION - Fetch track metadata from YouTube Music
     # ============================================================================
 
-    def _reset_extraction_state(self) -> None:
-        """Reset extraction state for a new download."""
-        self._extracted_tracks = []
-        self._playlist_info = None
-
-    def _execute_extraction_phase(
+    def _extract_phase(
         self,
         url: str,
         cancel_token: CancelToken | None,
-    ) -> Iterator[PlaylistProgress]:
+    ) -> Iterator[tuple[PlaylistProgress, ExtractProgress]]:
         """Execute metadata extraction phase with progress updates.
 
         Fetches track metadata from the YouTube Music URL. Handles all URL types
-        (single track, album, playlist). Progress is yielded after each track
-        is extracted. This phase populates the internal state with tracks and
-        playlist_info for use by subsequent phases.
-
-        Why separate phase: Extraction is I/O-bound (API calls) and can take
-        significant time for large playlists. Separating it allows clear
-        progress reporting and early cancellation if needed.
+        (single track, album, playlist). Yields (progress, extract_progress)
+        tuples so the caller can collect tracks and playlist info.
 
         Args:
             url: YouTube Music URL (single track, album, or playlist).
             cancel_token: Optional cancellation token.
 
         Yields:
-            PlaylistProgress with phase="extracting" and track metadata.
+            Tuples of (PlaylistProgress, ExtractProgress). The caller collects
+            tracks from extract_progress.track and playlist_info.
         """
         logger.info(
             "Fetching metadata",
             extra={"phase": "extracting", "phase_num": 1},
         )
 
-        self._reset_extraction_state()
+        extracted_count = 0
         last_progress = None
 
         for progress in self._extractor.extract(url, max_items=self._config.max_items):
-            # Only add non-None tracks (skip those with skip reasons)
             if progress.track is not None:
-                self._extracted_tracks.append(progress.track)
-            self._playlist_info = progress.playlist_info
+                extracted_count += 1
             last_progress = progress
-            yield PlaylistProgress(
-                phase="extracting",
-                current=progress.current,
-                total=progress.total,
-                extract_progress=progress,
+            yield (
+                PlaylistProgress(
+                    phase="extracting",
+                    current=progress.current,
+                    total=progress.total,
+                    extract_progress=progress,
+                ),
+                progress,
             )
 
         # Log extraction summary
         if last_progress:
-            # unavailable = tracks YouTube reports as unavailable at source
-            # extraction_skipped = tracks we skipped during extraction (e.g., UGC)
             unavailable = last_progress.playlist_info.unavailable_tracks
             extraction_skipped = last_progress.skipped_by_reason
             total_skipped = len(unavailable) + sum(extraction_skipped.values())
-            total_in_playlist = len(self._extracted_tracks) + total_skipped
+            total_in_playlist = extracted_count + total_skipped
             kind = last_progress.playlist_info.kind.value.capitalize()
 
             if total_skipped:
@@ -383,7 +380,6 @@ class PlaylistDownloadService:
                     total_skipped,
                     skip_summary,
                 )
-                # Log unavailable track details (extraction skips logged earlier)
                 for ut in unavailable:
                     logger.info(
                         "  - %s by %s (%s)",
@@ -394,41 +390,27 @@ class PlaylistDownloadService:
             else:
                 logger.info("%s contains %d tracks", kind, total_in_playlist)
 
-    def _get_extraction_results(
-        self,
-    ) -> tuple[list[TrackMetadata], PlaylistInfo | None]:
-        """Retrieve tracks and playlist info from extraction phase.
-
-        Returns:
-            Tuple of (tracks, playlist_info) from the extraction phase.
-        """
-        return self._extracted_tracks, self._playlist_info
-
     # ============================================================================
     # PHASE 2: DOWNLOAD - Download tracks to disk via yt-dlp
     # ============================================================================
 
-    def _execute_download_phase(
+    def _download_phase(
         self,
         tracks: list[TrackMetadata],
         cancel_token: CancelToken | None,
-    ) -> Iterator[PlaylistProgress]:
+    ) -> Iterator[tuple[PlaylistProgress, DownloadResult]]:
         """Execute track download phase with progress updates.
 
-        Downloads all tracks to disk using yt-dlp. Progress is yielded after
-        each track completes (success, skipped, or failed). This phase
-        populates internal state with download results for composition.
-
-        Why separate phase: Downloads are the slowest part of the pipeline
-        (network-bound, large file transfers). Separating allows detailed
-        progress reporting and respects cancellation during the download loop.
+        Downloads all tracks to disk using yt-dlp. Yields (progress, result)
+        tuples so the caller can collect download results.
 
         Args:
             tracks: List of track metadata to download.
             cancel_token: Optional cancellation token (checked by DownloadService).
 
         Yields:
-            PlaylistProgress with phase="downloading" and download results.
+            Tuples of (PlaylistProgress, DownloadResult). The caller collects
+            results into a local list.
         """
         self._check_cancellation(cancel_token)
 
@@ -438,25 +420,22 @@ class PlaylistDownloadService:
             extra={"phase": "downloading", "phase_num": 2},
         )
 
-        self._download_results: list[DownloadResult] = []
-
         for progress in self._downloader.download_tracks(tracks, cancel_token):
-            self._download_results.append(progress.result)
-            yield PlaylistProgress(
-                phase="downloading",
-                current=progress.current,
-                total=progress.total,
-                download_progress=progress,
+            yield (
+                PlaylistProgress(
+                    phase="downloading",
+                    current=progress.current,
+                    total=progress.total,
+                    download_progress=progress,
+                ),
+                progress.result,
             )
 
-        # Log download statistics with stats_type discriminator
-        success_count = sum(
-            1 for r in self._download_results if r.status == DownloadStatus.SUCCESS
-        )
-        failed_count = sum(
-            1 for r in self._download_results if r.status == DownloadStatus.FAILED
-        )
-        skipped_by_reason = aggregate_skip_reasons(self._download_results)
+    def _log_download_stats(self, results: list[DownloadResult]) -> None:
+        """Log download statistics after download phase completes."""
+        success_count = sum(1 for r in results if r.status == DownloadStatus.SUCCESS)
+        failed_count = sum(1 for r in results if r.status == DownloadStatus.FAILED)
+        skipped_by_reason = aggregate_skip_reasons(results)
 
         logger.info(
             "Downloads complete",
@@ -472,34 +451,21 @@ class PlaylistDownloadService:
             },
         )
 
-    def _get_download_results(self) -> list[DownloadResult]:
-        """Retrieve download results from download phase.
-
-        Returns:
-            List of download results (success, skipped, or failed) for all tracks.
-        """
-        return self._download_results
-
     # ============================================================================
     # PHASE 3: COMPOSITION - Generate M3U playlists and save cover art
     # ============================================================================
 
-    def _execute_composition_phase(
+    def _compose_phase(
         self,
         playlist_info: PlaylistInfo,
         results: list[DownloadResult],
         cancel_token: CancelToken | None,
-    ) -> Iterator[PlaylistProgress]:
+    ) -> Iterator[tuple[PlaylistProgress, tuple[Path | None, Path | None]]]:
         """Execute playlist composition phase with progress updates.
 
-        Generates M3U playlist files and saves cover art to disk. This is
-        the final phase that creates the user-facing artifacts. Progress
-        is yielded before and after composition completes.
-
-        Why separate phase: Composition is fast but produces important
-        artifacts (M3U files, cover images). Separating allows clear
-        progress indication and ensures artifacts are generated even if
-        some downloads failed.
+        Generates M3U playlist files and saves cover art to disk. Yields
+        (progress, (m3u_path, cover_path)) tuples so the caller can collect
+        the artifact paths.
 
         Args:
             playlist_info: Playlist metadata for file generation.
@@ -507,18 +473,16 @@ class PlaylistDownloadService:
             cancel_token: Optional cancellation token.
 
         Yields:
-            PlaylistProgress with phase="composing" and status messages.
+            Tuples of (PlaylistProgress, (m3u_path, cover_path)).
         """
         self._check_cancellation(cancel_token)
 
         # Determine what we're actually generating
-        # Skip M3U for albums (if configured) and always skip for single tracks
         is_album = playlist_info.kind == ContentKind.ALBUM
         is_track = playlist_info.kind == ContentKind.TRACK
         will_generate_m3u = self._config.generate_m3u and not (
             is_track or (self._config.skip_album_m3u and is_album)
         )
-        # Cover saved for albums and playlists (not single tracks)
         will_save_cover = self._config.save_cover and not is_track
 
         # Build phase message based on what we're doing
@@ -536,14 +500,17 @@ class PlaylistDownloadService:
 
         logger.info(message, extra={"phase": "composing", "phase_num": 3})
 
-        yield PlaylistProgress(
-            phase="composing",
-            current=0,
-            total=1,
-            message=message,
+        yield (
+            PlaylistProgress(
+                phase="composing",
+                current=0,
+                total=1,
+                message=message,
+            ),
+            (None, None),
         )
 
-        self._m3u_path, self._cover_path = self._composer.compose(
+        m3u_path, cover_path = self._composer.compose(
             self._config.download.base_path,
             playlist_info,
             results,
@@ -552,29 +519,26 @@ class PlaylistDownloadService:
             skip_album_m3u=self._config.skip_album_m3u,
         )
 
-        yield PlaylistProgress(
-            phase="composing",
-            current=1,
-            total=1,
-            message="Done",
+        yield (
+            PlaylistProgress(
+                phase="composing",
+                current=1,
+                total=1,
+                message="Done",
+            ),
+            (m3u_path, cover_path),
         )
-
-    def _get_composition_results(self) -> tuple[Path | None, Path | None]:
-        """Retrieve M3U and cover paths from composition phase.
-
-        Returns:
-            Tuple of (m3u_path, cover_path). Either may be None if not generated.
-        """
-        return self._m3u_path, self._cover_path
 
     # ============================================================================
     # PHASE 4: NORMALIZATION - Apply ReplayGain tags using rsgain
     # ============================================================================
 
-    def _execute_normalization_phase(
+    def _normalize_phase(
         self,
         playlist_info: PlaylistInfo,
         results: list[DownloadResult],
+        *,
+        expected_count: int,
         cancel_token: CancelToken | None,
     ) -> Iterator[PlaylistProgress]:
         """Execute ReplayGain normalization phase with progress updates.
@@ -589,6 +553,7 @@ class PlaylistDownloadService:
         Args:
             playlist_info: Playlist metadata for determining album mode.
             results: Download results to identify successful downloads.
+            expected_count: Number of tracks expected (for album completeness check).
             cancel_token: Optional cancellation token.
 
         Yields:
@@ -608,10 +573,7 @@ class PlaylistDownloadService:
             return
 
         # Determine if this is a complete album (use album mode)
-        # Album mode calculates album gain in addition to track gain
-        # Only use album mode if ALL expected tracks downloaded successfully
         success_count = sum(1 for r in results if r.status == DownloadStatus.SUCCESS)
-        expected_count = len(self._extracted_tracks)
         is_complete_album = (
             playlist_info.kind == ContentKind.ALBUM
             and self._config.max_items is None
@@ -667,9 +629,6 @@ class PlaylistDownloadService:
         cover_path: Path | None,
     ) -> PlaylistDownloadResult:
         """Construct final result object with all download outcomes.
-
-        Combines data from all three phases into a single result object
-        that provides a complete summary of the download operation.
 
         Args:
             playlist_info: Metadata about the playlist.
