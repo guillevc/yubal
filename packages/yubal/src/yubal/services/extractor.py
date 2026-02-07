@@ -8,7 +8,6 @@ from yubal.client import YTMusicProtocol
 from yubal.exceptions import TrackParseError
 from yubal.models.enums import ContentKind, SkipReason, VideoType
 from yubal.models.progress import ExtractProgress
-from yubal.models.results import SingleTrackResult
 from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
 from yubal.models.ytmusic import Album, AlbumTrack, PlaylistTrack
 from yubal.utils.artists import format_artists
@@ -235,51 +234,6 @@ class MetadataExtractorService:
             APIError: If API requests fail.
         """
         return [p.track for p in self.extract(url, max_items=max_items) if p.track]
-
-    def extract_track(self, url: str) -> SingleTrackResult | None:
-        """Extract metadata for a single track from a watch URL.
-
-        Args:
-            url: YouTube Music watch URL with video ID.
-
-        Returns:
-            SingleTrackResult with track metadata and synthetic playlist info,
-            or None if the track has an unsupported video type (e.g., UGC).
-
-        Raises:
-            TrackParseError: If URL doesn't contain a video ID.
-            TrackNotFoundError: If track doesn't exist.
-            APIError: If API requests fail.
-        """
-        video_id = parse_video_id(url)
-        if not video_id:
-            raise TrackParseError(f"Could not extract video ID from: {url}")
-
-        logger.debug("Extracting metadata for track: %s", video_id)
-
-        # Fetch track using get_watch_playlist (same format as playlist tracks)
-        track = self._client.get_track(video_id)
-
-        # Process through existing single track extraction logic
-        metadata, skip_reason = self._extract_single_track(track)
-
-        # Return None for skipped tracks (unsupported type, no album match, etc.)
-        if metadata is None:
-            if skip_reason:
-                logger.info("Track skipped: %s", skip_reason.label)
-            return None
-
-        # Create synthetic playlist info for single track
-        playlist_info = PlaylistInfo(
-            playlist_id=video_id,
-            title=metadata.title,
-            cover_url=metadata.cover_url,
-            kind=ContentKind.TRACK,
-            author=None,
-            unavailable_tracks=[],
-        )
-
-        return SingleTrackResult(track=metadata, playlist_info=playlist_info)
 
     def _extract_single_track_as_progress(self, url: str) -> Iterator[ExtractProgress]:
         """Extract a single track and yield it as ExtractProgress.

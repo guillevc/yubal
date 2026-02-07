@@ -52,7 +52,6 @@ from yubal.models.results import (
     DownloadResult,
     PhaseStats,
     PlaylistDownloadResult,
-    SingleTrackResult,
 )
 from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.services import MetadataExtractorService, PlaylistDownloadService
@@ -204,7 +203,6 @@ __all__ = [
     "PlaylistNotFoundError",
     "PlaylistParseError",
     "PlaylistProgress",
-    "SingleTrackResult",
     "SkipReason",
     "TrackMetadata",
     "TrackNotFoundError",
