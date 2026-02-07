@@ -7,8 +7,9 @@ from conftest import MockYTMusicClient
 from pydantic import ValidationError
 from yubal.models.enums import VideoType
 from yubal.models.track import TrackMetadata
-from yubal.models.ytmusic import Album, Playlist, SearchResult
+from yubal.models.ytmusic import Album, Artist, Playlist, SearchResult, Thumbnail
 from yubal.services import MetadataExtractorService
+from yubal.services.extractor import _format_artists, _get_square_thumbnail
 
 
 def extract_all(
@@ -1386,3 +1387,75 @@ class TestMetadataExtractorService:
         assert tracks[0].video_type == VideoType.ATV
         assert tracks[1].video_type == VideoType.OMV
         assert "Unsupported video type 'UGC'" in caplog.text
+
+
+class TestFormatArtists:
+    """Tests for _format_artists function."""
+
+    def test_single_artist(self) -> None:
+        """Should format a single artist correctly."""
+        artists = [Artist(name="Taylor Swift", id="123")]
+        assert _format_artists(artists) == "Taylor Swift"
+
+    def test_multiple_artists(self) -> None:
+        """Should join multiple artists with semicolons."""
+        artists = [
+            Artist(name="John Lennon", id="1"),
+            Artist(name="Paul McCartney", id="2"),
+        ]
+        assert _format_artists(artists) == "John Lennon; Paul McCartney"
+
+    def test_empty_list(self) -> None:
+        """Should return empty string for empty list."""
+        assert _format_artists([]) == ""
+
+    def test_artist_without_id(self) -> None:
+        """Should handle artists without ID."""
+        artists = [Artist(name="Unknown Artist", id=None)]
+        assert _format_artists(artists) == "Unknown Artist"
+
+    def test_filters_empty_names(self) -> None:
+        """Should skip artists with empty names."""
+        artists = [
+            Artist(name="Valid Artist", id="1"),
+            Artist(name="", id="2"),
+        ]
+        assert _format_artists(artists) == "Valid Artist"
+
+
+class TestGetSquareThumbnail:
+    """Tests for _get_square_thumbnail function."""
+
+    def test_returns_largest_square(self) -> None:
+        """Should return the largest square thumbnail."""
+        thumbnails = [
+            Thumbnail(url="https://small.jpg", width=120, height=120),
+            Thumbnail(url="https://large.jpg", width=544, height=544),
+            Thumbnail(url="https://medium.jpg", width=320, height=320),
+        ]
+        assert _get_square_thumbnail(thumbnails) == "https://large.jpg"
+
+    def test_prefers_square_over_rectangular(self) -> None:
+        """Should prefer square thumbnails over larger rectangular ones."""
+        thumbnails = [
+            Thumbnail(url="https://rect.jpg", width=1280, height=720),
+            Thumbnail(url="https://square.jpg", width=544, height=544),
+        ]
+        assert _get_square_thumbnail(thumbnails) == "https://square.jpg"
+
+    def test_falls_back_to_last_thumbnail(self) -> None:
+        """Should return last thumbnail if no square ones exist."""
+        thumbnails = [
+            Thumbnail(url="https://small.jpg", width=120, height=90),
+            Thumbnail(url="https://large.jpg", width=1280, height=720),
+        ]
+        assert _get_square_thumbnail(thumbnails) == "https://large.jpg"
+
+    def test_returns_none_for_empty_list(self) -> None:
+        """Should return None for empty list."""
+        assert _get_square_thumbnail([]) is None
+
+    def test_single_square_thumbnail(self) -> None:
+        """Should work with a single square thumbnail."""
+        thumbnails = [Thumbnail(url="https://only.jpg", width=544, height=544)]
+        assert _get_square_thumbnail(thumbnails) == "https://only.jpg"
