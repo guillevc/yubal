@@ -128,3 +128,34 @@ class TestGetTrack:
         assert track.duration_seconds == 180
         assert len(track.thumbnails) == 1
         assert track.thumbnails[0].url == "https://example.com/thumb.jpg"
+
+
+class TestGetPlaylist:
+    def test_normalizes_null_artists_to_empty_list(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_playlist.return_value = {
+            "title": "Liked Music",
+            "tracks": [
+                {
+                    "videoId": "abc123",
+                    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                    "title": "Track With Null Artists",
+                    "artists": None,
+                    "thumbnails": [
+                        {
+                            "url": "https://example.com/thumb.jpg",
+                            "width": 120,
+                            "height": 120,
+                        }
+                    ],
+                    "duration_seconds": 180,
+                }
+            ],
+        }
+
+        client = YTMusicClient(ytmusic=mock_ytm)
+
+        playlist = client.get_playlist("LM")
+
+        assert len(playlist.tracks) == 1
+        assert playlist.tracks[0].artists == []
