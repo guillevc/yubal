@@ -40,7 +40,7 @@ class JobStore:
         If all jobs are active/queued, job creation returns None.
     """
 
-    MAX_JOBS = 20
+    MAX_JOBS = 200
     TIMEOUT_SECONDS = 30 * 60  # 30 minutes
 
     def __init__(self, clock: Clock, id_generator: IdGenerator) -> None:
