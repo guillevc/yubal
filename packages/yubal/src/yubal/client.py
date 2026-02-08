@@ -199,7 +199,7 @@ class YTMusicClient:
                     }
                 )
             else:
-                valid_tracks.append(track)
+                valid_tracks.append(self._normalize_playlist_track(track))
 
         data["tracks"] = valid_tracks
         data["unavailable_tracks"] = unavailable_tracks
@@ -210,6 +210,16 @@ class YTMusicClient:
             len(unavailable_tracks),
         )
         return Playlist.model_validate(data)
+
+    def _normalize_playlist_track(self, track: dict[str, Any]) -> dict[str, Any]:
+        """Normalize playlist track fields before model validation."""
+        normalized = dict(track)
+
+        # ytmusicapi may return null for artists on some tracks.
+        if normalized.get("artists") is None:
+            normalized["artists"] = []
+
+        return normalized
 
     def get_album(self, album_id: str) -> Album:
         """Fetch an album by ID.
