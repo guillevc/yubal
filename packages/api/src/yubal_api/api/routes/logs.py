@@ -7,8 +7,8 @@ from collections.abc import AsyncIterator
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
+from yubal_api.api.deps import LogBufferDep
 from yubal_api.schemas.logs import LogEntry
-from yubal_api.services.log_buffer import get_log_buffer
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +23,13 @@ HEARTBEAT_INTERVAL = 30
     summary="Get buffered log entries",
     description="Returns all currently buffered log entries as an array.",
 )
-async def get_logs() -> list[LogEntry]:
+async def get_logs(log_buffer: LogBufferDep) -> list[LogEntry]:
     """Get all buffered log entries.
 
     Returns the current log buffer contents. Useful for initial page load
     before connecting to the SSE stream.
     """
-    buffer = get_log_buffer()
+    buffer = log_buffer
     entries: list[LogEntry] = []
     for line in buffer.get_lines():
         try:
@@ -49,9 +49,9 @@ async def get_logs() -> list[LogEntry]:
         "Heartbeat comments sent every 30s."
     ),
 )
-async def stream_logs() -> StreamingResponse:
+async def stream_logs(log_buffer: LogBufferDep) -> StreamingResponse:
     """Stream structured log entries via Server-Sent Events."""
-    buffer = get_log_buffer()
+    buffer = log_buffer
 
     async def event_generator() -> AsyncIterator[str]:
         async with buffer.subscribe() as queue:

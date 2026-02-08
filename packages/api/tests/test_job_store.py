@@ -7,6 +7,7 @@ import pytest
 from yubal import AudioCodec, PhaseStats
 from yubal_api.domain.enums import JobSource, JobStatus
 from yubal_api.domain.job import ContentInfo
+from yubal_api.services.job_event_bus import JobEventBus
 from yubal_api.services.job_store import JobStore
 
 # =============================================================================
@@ -17,7 +18,7 @@ from yubal_api.services.job_store import JobStore
 @pytest.fixture
 def store(clock: Any, id_generator: Any) -> JobStore:
     """Provide a configured JobStore instance."""
-    return JobStore(clock=clock, id_generator=id_generator)
+    return JobStore(clock=clock, id_generator=id_generator, event_bus=JobEventBus())
 
 
 @pytest.fixture
@@ -579,7 +580,9 @@ class TestCapacityLimits:
 
     def test_capacity_limit_reached(self, clock: Any, id_generator: Any) -> None:
         """Should return None when at capacity with no finished jobs to prune."""
-        store = JobStore(clock=clock, id_generator=id_generator)
+        store = JobStore(
+            clock=clock, id_generator=id_generator, event_bus=JobEventBus()
+        )
 
         # Fill to capacity with pending jobs
         for i in range(JobStore.MAX_JOBS):
@@ -594,7 +597,9 @@ class TestCapacityLimits:
         self, clock: Any, id_generator: Any
     ) -> None:
         """When at capacity, oldest finished job should be pruned."""
-        store = JobStore(clock=clock, id_generator=id_generator)
+        store = JobStore(
+            clock=clock, id_generator=id_generator, event_bus=JobEventBus()
+        )
 
         # Create jobs up to capacity
         for i in range(JobStore.MAX_JOBS):
@@ -617,7 +622,9 @@ class TestCapacityLimits:
         self, clock: Any, id_generator: Any
     ) -> None:
         """Should prune enough finished jobs to make room."""
-        store = JobStore(clock=clock, id_generator=id_generator)
+        store = JobStore(
+            clock=clock, id_generator=id_generator, event_bus=JobEventBus()
+        )
 
         # Fill to capacity
         for i in range(JobStore.MAX_JOBS):
@@ -641,7 +648,9 @@ class TestCapacityLimits:
         self, clock: Any, id_generator: Any
     ) -> None:
         """Should fail when all jobs are running or pending."""
-        store = JobStore(clock=clock, id_generator=id_generator)
+        store = JobStore(
+            clock=clock, id_generator=id_generator, event_bus=JobEventBus()
+        )
 
         # Fill with running jobs
         for i in range(JobStore.MAX_JOBS):
@@ -794,7 +803,9 @@ class TestThreadSafety:
 
     def test_concurrent_creates(self, clock: Any, id_generator: Any) -> None:
         """Multiple threads creating jobs should not cause race conditions."""
-        store = JobStore(clock=clock, id_generator=id_generator)
+        store = JobStore(
+            clock=clock, id_generator=id_generator, event_bus=JobEventBus()
+        )
         results: list[tuple[str, bool] | None] = []
         lock = threading.Lock()
 
@@ -1024,7 +1035,9 @@ class TestEdgeCases:
         self, clock: Any, id_generator: Any
     ) -> None:
         """When pruning, oldest finished job should be removed first."""
-        store = JobStore(clock=clock, id_generator=id_generator)
+        store = JobStore(
+            clock=clock, id_generator=id_generator, event_bus=JobEventBus()
+        )
 
         # Fill to capacity
         for i in range(JobStore.MAX_JOBS):

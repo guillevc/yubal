@@ -82,15 +82,3 @@ class JobEventBus:
     def emit_cleared(self, count: int) -> None:
         """Emit jobs cleared event."""
         self._emit(ClearedEvent(count=count))
-
-
-# Singleton instance
-_job_event_bus: JobEventBus | None = None
-
-
-def get_job_event_bus() -> JobEventBus:
-    """Get the singleton JobEventBus instance."""
-    global _job_event_bus
-    if _job_event_bus is None:
-        _job_event_bus = JobEventBus()
-    return _job_event_bus

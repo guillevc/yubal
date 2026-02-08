@@ -12,7 +12,7 @@ from yubal import AudioCodec, PhaseStats
 from yubal_api.domain.enums import JobSource, JobStatus
 from yubal_api.domain.job import ContentInfo, Job
 from yubal_api.domain.types import Clock, IdGenerator
-from yubal_api.services.job_event_bus import get_job_event_bus
+from yubal_api.services.job_event_bus import JobEventBus
 
 logger = logging.getLogger(__name__)
 
@@ -41,15 +41,19 @@ class JobStore:
     MAX_JOBS = 200
     TIMEOUT_SECONDS = 30 * 60  # 30 minutes
 
-    def __init__(self, clock: Clock, id_generator: IdGenerator) -> None:
+    def __init__(
+        self, clock: Clock, id_generator: IdGenerator, event_bus: JobEventBus
+    ) -> None:
         """Initialize the job store.
 
         Args:
             clock: Function returning current datetime (enables testing).
             id_generator: Function generating unique job IDs.
+            event_bus: Event bus for emitting job state change events.
         """
         self._clock = clock
         self._id_generator = id_generator
+        self._event_bus = event_bus
         self._jobs: OrderedDict[str, Job] = OrderedDict()
         self._lock = threading.Lock()
         self._active_job_id: str | None = None
@@ -96,7 +100,7 @@ class JobStore:
             if should_start:
                 self._active_job_id = job.id
 
-            get_job_event_bus().emit_created(job)
+            self._event_bus.emit_created(job)
             return job, should_start
 
     def get(self, job_id: str) -> Job | None:
@@ -148,7 +152,7 @@ class JobStore:
                 return False
 
             self._remove(job_id)
-            get_job_event_bus().emit_deleted(job_id)
+            self._event_bus.emit_deleted(job_id)
             logger.debug("Job removed: %s", job_id[:8])
             return True
 
@@ -164,7 +168,7 @@ class JobStore:
                 self._remove(job_id)
             count = len(finished_ids)
             if count > 0:
-                get_job_event_bus().emit_cleared(count)
+                self._event_bus.emit_cleared(count)
             return count
 
     # -------------------------------------------------------------------------
@@ -206,7 +210,7 @@ class JobStore:
                 download_stats=download_stats,
                 started_at=started_at,
             )
-            get_job_event_bus().emit_updated(job)
+            self._event_bus.emit_updated(job)
             return job
 
     def cancel(self, job_id: str) -> bool:
@@ -234,7 +238,7 @@ class JobStore:
 
             job.status = JobStatus.CANCELLED
             job.completed_at = self._clock()
-            get_job_event_bus().emit_updated(job)
+            self._event_bus.emit_updated(job)
             return True
 
     # -------------------------------------------------------------------------

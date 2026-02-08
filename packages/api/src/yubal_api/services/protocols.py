@@ -2,9 +2,11 @@
 
 from datetime import datetime
 from typing import Protocol
+from uuid import UUID
 
 from yubal import AudioCodec, PhaseStats
 
+from yubal_api.db.subscription import Subscription, SubscriptionType
 from yubal_api.domain.enums import JobSource, JobStatus
 from yubal_api.domain.job import ContentInfo, Job
 
@@ -56,3 +58,31 @@ class JobExecutionStore(Protocol):
             True if released, False if job was not the active job.
         """
         ...
+
+
+class SubscriptionRepo(Protocol):
+    """Narrow interface for subscription data access."""
+
+    def list(
+        self,
+        *,
+        enabled: bool | None = None,
+        type: SubscriptionType | None = None,
+    ) -> list[Subscription]: ...
+
+    def get(self, id: UUID) -> Subscription | None: ...
+
+    def get_by_url(self, url: str) -> Subscription | None: ...
+
+    def create(self, subscription: Subscription) -> Subscription: ...
+
+    def update(self, id: UUID, **kwargs: object) -> Subscription | None: ...
+
+    def delete(self, id: UUID) -> bool: ...
+
+    def count(
+        self,
+        *,
+        enabled: bool | None = None,
+        type: SubscriptionType | None = None,
+    ) -> int: ...

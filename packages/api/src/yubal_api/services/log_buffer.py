@@ -178,21 +178,3 @@ class BufferHandler(logging.Handler):
         ):
             return "file"
         return "default"
-
-
-# Global singleton
-_log_buffer: LogBuffer | None = None
-
-
-def get_log_buffer() -> LogBuffer:
-    """Get the global log buffer singleton."""
-    global _log_buffer
-    if _log_buffer is None:
-        _log_buffer = LogBuffer()
-    return _log_buffer
-
-
-def clear_log_buffer() -> None:
-    """Clear the global log buffer singleton."""
-    global _log_buffer
-    _log_buffer = None

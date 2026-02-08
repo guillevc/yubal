@@ -38,15 +38,14 @@ from yubal_api.schemas.jobs import (
     UpdatedEvent,
 )
 from yubal_api.schemas.logs import LogEntry
+from yubal_api.services.job_event_bus import JobEventBus
 from yubal_api.services.job_executor import JobExecutor
 from yubal_api.services.job_store import JobStore
-from yubal_api.services.log_buffer import (
-    BufferHandler,
-    clear_log_buffer,
-    get_log_buffer,
-)
+from yubal_api.services.log_buffer import BufferHandler, LogBuffer
+from yubal_api.services.playlist_info import PlaylistInfoService
 from yubal_api.services.scheduler import Scheduler
 from yubal_api.services.shutdown import ShutdownCoordinator
+from yubal_api.services.subscription_service import SubscriptionService
 from yubal_api.settings import get_settings
 
 # Global reference for shutdown suppression
@@ -76,8 +75,10 @@ def setup_logging() -> None:
         uvicorn_logger.handlers = [handler]
         uvicorn_logger.propagate = False
 
-    # Add buffer handler to capture logs for SSE streaming
-    buffer_handler = BufferHandler(get_log_buffer())
+
+def setup_log_streaming(log_buffer: LogBuffer) -> None:
+    """Attach buffer handler to capture logs for SSE streaming."""
+    buffer_handler = BufferHandler(log_buffer)
     buffer_handler.setLevel(logging.INFO)
     logging.getLogger("yubal").addHandler(buffer_handler)
     logging.getLogger("yubal_api").addHandler(buffer_handler)
@@ -125,6 +126,13 @@ def create_services(repository: SubscriptionRepository) -> Services:
     """
     settings = get_settings()
 
+    # Create event bus and log buffer
+    job_event_bus = JobEventBus()
+    log_buffer = LogBuffer()
+
+    # Attach log streaming before services start logging
+    setup_log_streaming(log_buffer)
+
     # Create shutdown coordinator
     shutdown_coordinator = ShutdownCoordinator()
 
@@ -132,6 +140,7 @@ def create_services(repository: SubscriptionRepository) -> Services:
     job_store = JobStore(
         clock=lambda: datetime.now(settings.timezone),
         id_generator=lambda: str(uuid.uuid4()),
+        event_bus=job_event_bus,
     )
 
     job_executor = JobExecutor(
@@ -142,6 +151,14 @@ def create_services(repository: SubscriptionRepository) -> Services:
         fetch_lyrics=settings.fetch_lyrics,
         apply_replaygain=settings.replaygain,
         subscription_repository=repository,
+    )
+
+    # Create subscription service
+    cookies_path = settings.cookies_file if settings.cookies_file.exists() else None
+    playlist_info = PlaylistInfoService(cookies_path=cookies_path)
+    subscription_service = SubscriptionService(
+        repository=repository,
+        playlist_info=playlist_info,
     )
 
     # Create scheduler
@@ -159,7 +176,10 @@ def create_services(repository: SubscriptionRepository) -> Services:
         job_executor=job_executor,
         shutdown_coordinator=shutdown_coordinator,
         repository=repository,
+        subscription_service=subscription_service,
         scheduler=scheduler_service,
+        job_event_bus=job_event_bus,
+        log_buffer=log_buffer,
     )
 
 
@@ -212,9 +232,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Clean up .part files from incomplete downloads (delegated to yubal)
     cleanup_part_files(settings.data)
-
-    # Clean up log buffer
-    clear_log_buffer()
 
     # Clean temp directory
     if settings.temp.exists():

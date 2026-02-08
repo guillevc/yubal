@@ -6,10 +6,10 @@ from datetime import UTC, datetime
 
 from croniter import croniter
 
-from yubal_api.db.repository import SubscriptionRepository
 from yubal_api.db.subscription import Subscription
 from yubal_api.domain.enums import JobSource
 from yubal_api.services.job_executor import JobExecutor
+from yubal_api.services.protocols import SubscriptionRepo
 from yubal_api.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class Scheduler:
 
     def __init__(
         self,
-        repository: SubscriptionRepository,
+        repository: SubscriptionRepo,
         job_executor: JobExecutor,
         settings: Settings,
     ) -> None:

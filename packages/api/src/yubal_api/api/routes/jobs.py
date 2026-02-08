@@ -11,6 +11,7 @@ from fastapi import APIRouter, status
 from fastapi.responses import StreamingResponse
 
 from yubal_api.api.deps import (
+    JobEventBusDep,
     JobExecutorDep,
     JobStoreDep,
 )
@@ -29,7 +30,6 @@ from yubal_api.schemas.jobs import (
     JobsResponse,
     SnapshotEvent,
 )
-from yubal_api.services.job_event_bus import get_job_event_bus
 from yubal_api.services.job_store import JobStore
 
 router = APIRouter(prefix="/jobs", tags=["jobs"])
@@ -142,9 +142,11 @@ HEARTBEAT_INTERVAL = 30.0
         "Heartbeat comments sent every 30s."
     ),
 )
-async def stream_jobs(job_store: JobStoreDep) -> StreamingResponse:
+async def stream_jobs(
+    job_store: JobStoreDep, job_event_bus: JobEventBusDep
+) -> StreamingResponse:
     """Stream job events via Server-Sent Events."""
-    bus = get_job_event_bus()
+    bus = job_event_bus
 
     async def event_generator() -> AsyncIterator[str]:
         async with bus.subscribe() as queue:

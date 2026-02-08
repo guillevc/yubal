@@ -226,6 +226,8 @@ class JobExecutor:
                     download_stats=result.download_stats,
                 )
                 # Update subscription metadata with latest info from YouTube Music
+                # TODO: migrate to SubscriptionService when executor
+                # refactoring is scoped
                 if (
                     self._subscription_repository
                     and result.content_info
