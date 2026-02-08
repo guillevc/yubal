@@ -5,8 +5,9 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 
 from yubal.client import YTMusicProtocol
-from yubal.exceptions import TrackParseError
+from yubal.exceptions import CancellationError, TrackParseError
 from yubal.lib.matching import find_best_album_match, find_track_by_fuzzy_title
+from yubal.models.cancel import CancelToken
 from yubal.models.enums import ContentKind, SkipReason, VideoType
 from yubal.models.progress import ExtractProgress
 from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
@@ -73,8 +74,23 @@ class MetadataExtractorService:
     # PUBLIC API - Main entry points for metadata extraction
     # ============================================================================
 
+    def _check_cancellation(self, cancel_token: CancelToken | None) -> None:
+        """Check if operation has been cancelled and raise if so.
+
+        Args:
+            cancel_token: Optional cancellation token to check.
+
+        Raises:
+            CancellationError: If cancel_token.is_cancelled is True.
+        """
+        if cancel_token and cancel_token.is_cancelled:
+            raise CancellationError("Operation cancelled")
+
     def extract(
-        self, url: str, max_items: int | None = None
+        self,
+        url: str,
+        max_items: int | None = None,
+        cancel_token: CancelToken | None = None,
     ) -> Iterator[ExtractProgress]:
         """Extract metadata from any YouTube Music URL with progress updates.
 
@@ -96,12 +112,16 @@ class MetadataExtractorService:
             max_items: Maximum number of tracks to extract. If None, extracts
                 all tracks. Useful for testing or quick previews. Ignored for
                 single tracks.
+            cancel_token: Optional token for cancellation support. Checked
+                after playlist fetch, after classification, and before/after
+                each track extraction.
 
         Yields:
             ExtractProgress with current/total counts and the extracted track.
             The track field may be a fallback if extraction failed for that track.
 
         Raises:
+            CancellationError: If cancel_token.is_cancelled becomes True.
             PlaylistParseError: If URL is invalid (for playlists).
             TrackParseError: If URL is invalid (for single tracks).
             PlaylistNotFoundError: If playlist doesn't exist.
@@ -123,6 +143,7 @@ class MetadataExtractorService:
         logger.debug("Extracting metadata for playlist: %s", playlist_id)
 
         playlist = self._client.get_playlist(playlist_id)
+        self._check_cancellation(cancel_token)
         playlist_total = len(playlist.tracks) + playlist.unavailable_count
         unavailable_count = playlist.unavailable_count
 
@@ -149,6 +170,7 @@ class MetadataExtractorService:
         kind = self._classify_playlist_as_album_or_playlist(
             playlist_id, playlist.tracks
         )
+        self._check_cancellation(cancel_token)
 
         # Convert raw unavailable track dicts to domain models
         unavailable_tracks = [
@@ -184,8 +206,12 @@ class MetadataExtractorService:
                 skipped_by_reason[ut.reason] = skipped_by_reason.get(ut.reason, 0) + 1
 
         for track in tracks:
+            self._check_cancellation(cancel_token)
             try:
                 metadata, skip_reason = self._extract_single_track(track)
+                self._check_cancellation(cancel_token)
+            except CancellationError:
+                raise
             except Exception as e:
                 logger.exception(
                     "Failed to extract track '%s': %s",

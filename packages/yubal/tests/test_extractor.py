@@ -5,6 +5,8 @@ import logging
 import pytest
 from conftest import MockYTMusicClient
 from pydantic import ValidationError
+from yubal.exceptions import CancellationError
+from yubal.models.cancel import CancelToken
 from yubal.models.enums import VideoType
 from yubal.models.track import TrackMetadata
 from yubal.models.ytmusic import Album, Artist, Playlist, SearchResult, Thumbnail
@@ -1387,6 +1389,133 @@ class TestMetadataExtractorService:
         assert tracks[0].video_type == VideoType.ATV
         assert tracks[1].video_type == VideoType.OMV
         assert "Unsupported video type 'UGC'" in caplog.text
+
+
+class TestExtractorCancellation:
+    """Tests for cancellation during metadata extraction."""
+
+    def _make_multi_track_playlist(self, count: int = 5) -> Playlist:
+        """Create a playlist with multiple tracks."""
+        tracks = []
+        for i in range(count):
+            tracks.append(
+                {
+                    "videoId": f"v{i}",
+                    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                    "title": f"Song {i}",
+                    "artists": [{"name": "Artist"}],
+                    "album": {"id": "alb1", "name": "Album"},
+                    "thumbnails": [
+                        {"url": "https://t.jpg", "width": 120, "height": 90}
+                    ],
+                    "duration_seconds": 180,
+                }
+            )
+        return Playlist.model_validate({"tracks": tracks})
+
+    def test_pre_cancelled_token_raises_immediately(self) -> None:
+        """Should raise CancellationError immediately with a pre-cancelled token."""
+        playlist = self._make_multi_track_playlist(5)
+        album = Album.model_validate(
+            {
+                "title": "Album",
+                "artists": [{"name": "Artist"}],
+                "thumbnails": [{"url": "https://t.jpg", "width": 544, "height": 544}],
+                "tracks": [
+                    {
+                        "videoId": "v0",
+                        "title": "Song 0",
+                        "artists": [{"name": "Artist"}],
+                        "trackNumber": 1,
+                        "duration_seconds": 180,
+                    }
+                ],
+            }
+        )
+        mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        token = CancelToken()
+        token.cancel()
+
+        with pytest.raises(CancellationError):
+            list(
+                service.extract(
+                    "https://music.youtube.com/playlist?list=PLtest",
+                    cancel_token=token,
+                )
+            )
+
+    def test_cancel_mid_extraction_stops_generator(self) -> None:
+        """Should stop yielding tracks when cancelled mid-extraction."""
+        playlist = self._make_multi_track_playlist(10)
+        album = Album.model_validate(
+            {
+                "title": "Album",
+                "artists": [{"name": "Artist"}],
+                "thumbnails": [{"url": "https://t.jpg", "width": 544, "height": 544}],
+                "tracks": [
+                    {
+                        "videoId": f"v{i}",
+                        "title": f"Song {i}",
+                        "artists": [{"name": "Artist"}],
+                        "trackNumber": i + 1,
+                        "duration_seconds": 180,
+                    }
+                    for i in range(10)
+                ],
+            }
+        )
+        mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        token = CancelToken()
+        extracted = []
+
+        with pytest.raises(CancellationError):
+            for progress in service.extract(
+                "https://music.youtube.com/playlist?list=PLtest",
+                cancel_token=token,
+            ):
+                extracted.append(progress.track)
+                if len(extracted) == 3:
+                    token.cancel()
+
+        # Should have extracted some tracks but not all 10
+        assert 0 < len(extracted) < 10
+
+    def test_no_cancel_token_extracts_normally(self) -> None:
+        """Should work normally when cancel_token is None."""
+        playlist = self._make_multi_track_playlist(3)
+        album = Album.model_validate(
+            {
+                "title": "Album",
+                "artists": [{"name": "Artist"}],
+                "thumbnails": [{"url": "https://t.jpg", "width": 544, "height": 544}],
+                "tracks": [
+                    {
+                        "videoId": f"v{i}",
+                        "title": f"Song {i}",
+                        "artists": [{"name": "Artist"}],
+                        "trackNumber": i + 1,
+                        "duration_seconds": 180,
+                    }
+                    for i in range(3)
+                ],
+            }
+        )
+        mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
+        service = MetadataExtractorService(mock)
+
+        tracks = [
+            p.track
+            for p in service.extract(
+                "https://music.youtube.com/playlist?list=PLtest",
+                cancel_token=None,
+            )
+            if p.track
+        ]
+        assert len(tracks) == 3
 
 
 class TestFormatArtists:

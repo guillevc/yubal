@@ -354,7 +354,9 @@ class PlaylistDownloadService:
         extracted_count = 0
         last_progress = None
 
-        for progress in self._extractor.extract(url, max_items=self._config.max_items):
+        for progress in self._extractor.extract(
+            url, max_items=self._config.max_items, cancel_token=cancel_token
+        ):
             if progress.track is not None:
                 extracted_count += 1
             last_progress = progress

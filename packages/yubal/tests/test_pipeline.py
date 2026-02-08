@@ -5,6 +5,8 @@ from unittest.mock import MagicMock
 
 import pytest
 from yubal.config import DownloadConfig, PlaylistDownloadConfig
+from yubal.exceptions import CancellationError
+from yubal.models.cancel import CancelToken
 from yubal.models.enums import ContentKind, DownloadStatus, VideoType
 from yubal.models.progress import DownloadProgress, ExtractProgress
 from yubal.models.results import DownloadResult
@@ -128,3 +130,62 @@ class TestDownloadTrack:
 
         # Verify extract() was called (unified API for all URL types)
         mock_extractor.extract.assert_called_once()
+
+
+class TestPipelineCancellation:
+    """Tests for cancellation propagation through the pipeline."""
+
+    def test_cancellation_during_extraction_propagates(self, tmp_path: Path) -> None:
+        """CancellationError during extraction should propagate."""
+        config = PlaylistDownloadConfig(
+            download=DownloadConfig(base_path=tmp_path),
+            generate_m3u=False,
+            save_cover=False,
+        )
+
+        mock_extractor = MagicMock()
+        mock_extractor.extract.side_effect = CancellationError("Operation cancelled")
+
+        service = PlaylistDownloadService(
+            config=config,
+            extractor=mock_extractor,
+        )
+
+        token = CancelToken()
+
+        with pytest.raises(CancellationError):
+            list(
+                service.download_playlist(
+                    "https://music.youtube.com/playlist?list=PLtest",
+                    cancel_token=token,
+                )
+            )
+
+    def test_pipeline_passes_cancel_token_to_extractor(self, tmp_path: Path) -> None:
+        """Pipeline should pass cancel_token to extractor.extract()."""
+        config = PlaylistDownloadConfig(
+            download=DownloadConfig(base_path=tmp_path),
+            generate_m3u=False,
+            save_cover=False,
+        )
+
+        mock_extractor = MagicMock()
+        mock_extractor.extract.return_value = iter([])
+
+        service = PlaylistDownloadService(
+            config=config,
+            extractor=mock_extractor,
+        )
+
+        token = CancelToken()
+        list(
+            service.download_playlist(
+                "https://music.youtube.com/playlist?list=PLtest",
+                cancel_token=token,
+            )
+        )
+
+        # Verify cancel_token was passed through
+        mock_extractor.extract.assert_called_once()
+        call_kwargs = mock_extractor.extract.call_args
+        assert call_kwargs.kwargs.get("cancel_token") is token
