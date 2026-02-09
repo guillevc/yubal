@@ -15,6 +15,8 @@ from yubal import (
 from yubal_api.api.deps import PlaylistInfoServiceDep, RepositoryDep, SchedulerDep
 from yubal_api.db.subscription import Subscription, SubscriptionType
 from yubal_api.schemas.subscriptions import (
+    LibraryPlaylistListResponse,
+    LibraryPlaylistResponse,
     SubscriptionCreate,
     SubscriptionListResponse,
     SubscriptionResponse,
@@ -55,6 +57,32 @@ def list_subscriptions(
     subscriptions = repository.list(enabled=enabled, type=type)
     return SubscriptionListResponse(
         items=[SubscriptionResponse.model_validate(s) for s in subscriptions]
+    )
+
+
+@router.get("/library-playlists", response_model=LibraryPlaylistListResponse)
+def list_library_playlists(
+    playlist_info_service: PlaylistInfoServiceDep,
+) -> LibraryPlaylistListResponse:
+    """List account library playlists."""
+    try:
+        playlists = playlist_info_service.list_library_playlists()
+    except AuthenticationRequiredError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+        ) from e
+    except APIError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(e),
+        ) from e
+
+    return LibraryPlaylistListResponse(
+        items=[
+            LibraryPlaylistResponse.model_validate(p, from_attributes=True)
+            for p in playlists
+        ]
     )
 
 

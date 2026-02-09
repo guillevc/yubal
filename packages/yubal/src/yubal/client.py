@@ -18,7 +18,13 @@ from yubal.exceptions import (
     YTMetaError,
 )
 from yubal.models.enums import SkipReason
-from yubal.models.ytmusic import Album, Playlist, PlaylistTrack, SearchResult
+from yubal.models.ytmusic import (
+    Album,
+    LibraryPlaylist,
+    Playlist,
+    PlaylistTrack,
+    SearchResult,
+)
 from yubal.utils.cookies import cookies_to_ytmusic_auth
 
 logger = logging.getLogger(__name__)
@@ -48,6 +54,10 @@ class YTMusicProtocol(Protocol):
 
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Fetch a single track by video ID."""
+        ...
+
+    def get_library_playlists(self) -> list[LibraryPlaylist]:
+        """List account library playlists."""
         ...
 
 
@@ -324,6 +334,37 @@ class YTMusicClient:
         track_data = self._normalize_watch_track(tracks[0])
         return PlaylistTrack.model_validate(track_data)
 
+    def get_library_playlists(self) -> list[LibraryPlaylist]:
+        """List playlists from the authenticated account library.
+
+        Returns:
+            List of parsed LibraryPlaylist models.
+
+        Raises:
+            AuthenticationRequiredError: If account authentication is required.
+            APIError: If API request fails.
+        """
+        logger.debug("Fetching authenticated library playlists")
+        try:
+            data = self._ytm.get_library_playlists(limit=None)
+        except YTMusicUserError as e:
+            error_msg = str(e)
+            logger.warning("YTMusic user error for library playlists: %s", e)
+            if self._is_auth_error(error_msg):
+                raise AuthenticationRequiredError(
+                    "Authentication is required to list account playlists. "
+                    "Please upload valid YouTube Music cookies."
+                ) from e
+            raise APIError(f"Failed to fetch library playlists: {e}") from e
+        except YTMusicServerError as e:
+            logger.warning("YTMusic server error for library playlists: %s", e)
+            raise APIError(f"Failed to fetch library playlists: {e}") from e
+        except YTMusicError as e:
+            logger.warning("YTMusic error for library playlists: %s", e)
+            raise APIError(f"Failed to fetch library playlists: {e}") from e
+
+        return [LibraryPlaylist.model_validate(item) for item in (data or []) if item]
+
     def _normalize_watch_track(self, track: dict) -> dict:
         """Normalize get_watch_playlist track to PlaylistTrack format.
 
@@ -474,3 +515,16 @@ class YTMusicClient:
             )
 
         return None
+
+    def _is_auth_error(self, error_msg: str) -> bool:
+        """Check whether an error message indicates missing authentication."""
+        indicators = [
+            "authentication",
+            "authenticate",
+            "logged in",
+            "login",
+            "cookies",
+            "sapisid",
+        ]
+        lowered = error_msg.lower()
+        return any(indicator in lowered for indicator in indicators)

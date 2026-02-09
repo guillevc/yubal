@@ -31,7 +31,10 @@ class SubscriptionResponse(BaseModel):
     name: str
     enabled: bool
     max_items: int | None
-    thumbnail_url: str | None = Field(default=None, json_schema_extra={"format": "uri"})
+    thumbnail_url: str | None = Field(
+        default=None,
+        json_schema_extra={"format": "uri"},
+    )
     created_at: UTCDateTime
     last_synced_at: UTCDateTime | None
 
@@ -42,6 +45,26 @@ class SubscriptionListResponse(BaseModel):
     """List of subscriptions response."""
 
     items: list[SubscriptionResponse]
+
+
+class LibraryPlaylistResponse(BaseModel):
+    """Library playlist response item."""
+
+    playlist_id: str
+    title: str
+    name: str
+    url: str = Field(json_schema_extra={"format": "uri"})
+    thumbnail_url: str | None = Field(
+        default=None,
+        json_schema_extra={"format": "uri"},
+    )
+    track_count: int | None = Field(default=None, ge=0)
+
+
+class LibraryPlaylistListResponse(BaseModel):
+    """List of library playlists response."""
+
+    items: list[LibraryPlaylistResponse]
 
 
 class SyncResponse(BaseModel):

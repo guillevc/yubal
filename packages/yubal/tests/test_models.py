@@ -9,6 +9,7 @@ from yubal.models.ytmusic import (
     AlbumRef,
     AlbumTrack,
     Artist,
+    LibraryPlaylist,
     Playlist,
     PlaylistTrack,
     SearchResult,
@@ -259,3 +260,16 @@ class TestYTMusicModels:
         artist = Artist(name="Test", id="123")
         with pytest.raises(ValidationError):
             artist.name = "Changed"
+
+    def test_library_playlist_parsing(self) -> None:
+        """LibraryPlaylist should parse aliases and optional fields."""
+        playlist = LibraryPlaylist.model_validate(
+            {
+                "playlistId": "PL123",
+                "title": "Library Playlist",
+                "count": "12 songs",
+                "thumbnails": [{"url": "https://t.jpg", "width": 120, "height": 120}],
+            }
+        )
+        assert playlist.playlist_id == "PL123"
+        assert playlist.track_count_raw == "12 songs"

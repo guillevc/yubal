@@ -15,6 +15,18 @@ class PlaylistMetadata:
     thumbnail_url: str | None
 
 
+@dataclass(frozen=True)
+class LibraryPlaylistInfo:
+    """Normalized account library playlist info."""
+
+    playlist_id: str
+    title: str
+    name: str
+    url: str
+    thumbnail_url: str | None
+    track_count: int | None
+
+
 class PlaylistInfoService:
     """Service to fetch playlist metadata from YouTube Music."""
 
@@ -47,3 +59,37 @@ class PlaylistInfoService:
         title = playlist.title or "Unknown Playlist"
         thumbnail_url = playlist.thumbnails[-1].url if playlist.thumbnails else None
         return PlaylistMetadata(title=title, thumbnail_url=thumbnail_url)
+
+    def list_library_playlists(self) -> list[LibraryPlaylistInfo]:
+        """List and normalize playlists from the authenticated account library."""
+        playlists = self._client.get_library_playlists()
+        results: list[LibraryPlaylistInfo] = []
+
+        for playlist in playlists:
+            title = playlist.title or playlist.name or "Unknown Playlist"
+            name = playlist.name or playlist.title or "Unknown Playlist"
+            thumbnail_url = playlist.thumbnails[-1].url if playlist.thumbnails else None
+            results.append(
+                LibraryPlaylistInfo(
+                    playlist_id=playlist.playlist_id,
+                    title=title,
+                    name=name,
+                    url=f"https://music.youtube.com/playlist?list={playlist.playlist_id}",
+                    thumbnail_url=thumbnail_url,
+                    track_count=self._parse_track_count(playlist.track_count_raw),
+                )
+            )
+
+        return results
+
+    def _parse_track_count(self, value: int | str | None) -> int | None:
+        """Parse ytmusicapi playlist count field into an integer."""
+        if isinstance(value, int):
+            return value
+        if not isinstance(value, str):
+            return None
+
+        digits = "".join(char for char in value if char.isdigit())
+        if not digits:
+            return None
+        return int(digits)

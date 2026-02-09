@@ -13,6 +13,7 @@ __all__ = [
     "AlbumRef",
     "AlbumTrack",
     "Artist",
+    "LibraryPlaylist",
     "Playlist",
     "PlaylistTrack",
     "SearchResult",
@@ -75,6 +76,16 @@ class Playlist(YTMusicModel):
     def unavailable_count(self) -> int:
         """Number of unavailable tracks in the playlist."""
         return len(self.unavailable_tracks_raw)
+
+
+class LibraryPlaylist(YTMusicModel):
+    """Playlist entry from get_library_playlists()."""
+
+    playlist_id: str = Field(alias="playlistId")
+    title: str | None = None
+    name: str | None = None
+    track_count_raw: int | str | None = Field(default=None, alias="count")
+    thumbnails: list[Thumbnail] = Field(default_factory=list)
 
 
 class AlbumTrack(YTMusicModel):

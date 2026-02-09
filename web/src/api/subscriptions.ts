@@ -3,6 +3,17 @@ import type { components } from "./schema";
 
 export type Subscription = components["schemas"]["SubscriptionResponse"];
 export type SchedulerStatus = components["schemas"]["SchedulerStatus"];
+export interface LibraryPlaylist {
+  id: string;
+  name: string;
+  url: string;
+  thumbnailUrl?: string | null;
+  trackCount?: number | null;
+}
+
+export type LibraryPlaylistsResult =
+  | { success: true; playlists: LibraryPlaylist[] }
+  | { success: false; error: string; authRequired: boolean };
 
 export type AddSubscriptionResult =
   | { success: true; id: string }
@@ -18,6 +29,53 @@ export async function listSubscriptions(): Promise<Subscription[]> {
   const { data, error } = await api.GET("/subscriptions");
   if (error) return [];
   return data.items;
+}
+
+export async function listLibraryPlaylists(): Promise<LibraryPlaylistsResult> {
+  const { data, error, response } = await (
+    api as unknown as {
+      GET: (
+        path: "/subscriptions/library-playlists",
+      ) => Promise<{ data?: unknown; error?: unknown; response: Response }>;
+    }
+  ).GET("/subscriptions/library-playlists");
+
+  if (error) {
+    const authRequired = response.status === 401 || response.status === 403;
+    return {
+      success: false,
+      authRequired,
+      error: authRequired
+        ? "Authentication required to list account playlists"
+        : "Failed to load account playlists",
+    };
+  }
+
+  const items = Array.isArray(data)
+    ? data
+    : typeof data === "object" && data !== null && "items" in data
+      ? (data.items as unknown[])
+      : [];
+
+  const playlists = items
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .map((item) => {
+      const id = String(item.id ?? item.playlist_id ?? item.url ?? "");
+      const name = String(item.name ?? item.title ?? "Untitled playlist");
+      const url = String(item.url ?? "");
+      const thumbnailUrl =
+        typeof item.thumbnail_url === "string" ? item.thumbnail_url : null;
+      const rawTrackCount =
+        typeof item.track_count === "number"
+          ? item.track_count
+          : typeof item.count === "number"
+            ? item.count
+            : null;
+      return { id, name, url, thumbnailUrl, trackCount: rawTrackCount };
+    })
+    .filter((item) => item.id.length > 0 && item.url.length > 0);
+
+  return { success: true, playlists };
 }
 
 export async function addSubscription(
