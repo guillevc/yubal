@@ -298,6 +298,9 @@ export function SubscriptionsPage() {
         isLoading={isLoading}
         isSchedulerEnabled={schedulerStatus?.enabled}
         onToggleEnabled={handleToggleEnabled}
+        onUpdateLimit={(id, maxItems) =>
+          updateSubscription(id, { max_items: maxItems })
+        }
         onSync={syncSubscription}
         onDelete={deleteSubscription}
       />

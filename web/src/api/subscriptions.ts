@@ -107,11 +107,11 @@ export async function addSubscription(
 
 export async function updateSubscription(
   id: string,
-  updates: { enabled?: boolean },
+  updates: { enabled?: boolean; max_items?: number | null },
 ): Promise<Subscription | null> {
   const { data, error } = await api.PATCH("/subscriptions/{subscription_id}", {
     params: { path: { subscription_id: id } },
-    body: updates,
+    body: updates as never,
   });
   if (error) return null;
   return data;

@@ -20,6 +20,7 @@ class SubscriptionUpdate(BaseModel):
     """Request to update a subscription."""
 
     enabled: bool | None = None
+    max_items: int | None = Field(default=None, ge=1, le=10000)
 
 
 class SubscriptionResponse(BaseModel):

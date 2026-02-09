@@ -4,6 +4,11 @@ import { useTimeAgo } from "@/hooks/use-time-ago";
 import {
   Button,
   Image,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
   Switch,
   Table,
   TableBody,
@@ -15,10 +20,11 @@ import {
 import {
   InboxIcon,
   ListMusicIcon,
+  PencilIcon,
   RefreshCwIcon,
   Trash2Icon,
 } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 type ColumnKey = "name" | "lastSynced" | "limit" | "enabled" | "actions";
 
@@ -42,6 +48,7 @@ type SubscriptionsTableProps = {
   isLoading?: boolean;
   isSchedulerEnabled?: boolean;
   onToggleEnabled: (id: string, enabled: boolean) => void;
+  onUpdateLimit: (id: string, maxItems: number | null) => Promise<void>;
   onSync: (id: string) => void;
   onDelete: (id: string) => void;
 };
@@ -51,9 +58,42 @@ export function SubscriptionsTable({
   isLoading,
   isSchedulerEnabled,
   onToggleEnabled,
+  onUpdateLimit,
   onSync,
   onDelete,
 }: SubscriptionsTableProps) {
+  const [editingLimitId, setEditingLimitId] = useState<string | null>(null);
+  const [limitDraft, setLimitDraft] = useState("");
+  const [isSavingLimit, setIsSavingLimit] = useState(false);
+
+  const beginLimitEdit = useCallback((subscription: Subscription) => {
+    setEditingLimitId(subscription.id);
+    setLimitDraft(subscription.max_items?.toString() ?? "");
+  }, []);
+
+  const cancelLimitEdit = useCallback(() => {
+    setEditingLimitId(null);
+    setLimitDraft("");
+  }, []);
+
+  const saveLimitEdit = useCallback(async (subscriptionId: string) => {
+    const trimmed = limitDraft.trim();
+    const parsed = trimmed === "" ? null : Number.parseInt(trimmed, 10);
+    const isValidParsed = parsed === null || (!Number.isNaN(parsed) && parsed >= 1);
+
+    if (!isValidParsed) {
+      return;
+    }
+
+    setIsSavingLimit(true);
+    try {
+      await onUpdateLimit(subscriptionId, parsed);
+      cancelLimitEdit();
+    } finally {
+      setIsSavingLimit(false);
+    }
+  }, [cancelLimitEdit, limitDraft, onUpdateLimit]);
+
   const renderCell = useCallback(
     (
       subscription: Subscription,
@@ -92,9 +132,18 @@ export function SubscriptionsTable({
           return <TimeAgo dateString={subscription.last_synced_at} />;
         case "limit":
           return (
-            <span className="text-foreground-500 font-mono text-sm">
-              {subscription.max_items ?? "∞"}
-            </span>
+            <Button
+              variant="light"
+              size="sm"
+              onPress={() => beginLimitEdit(subscription)}
+              aria-label={`Edit sync limit for ${subscription.name}`}
+              className="group/limit h-auto min-h-0 gap-1 rounded-sm px-1 py-0.5 data-[hover=true]:bg-transparent"
+            >
+              <span className="text-foreground-500 font-mono text-sm">
+                {subscription.max_items ?? "∞"}
+              </span>
+              <PencilIcon className="text-foreground-400 h-3.5 w-3.5 opacity-0 transition-opacity group-hover/limit:opacity-100 group-focus-visible/limit:opacity-100" />
+            </Button>
           );
         case "enabled":
           return (
@@ -117,6 +166,7 @@ export function SubscriptionsTable({
                 isIconOnly
                 className="text-foreground-500 hover:text-primary"
                 onPress={() => onSync(subscription.id)}
+                aria-label={`Sync ${subscription.name}`}
               >
                 <RefreshCwIcon className="h-4 w-4" />
               </Button>
@@ -126,6 +176,7 @@ export function SubscriptionsTable({
                 isIconOnly
                 className="text-foreground-500 hover:text-danger"
                 onPress={() => onDelete(subscription.id)}
+                aria-label={`Delete ${subscription.name}`}
               >
                 <Trash2Icon className="h-4 w-4" />
               </Button>
@@ -133,11 +184,22 @@ export function SubscriptionsTable({
           );
       }
     },
-    [onToggleEnabled, onSync, onDelete],
+    [
+      beginLimitEdit,
+      cancelLimitEdit,
+      editingLimitId,
+      isSavingLimit,
+      limitDraft,
+      onToggleEnabled,
+      onSync,
+      onDelete,
+      saveLimitEdit,
+    ],
   );
 
   return (
-    <Table>
+    <>
+      <Table aria-label="Subscriptions table" selectionMode="none">
       <TableHeader columns={columns}>
         {(column) => (
           <TableColumn
@@ -176,6 +238,57 @@ export function SubscriptionsTable({
           </TableRow>
         )}
       </TableBody>
-    </Table>
+      </Table>
+      <Modal
+        isOpen={editingLimitId !== null}
+        onOpenChange={(open) => {
+          if (!open) cancelLimitEdit();
+        }}
+      >
+        <ModalContent>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (editingLimitId) {
+                void saveLimitEdit(editingLimitId);
+              }
+            }}
+          >
+            <ModalHeader>Edit sync limit</ModalHeader>
+            <ModalBody>
+              <input
+                type="number"
+                min={1}
+                max={10000}
+                autoFocus
+                value={limitDraft}
+                onChange={(e) => setLimitDraft(e.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    cancelLimitEdit();
+                  }
+                }}
+                placeholder="Leave empty for unlimited"
+                className="bg-default-100 border-default-200 focus:border-primary h-10 w-full rounded-md border px-3 font-mono text-sm outline-none"
+                aria-label="Limit value"
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                variant="light"
+                onPress={cancelLimitEdit}
+                isDisabled={isSavingLimit}
+              >
+                Cancel
+              </Button>
+              <Button color="primary" type="submit" isLoading={isSavingLimit}>
+                Save
+              </Button>
+            </ModalFooter>
+          </form>
+        </ModalContent>
+      </Modal>
+    </>
   );
 }

@@ -38,7 +38,7 @@ export interface UseSubscriptionsResult {
   ) => Promise<{ added: number; failed: number; skipped: number }>;
   updateSubscription: (
     id: string,
-    updates: { enabled?: boolean },
+    updates: { enabled?: boolean; max_items?: number | null },
   ) => Promise<void>;
   deleteSubscription: (id: string) => Promise<void>;
   syncSubscription: (id: string) => Promise<void>;
@@ -169,7 +169,7 @@ export function useSubscriptions(): UseSubscriptionsResult {
   );
 
   const updateSubscription = useCallback(
-    async (id: string, updates: { enabled?: boolean }) => {
+    async (id: string, updates: { enabled?: boolean; max_items?: number | null }) => {
       const result = await updateSubscriptionApi(id, updates);
       if (result === null) {
         showErrorToast("Update failed", "Could not update subscription");
