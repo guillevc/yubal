@@ -2,8 +2,8 @@
 
 from uuid import uuid4
 
-from yubal_api.db.repository import SubscriptionRepository
 from yubal_api.db.subscription import Subscription, SubscriptionType
+from yubal_api.db.subscription_repository import SubscriptionRepository
 
 
 class TestSubscriptionRepository:

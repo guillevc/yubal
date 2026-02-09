@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from sqlalchemy.engine import Engine
 from sqlmodel import SQLModel, create_engine
-from yubal_api.db.repository import SubscriptionRepository
+from yubal_api.db.subscription_repository import SubscriptionRepository
 
 # =============================================================================
 # Database Fixtures
