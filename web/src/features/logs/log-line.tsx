@@ -62,7 +62,9 @@ function PhaseLog({
 const SKIP_REASON_LABELS: Record<string, string> = {
   file_exists: "file exists",
   unsupported_video_type: "unsupported",
-  no_video_id: "unavailable",
+  ugc: "UGC",
+  no_video_id: "no video ID",
+  region_unavailable: "unavailable",
 };
 
 /** Format skip reasons into a human-readable summary string */
@@ -89,18 +91,23 @@ function ExtractionStatsLog({
   success: number;
   skippedByReason: SkippedByReason;
 }) {
-  // Extraction-specific: show unsupported and unavailable separately
-  const skipped = skippedByReason.unsupported_video_type ?? 0;
-  const unavailable = skippedByReason.no_video_id ?? 0;
+  const totalSkipped = Object.values(skippedByReason).reduce(
+    (a, b) => a + b,
+    0,
+  );
 
   return (
     <div className="flex items-center gap-1">
       <CheckIcon className={`${ICON_CLASS} text-success`} />
       <span className="text-success">{success} extracted</span>
-      <span>,</span>
-      <span className="text-warning">{skipped} skipped</span>
-      <span>,</span>
-      <span className="text-foreground-400">{unavailable} unavailable</span>
+      {totalSkipped > 0 && (
+        <>
+          <span>,</span>
+          <span className="text-warning">
+            {formatSkippedMessage(skippedByReason)}
+          </span>
+        </>
+      )}
     </div>
   );
 }

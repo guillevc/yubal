@@ -8,14 +8,14 @@ from yubal.client import YTMusicClient, YTMusicProtocol
 from yubal.config import PlaylistDownloadConfig
 from yubal.exceptions import CancellationError
 from yubal.models.cancel import CancelToken
-from yubal.models.enums import ContentKind, DownloadStatus, SkipReason
+from yubal.models.enums import ContentKind, DownloadStatus
 from yubal.models.progress import ExtractProgress, PlaylistProgress
 from yubal.models.results import (
     DownloadResult,
     PlaylistDownloadResult,
     aggregate_skip_reasons,
 )
-from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
+from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.services.artifacts import (
     ArtifactPaths,
     PlaylistArtifactsProtocol,
@@ -26,27 +26,6 @@ from yubal.services.extractor import MetadataExtractorService
 from yubal.services.replaygain import ReplayGainProtocol, ReplayGainService
 
 logger = logging.getLogger(__name__)
-
-
-def _format_skip_summary(
-    unavailable: list[UnavailableTrack],
-    skipped_by_reason: dict[SkipReason, int],
-) -> str:
-    """Format skip reasons into human-readable summary.
-
-    Args:
-        unavailable: Tracks YouTube reports as unavailable at source.
-        skipped_by_reason: Tracks skipped during extraction (e.g., unsupported type).
-
-    Returns:
-        Formatted string like "3 unavailable, 2 unsupported video type".
-    """
-    parts: list[str] = []
-    if unavailable:
-        parts.append(f"{len(unavailable)} unavailable")
-    for reason, count in skipped_by_reason.items():
-        parts.append(f"{count} {reason.label}")
-    return ", ".join(parts)
 
 
 class PlaylistDownloadService:
@@ -353,15 +332,9 @@ class PlaylistDownloadService:
             extra={"phase": "extracting", "phase_num": 1},
         )
 
-        extracted_count = 0
-        last_progress = None
-
         for progress in self._extractor.extract(
             url, max_items=self._config.max_items, cancel_token=cancel_token
         ):
-            if progress.track is not None:
-                extracted_count += 1
-            last_progress = progress
             yield (
                 PlaylistProgress(
                     phase="extracting",
@@ -371,33 +344,6 @@ class PlaylistDownloadService:
                 ),
                 progress,
             )
-
-        # Log extraction summary
-        if last_progress:
-            unavailable = last_progress.playlist_info.unavailable_tracks
-            extraction_skipped = last_progress.skipped_by_reason
-            total_skipped = len(unavailable) + sum(extraction_skipped.values())
-            total_in_playlist = extracted_count + total_skipped
-            kind = last_progress.playlist_info.kind.value.capitalize()
-
-            if total_skipped:
-                skip_summary = _format_skip_summary(unavailable, extraction_skipped)
-                logger.info(
-                    "%s contains %d tracks (%d skipped: %s)",
-                    kind,
-                    total_in_playlist,
-                    total_skipped,
-                    skip_summary,
-                )
-                for ut in unavailable:
-                    logger.info(
-                        "  - %s by %s (%s)",
-                        ut.title or "Unknown",
-                        ut.artist_display,
-                        ut.reason.label,
-                    )
-            else:
-                logger.info("%s contains %d tracks", kind, total_in_playlist)
 
     # ============================================================================
     # PHASE 2: DOWNLOAD - Download tracks to disk via yt-dlp
@@ -459,6 +405,23 @@ class PlaylistDownloadService:
                 }
             },
         )
+
+        # Log individual skipped/failed track details
+        for r in results:
+            if r.status == DownloadStatus.SKIPPED and r.skip_reason:
+                logger.warning(
+                    "  - %s by %s (%s)",
+                    r.track.title,
+                    ", ".join(r.track.artists),
+                    r.skip_reason.label,
+                )
+            elif r.status == DownloadStatus.FAILED:
+                logger.warning(
+                    "  - %s by %s (failed: %s)",
+                    r.track.title,
+                    ", ".join(r.track.artists),
+                    r.error or "unknown error",
+                )
 
     # ============================================================================
     # PHASE 3: COMPOSITION - Generate M3U playlists and save cover art

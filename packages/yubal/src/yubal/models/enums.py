@@ -33,6 +33,7 @@ class SkipReason(StrEnum):
 
     FILE_EXISTS = "file_exists"
     UNSUPPORTED_VIDEO_TYPE = "unsupported_video_type"
+    UGC = "ugc"
     NO_VIDEO_ID = "no_video_id"
     REGION_UNAVAILABLE = "region_unavailable"
 
@@ -44,6 +45,8 @@ class SkipReason(StrEnum):
                 return "file exists"
             case SkipReason.UNSUPPORTED_VIDEO_TYPE:
                 return "unsupported video type"
+            case SkipReason.UGC:
+                return "user-generated content (UGC)"
             case SkipReason.NO_VIDEO_ID:
                 return "no video ID"
             case SkipReason.REGION_UNAVAILABLE:

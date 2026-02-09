@@ -14,6 +14,7 @@ LogEntryType = Literal[
 SkipReasonType = Literal[
     "file_exists",
     "unsupported_video_type",
+    "ugc",
     "no_video_id",
     "region_unavailable",
 ]

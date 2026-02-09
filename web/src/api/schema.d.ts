@@ -796,7 +796,7 @@ export interface components {
          *     - Download: FILE_EXISTS
          * @enum {string}
          */
-        SkipReason: "file_exists" | "unsupported_video_type" | "no_video_id" | "region_unavailable";
+        SkipReason: "file_exists" | "unsupported_video_type" | "ugc" | "no_video_id" | "region_unavailable";
         /**
          * SubscriptionCounts
          * @description Subscription count statistics.
@@ -893,6 +893,10 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
         /**
          * SnapshotEvent

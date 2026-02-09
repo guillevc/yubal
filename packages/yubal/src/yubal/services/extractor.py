@@ -201,11 +201,7 @@ class MetadataExtractorService:
 
         extracted_count = 0
         skipped_by_reason: dict[SkipReason, int] = {}
-
-        # Add unavailable tracks from playlist by reason
-        for ut in unavailable_tracks:
-            if not limited:  # Only count when not limiting
-                skipped_by_reason[ut.reason] = skipped_by_reason.get(ut.reason, 0) + 1
+        skipped_tracks: list[tuple[PlaylistTrack, SkipReason]] = []
 
         for track in tracks:
             self._check_cancellation(cancel_token)
@@ -228,6 +224,7 @@ class MetadataExtractorService:
                 skipped_by_reason[skip_reason] = (
                     skipped_by_reason.get(skip_reason, 0) + 1
                 )
+                skipped_tracks.append((track, skip_reason))
                 logger.debug(
                     "Skipped track '%s': %s",
                     track.title,
@@ -245,14 +242,66 @@ class MetadataExtractorService:
                 playlist_info=playlist_info,
             )
 
-        # Log with stats_type discriminator and skipped_by_reason dict
-        # Note: failed=0 because extraction failures become fallback metadata
-        # rather than stopping the process. Skipped tracks are the meaningful metric.
-        logger.debug(
-            "Extraction complete: %d extracted, %d skipped",
-            extracted_count,
-            sum(skipped_by_reason.values()),
+        # Structured extraction summary — the extractor owns this log
+        # Merge unavailable track reasons into a combined skip dict for stats
+        all_skipped_by_reason = dict(skipped_by_reason)
+        for ut in unavailable_for_info:
+            all_skipped_by_reason[ut.reason] = (
+                all_skipped_by_reason.get(ut.reason, 0) + 1
+            )
+
+        total_skipped = sum(all_skipped_by_reason.values())
+        total_in_playlist = extracted_count + total_skipped
+        kind_label = kind.value.capitalize()
+
+        if total_skipped:
+            parts: list[str] = []
+            for reason, count in all_skipped_by_reason.items():
+                parts.append(f"{count} {reason.label}")
+            msg = (
+                f"{kind_label} contains {total_in_playlist} tracks"
+                f" ({total_skipped} skipped: {', '.join(parts)})"
+            )
+        else:
+            msg = f"{kind_label} contains {total_in_playlist} tracks"
+
+        # WARNING for unavailable or UGC tracks, INFO otherwise
+        has_unavailable = any(ut.reason for ut in unavailable_for_info)
+        use_warning = has_unavailable or SkipReason.UGC in skipped_by_reason
+        log = logger.warning if use_warning else logger.info
+
+        log(
+            msg,
+            extra={
+                "stats": {
+                    "stats_type": "extraction",
+                    "success": extracted_count,
+                    "failed": 0,
+                    "skipped_by_reason": {
+                        k.value: v for k, v in all_skipped_by_reason.items()
+                    },
+                }
+            },
         )
+
+        # Log individual skipped track details
+        for ut in unavailable_for_info:
+            logger.warning(
+                "  - %s by %s (%s)",
+                ut.title or "Unknown",
+                ut.artist_display,
+                ut.reason.label,
+            )
+        for skipped_track, reason in skipped_tracks:
+            detail = reason.label
+            if reason == SkipReason.UGC:
+                detail += " — enable download_ugc to include"
+            logger.warning(
+                "  - %s by %s (%s)",
+                skipped_track.title,
+                _format_artists(skipped_track.artists),
+                detail,
+            )
 
     def _extract_single_track_as_progress(self, url: str) -> Iterator[ExtractProgress]:
         """Extract a single track and yield it as ExtractProgress.
@@ -440,21 +489,24 @@ class MetadataExtractorService:
         """
         video_type = self._determine_video_type(track)
 
-        # Skip tracks with unsupported video type (warning already logged)
+        # Skip tracks with unsupported video type
         if video_type is None:
-            # Check if this is a UGC track and download_ugc is enabled
-            if self._download_ugc and track.video_type:
+            # Check if UGC
+            is_ugc = False
+            if track.video_type:
                 try:
-                    raw_type = VideoType(track.video_type)
+                    is_ugc = VideoType(track.video_type) == VideoType.UGC
                 except ValueError:
-                    return None, SkipReason.UNSUPPORTED_VIDEO_TYPE
-                if raw_type == VideoType.UGC:
-                    metadata = self._create_fallback_metadata(
-                        track, raw_type, match_result=MatchResult.UNOFFICIAL
-                    )
-                    if metadata is not None:
-                        return metadata, None
-            return None, SkipReason.UNSUPPORTED_VIDEO_TYPE
+                    pass
+
+            if is_ugc and self._download_ugc:
+                metadata = self._create_fallback_metadata(
+                    track, VideoType.UGC, match_result=MatchResult.UNOFFICIAL
+                )
+                if metadata is not None:
+                    return metadata, None
+
+            return None, SkipReason.UGC if is_ugc else SkipReason.UNSUPPORTED_VIDEO_TYPE
 
         album_id = track.album.id if track.album else None
         search_atv_id: str | None = None
@@ -510,7 +562,7 @@ class MetadataExtractorService:
             VideoType enum value if supported, or None if missing/unsupported.
         """
         if not track.video_type:
-            logger.warning(
+            logger.debug(
                 "Missing video type for track '%s'",
                 track.title,
             )
@@ -519,7 +571,7 @@ class MetadataExtractorService:
         try:
             video_type = VideoType(track.video_type)
         except ValueError:
-            logger.warning(
+            logger.debug(
                 "Unknown video type '%s' for track '%s'",
                 track.video_type,
                 track.title,
@@ -528,7 +580,7 @@ class MetadataExtractorService:
 
         # Only ATV and OMV are supported
         if video_type not in SUPPORTED_VIDEO_TYPES:
-            logger.warning(
+            logger.debug(
                 "Unsupported video type '%s' for track '%s'",
                 video_type.name,
                 track.title,
@@ -588,11 +640,16 @@ class MetadataExtractorService:
 
             # Reject low-confidence title matches
             if not title_match.is_good_match:
-                logger.warning(
-                    "Low confidence album search: '%s' -> '%s' (%.0f%%) - unmatched",
+                logger.debug(
+                    "Low title match for '%s': '%s' (%.0f%%)",
                     track.title,
                     title_match.candidate_normalized,
                     title_match.similarity,
+                )
+                logger.warning(
+                    "'%s' by %s -> _Unmatched/ (no confident album match)",
+                    track.title,
+                    _format_artists(track.artists),
                 )
                 return None
 
@@ -608,12 +665,17 @@ class MetadataExtractorService:
 
             # Reject low-confidence artist matches
             if not artist_match.is_good_match:
-                logger.warning(
-                    "Low artist match for '%s': %s vs %s (%.0f%%) - unmatched",
+                logger.debug(
+                    "Low artist match for '%s': %s vs %s (%.0f%%)",
                     title_match.candidate_normalized,
                     artist_match.target_artists,
                     artist_match.candidate_artists,
                     artist_match.best_score,
+                )
+                logger.warning(
+                    "'%s' by %s -> _Unmatched/ (no confident album match)",
+                    track.title,
+                    _format_artists(track.artists),
                 )
                 return None
 
@@ -628,8 +690,13 @@ class MetadataExtractorService:
 
         # Had results with album info but none matched title
         if had_results_with_album:
+            logger.debug(
+                "No matching album found for '%s' by %s",
+                track.title,
+                artists,
+            )
             logger.warning(
-                "No matching album found for '%s' by %s - unmatched",
+                "'%s' by %s -> _Unmatched/ (no confident album match)",
                 track.title,
                 artists,
             )

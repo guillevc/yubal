@@ -7,7 +7,7 @@ from conftest import MockYTMusicClient
 from pydantic import ValidationError
 from yubal.exceptions import CancellationError
 from yubal.models.cancel import CancelToken
-from yubal.models.enums import MatchResult, VideoType
+from yubal.models.enums import MatchResult, SkipReason, VideoType
 from yubal.models.track import TrackMetadata
 from yubal.models.ytmusic import Album, Artist, Playlist, SearchResult, Thumbnail
 from yubal.services import MetadataExtractorService
@@ -785,7 +785,7 @@ class TestMetadataExtractorService:
         mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
 
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             tracks = extract_all(
                 service, "https://music.youtube.com/playlist?list=PLtest"
             )
@@ -1215,9 +1215,8 @@ class TestMetadataExtractorService:
 
     def test_extract_skips_ugc_video_type(
         self,
-        caplog: pytest.LogCaptureFixture,
     ) -> None:
-        """Should skip UGC (User Generated Content) video types with warning."""
+        """Should skip UGC video types with SkipReason.UGC."""
         playlist = Playlist.model_validate(
             {
                 "tracks": [
@@ -1238,20 +1237,20 @@ class TestMetadataExtractorService:
         mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
 
-        with caplog.at_level(logging.WARNING):
-            tracks = extract_all(
-                service, "https://music.youtube.com/playlist?list=PLtest"
-            )
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # UGC track should be skipped
         assert len(tracks) == 0
-        assert "Unsupported video type 'UGC'" in caplog.text
+
+        # Verify skip reason is UGC (not UNSUPPORTED_VIDEO_TYPE)
+        metadata, skip_reason = service._extract_single_track(playlist.tracks[0])
+        assert metadata is None
+        assert skip_reason is SkipReason.UGC
 
     def test_extract_skips_official_source_music_video_type(
         self,
-        caplog: pytest.LogCaptureFixture,
     ) -> None:
-        """Should skip OFFICIAL_SOURCE_MUSIC video types with warning."""
+        """Should skip OFFICIAL_SOURCE_MUSIC video types with UNSUPPORTED_VIDEO_TYPE."""
         playlist = Playlist.model_validate(
             {
                 "tracks": [
@@ -1272,20 +1271,21 @@ class TestMetadataExtractorService:
         mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
 
-        with caplog.at_level(logging.WARNING):
-            tracks = extract_all(
-                service, "https://music.youtube.com/playlist?list=PLtest"
-            )
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # OFFICIAL_SOURCE_MUSIC track should be skipped
         assert len(tracks) == 0
-        assert "Unsupported video type 'OFFICIAL_SOURCE_MUSIC'" in caplog.text
+
+        # Truly unsupported types use UNSUPPORTED_VIDEO_TYPE (not UGC)
+        metadata, skip_reason = service._extract_single_track(playlist.tracks[0])
+        assert metadata is None
+        assert skip_reason is SkipReason.UNSUPPORTED_VIDEO_TYPE
 
     def test_extract_skips_unknown_video_type(
         self,
         caplog: pytest.LogCaptureFixture,
     ) -> None:
-        """Should skip unknown video types with warning."""
+        """Should skip unknown video types."""
         playlist = Playlist.model_validate(
             {
                 "tracks": [
@@ -1306,7 +1306,7 @@ class TestMetadataExtractorService:
         mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock)
 
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             tracks = extract_all(
                 service, "https://music.youtube.com/playlist?list=PLtest"
             )
@@ -1317,7 +1317,6 @@ class TestMetadataExtractorService:
 
     def test_extract_mixed_video_types_skips_unsupported(
         self,
-        caplog: pytest.LogCaptureFixture,
     ) -> None:
         """Should process supported types and skip unsupported in mixed playlists."""
         playlist = Playlist.model_validate(
@@ -1379,16 +1378,12 @@ class TestMetadataExtractorService:
         mock = MockYTMusicClient(playlist=playlist, album=album, search_results=[])
         service = MetadataExtractorService(mock)
 
-        with caplog.at_level(logging.WARNING):
-            tracks = extract_all(
-                service, "https://music.youtube.com/playlist?list=PLtest"
-            )
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
         # Should have 2 tracks (ATV and OMV), UGC skipped
         assert len(tracks) == 2
         assert tracks[0].video_type == VideoType.ATV
         assert tracks[1].video_type == VideoType.OMV
-        assert "Unsupported video type 'UGC'" in caplog.text
 
 
 class TestExtractorCancellation:
@@ -1613,14 +1608,16 @@ class TestUGCDownload:
         )
 
     def test_ugc_skipped_when_download_ugc_disabled(self) -> None:
-        """Should skip UGC tracks when download_ugc is False (default)."""
+        """Should skip UGC tracks with SkipReason.UGC when download_ugc is False."""
         playlist = self._make_ugc_playlist()
         mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
         service = MetadataExtractorService(mock, download_ugc=False)
 
-        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
-
-        assert len(tracks) == 0
+        # Verify _extract_single_track returns UGC skip reason
+        track = playlist.tracks[0]
+        metadata, skip_reason = service._extract_single_track(track)
+        assert metadata is None
+        assert skip_reason is SkipReason.UGC
 
     def test_ugc_extracted_when_download_ugc_enabled(self) -> None:
         """Should extract UGC tracks as unofficial when download_ugc is True."""
