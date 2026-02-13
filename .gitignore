@@ -8,3 +8,7 @@
 __pycache__/
 *.tsbuildinfo
 .coverage
+
+/.agents/
+/.claude/
+/CLAUDE.md
