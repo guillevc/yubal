@@ -260,8 +260,9 @@ version VERSION:
     set -euo pipefail
 
     # Update Python packages
-    find . -name "pyproject.toml" -not -path "./.*" \
-        -exec sed -i '' 's/^version = ".*"/version = "{{VERSION}}"/' {} \;
+    uv version --frozen --package yubal {{VERSION}}
+    uv version --frozen --package yubal-api {{VERSION}}
+    uv version --frozen {{VERSION}}
 
     # Update web package
     (cd web && npm pkg set version={{VERSION}})
