@@ -108,6 +108,8 @@ docker compose up -d
 # Open http://localhost:8000
 ```
 
+> **Unraid?** Use the [community Docker template](https://github.com/SerpentDrago/UnraidDockerTemplates/tree/main/yubal) by [@SerpentDrago](https://github.com/SerpentDrago) ([unraid forum thread](https://forums.unraid.net/topic/197157-support-yubal-self-hosted-youtube-music-downloader/)).
+
 ## ⚙️ Configuration
 
 | Variable                  | Description                                       | Default (Docker) |
