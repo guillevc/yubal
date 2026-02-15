@@ -53,9 +53,7 @@ class TestExecutorTimeout:
 
     @pytest.fixture
     def executor(self, store: FakeJobStore, tmp_path: Any) -> JobExecutor:
-        ex = JobExecutor(job_store=store, base_path=tmp_path)
-        ex.TIMEOUT_SECONDS = 0.1  # 100ms for fast tests
-        return ex
+        return JobExecutor(job_store=store, base_path=tmp_path, job_timeout=0.1)
 
     @pytest.mark.asyncio
     async def test_timeout_triggers_cancellation_and_fails_job(

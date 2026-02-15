@@ -108,6 +108,13 @@ class Settings(BaseSettings):
         description="Cron expression for scheduled sync",
     )
 
+    # Job execution
+    job_timeout_seconds: int = Field(
+        default=1800,
+        ge=60,
+        description="Job execution timeout in seconds",
+    )
+
     # Timezone
     tz: Timezone = Field(default="UTC", description="Timezone for timestamps")
 

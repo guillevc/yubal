@@ -41,8 +41,6 @@ class JobExecutor:
         - Tasks are tracked in a set to prevent garbage collection
     """
 
-    TIMEOUT_SECONDS: float = 30 * 60  # 30 minutes
-
     def __init__(
         self,
         job_store: JobExecutionStore,
@@ -55,6 +53,7 @@ class JobExecutor:
         download_ugc: bool = False,
         subscription_service: SubscriptionService | None = None,
         cache_path: Path | None = None,
+        job_timeout: float = 1800,
     ) -> None:
         """Initialize the job executor.
 
@@ -69,6 +68,7 @@ class JobExecutor:
             download_ugc: Whether to download UGC tracks to _Unofficial folder.
             subscription_service: Optional service to update subscription metadata.
             cache_path: Optional directory for extraction cache.
+            job_timeout: Maximum execution time per job in seconds.
         """
         self._job_store = job_store
         self._base_path = base_path
@@ -80,6 +80,7 @@ class JobExecutor:
         self._download_ugc = download_ugc
         self._subscription_service = subscription_service
         self._cache_path = cache_path
+        self._job_timeout = job_timeout
 
         # Track background tasks to prevent GC during execution
         self._background_tasks: set[asyncio.Task[Any]] = set()
@@ -184,7 +185,7 @@ class JobExecutor:
             if cancel_token.is_cancelled:
                 return
 
-            async with asyncio.timeout(self.TIMEOUT_SECONDS):
+            async with asyncio.timeout(self._job_timeout):
                 self._job_store.transition(
                     job_id,
                     JobStatus.FETCHING_INFO,
@@ -273,7 +274,7 @@ class JobExecutor:
 
         except TimeoutError:
             logger.warning(
-                "Job %s timed out after %d seconds", job_id[:8], self.TIMEOUT_SECONDS
+                "Job %s timed out after %d seconds", job_id[:8], self._job_timeout
             )
             cancel_token.cancel()
             self._job_store.transition(job_id, JobStatus.FAILED)

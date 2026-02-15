@@ -162,6 +162,7 @@ def create_services(repository: SubscriptionRepository) -> Services:
         download_ugc=settings.download_ugc,
         subscription_service=subscription_service,
         cache_path=settings.cache_path,
+        job_timeout=settings.job_timeout_seconds,
     )
 
     # Create scheduler
