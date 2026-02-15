@@ -42,7 +42,7 @@ const DownloadForm = memo(function DownloadForm({
             if (!Number.isNaN(value) && value >= 1) setMaxItems(value);
           }}
           min={1}
-          max={1000}
+          max={10000}
           radius="lg"
           placeholder="Max"
           startContent={<HashIcon className="text-foreground-400 h-4 w-4" />}
