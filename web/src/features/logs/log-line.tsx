@@ -2,8 +2,8 @@ import type { components } from "@/api/schema";
 import {
   AlertTriangleIcon,
   ArrowDownIcon,
+  ArrowRightIcon,
   CheckIcon,
-  CircleIcon,
   PaperclipIcon,
   XIcon,
 } from "lucide-react";
@@ -23,7 +23,7 @@ const STATUS_CONFIG: Record<
   { icon: typeof CheckIcon; color: string }
 > = {
   success: { icon: CheckIcon, color: "text-success" },
-  skipped: { icon: CircleIcon, color: "text-warning" },
+  skipped: { icon: ArrowRightIcon, color: "text-secondary" },
   failed: { icon: XIcon, color: "text-danger" },
 };
 
@@ -86,9 +86,11 @@ function formatSkippedMessage(skippedByReason: SkippedByReason): string {
 /** Extraction stats display */
 function ExtractionStatsLog({
   success,
+  cached,
   skippedByReason,
 }: {
   success: number;
+  cached: number;
   skippedByReason: SkippedByReason;
 }) {
   const totalSkipped = Object.values(skippedByReason).reduce(
@@ -100,6 +102,9 @@ function ExtractionStatsLog({
     <div className="flex items-center gap-1">
       <CheckIcon className={`${ICON_CLASS} text-success`} />
       <span className="text-success">{success} extracted</span>
+      {cached > 0 && (
+        <span className="text-foreground-400">({cached} cached)</span>
+      )}
       {totalSkipped > 0 && (
         <>
           <span>,</span>
@@ -132,7 +137,7 @@ function DownloadStatsLog({
       <Icon className={`${ICON_CLASS} ${iconColor}`} />
       <span className="text-success">{success} success</span>
       <span>,</span>
-      <span className="text-warning">
+      <span className="text-secondary">
         {formatSkippedMessage(skippedByReason)}
       </span>
       <span>,</span>
@@ -176,7 +181,7 @@ function StatusLog({
   const Icon = config.icon;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex gap-1 align-text-top">
       <Icon className={`${ICON_CLASS} ${config.color}`} />
       <span>{message}</span>
     </div>
@@ -235,6 +240,7 @@ export function LogLine({ entry }: { entry: LogEntry }) {
         return (
           <ExtractionStatsLog
             success={stats.success ?? 0}
+            cached={stats.cached ?? 0}
             skippedByReason={skippedByReason}
           />
         );

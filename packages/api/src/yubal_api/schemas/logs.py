@@ -49,6 +49,7 @@ class LogStats(BaseModel):
         ..., description="Type of stats: 'extraction' or 'download'"
     )
     success: int = 0
+    cached: int = 0
     failed: int = 0
     skipped_by_reason: dict[SkipReasonType, int] = Field(
         default_factory=dict,

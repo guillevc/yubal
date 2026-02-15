@@ -274,6 +274,7 @@ class SyncService:
     apply_replaygain: bool = False
     ascii_filenames: bool = False
     download_ugc: bool = False
+    cache_path: Path | None = None
     _codec: AudioCodec = field(init=False)
 
     def __post_init__(self) -> None:
@@ -315,6 +316,7 @@ class SyncService:
             apply_replaygain=self.apply_replaygain,
             ascii_filenames=self.ascii_filenames,
             download_ugc=self.download_ugc,
+            cache_path=self.cache_path,
         )
         return workflow.execute()
 
@@ -344,6 +346,7 @@ class _SyncWorkflow:
     apply_replaygain: bool
     ascii_filenames: bool
     download_ugc: bool
+    cache_path: Path | None
 
     # Workflow state
     content_info: ContentInfo | None = field(default=None, init=False)
@@ -397,6 +400,7 @@ class _SyncWorkflow:
             save_cover=True,
             max_items=self.max_items,
             apply_replaygain=self.apply_replaygain,
+            cache_path=self.cache_path,
         )
         return create_playlist_downloader(config, cookies_path=self.cookies_path)
 

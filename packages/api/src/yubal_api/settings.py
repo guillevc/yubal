@@ -143,6 +143,11 @@ class Settings(BaseSettings):
     def db_path(self) -> Path:
         return self.config / "yubal" / "yubal.db"
 
+    @property
+    def cache_path(self) -> Path:
+        """Directory for extraction cache (same as db_path parent)."""
+        return self.db_path.parent
+
 
 @cache
 def get_settings() -> Settings:

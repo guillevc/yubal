@@ -476,7 +476,12 @@ class DownloadService:
         # Skip existing files (with_suffix breaks on dots in filename)
         expected = Path(f"{output_path}.{self._config.codec.value}")
         if expected.exists():
-            logger.debug("Skipping existing file: %s", expected)
+            logger.info(
+                "Skipped (%s): '%s'",
+                SkipReason.FILE_EXISTS.label,
+                expected,
+                extra={"status": "skipped", "file_path": str(expected)},
+            )
             # Still fetch lyrics for existing files that don't have them yet
             self._fetch_and_save_lyrics(expected, track)
             return DownloadResult(

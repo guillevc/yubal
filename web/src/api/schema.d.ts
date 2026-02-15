@@ -720,6 +720,11 @@ export interface components {
              */
             success: number;
             /**
+             * Cached
+             * @default 0
+             */
+            cached: number;
+            /**
              * Failed
              * @default 0
              */

@@ -161,6 +161,7 @@ def create_services(repository: SubscriptionRepository) -> Services:
         ascii_filenames=settings.ascii_filenames,
         download_ugc=settings.download_ugc,
         subscription_service=subscription_service,
+        cache_path=settings.cache_path,
     )
 
     # Create scheduler

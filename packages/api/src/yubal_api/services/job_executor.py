@@ -54,6 +54,7 @@ class JobExecutor:
         ascii_filenames: bool = False,
         download_ugc: bool = False,
         subscription_service: SubscriptionService | None = None,
+        cache_path: Path | None = None,
     ) -> None:
         """Initialize the job executor.
 
@@ -67,6 +68,7 @@ class JobExecutor:
             ascii_filenames: Whether to transliterate unicode to ASCII in filenames.
             download_ugc: Whether to download UGC tracks to _Unofficial folder.
             subscription_service: Optional service to update subscription metadata.
+            cache_path: Optional directory for extraction cache.
         """
         self._job_store = job_store
         self._base_path = base_path
@@ -77,6 +79,7 @@ class JobExecutor:
         self._ascii_filenames = ascii_filenames
         self._download_ugc = download_ugc
         self._subscription_service = subscription_service
+        self._cache_path = cache_path
 
         # Track background tasks to prevent GC during execution
         self._background_tasks: set[asyncio.Task[Any]] = set()
@@ -228,6 +231,7 @@ class JobExecutor:
                     self._apply_replaygain,
                     self._ascii_filenames,
                     self._download_ugc,
+                    self._cache_path,
                 )
                 result = await asyncio.to_thread(
                     sync_service.run,

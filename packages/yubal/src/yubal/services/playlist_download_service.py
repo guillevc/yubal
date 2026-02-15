@@ -2,6 +2,7 @@
 
 import logging
 from collections.abc import Iterator
+from contextlib import nullcontext
 from pathlib import Path
 
 from yubal.client import YTMusicClient, YTMusicProtocol
@@ -21,6 +22,7 @@ from yubal.services.artifacts import (
     PlaylistArtifactsProtocol,
     PlaylistArtifactsService,
 )
+from yubal.services.cache import ExtractionCache
 from yubal.services.download_service import DownloadService
 from yubal.services.extractor import MetadataExtractorService
 from yubal.services.replaygain import ReplayGainProtocol, ReplayGainService
@@ -112,6 +114,7 @@ class PlaylistDownloadService:
             ascii_filenames=config.download.ascii_filenames,
         )
         self._replaygain = replaygain or ReplayGainService()
+        self._cache = ExtractionCache(config.cache_path) if config.cache_path else None
 
         # Store last result for retrieval after iteration
         self._last_result: PlaylistDownloadResult | None = None
@@ -176,57 +179,63 @@ class PlaylistDownloadService:
         )
         logger.info("URL: %s", url)
 
-        # Phase 1: Extract metadata (handles all URL types: track, album, playlist)
-        extracted_tracks: list[TrackMetadata] = []
-        playlist_info: PlaylistInfo | None = None
+        cache_ctx = self._cache if self._cache is not None else nullcontext()
+        with cache_ctx:
+            # Phase 1: Extract metadata (all URL types: track, album, playlist)
+            extracted_tracks: list[TrackMetadata] = []
+            playlist_info: PlaylistInfo | None = None
 
-        for progress, extract_progress in self._extract_phase(url, cancel_token):
-            if extract_progress.track is not None:
-                extracted_tracks.append(extract_progress.track)
-            playlist_info = extract_progress.playlist_info
-            yield progress
+            for progress, extract_progress in self._extract_phase(url, cancel_token):
+                if extract_progress.track is not None:
+                    extracted_tracks.append(extract_progress.track)
+                    if self._cache is not None:
+                        self._cache.add(extract_progress.track)
+                playlist_info = extract_progress.playlist_info
+                yield progress
 
-        # Early exit if no tracks found
-        if not extracted_tracks or not playlist_info:
-            logger.warning("No tracks extracted, nothing to download")
-            self._last_result = None
-            return
+            # Early exit if no tracks found
+            if not extracted_tracks or not playlist_info:
+                logger.warning("No tracks extracted, nothing to download")
+                self._last_result = None
+                return
 
-        # Phase 2: Download tracks to disk
-        download_results: list[DownloadResult] = []
+            # Phase 2: Download tracks to disk
+            download_results: list[DownloadResult] = []
 
-        for progress, result in self._download_phase(extracted_tracks, cancel_token):
-            download_results.append(result)
-            yield progress
+            for progress, result in self._download_phase(
+                extracted_tracks, cancel_token
+            ):
+                download_results.append(result)
+                yield progress
 
-        # Log download statistics
-        self._log_download_stats(download_results)
+            # Log download statistics
+            self._log_download_stats(download_results)
 
-        # Phase 3: Generate playlist artifacts
-        artifacts = ArtifactPaths()
+            # Phase 3: Generate playlist artifacts
+            artifacts = ArtifactPaths()
 
-        for progress, phase_artifacts in self._compose_phase(
-            playlist_info, download_results, cancel_token
-        ):
-            artifacts = phase_artifacts
-            yield progress
+            for progress, phase_artifacts in self._compose_phase(
+                playlist_info, download_results, cancel_token
+            ):
+                artifacts = phase_artifacts
+                yield progress
 
-        # Phase 4: Apply ReplayGain tags (optional)
-        if self._config.apply_replaygain:
-            yield from self._normalize_phase(
-                playlist_info,
-                download_results,
-                expected_count=len(extracted_tracks),
-                cancel_token=cancel_token,
+            # Phase 4: Apply ReplayGain tags (optional)
+            if self._config.apply_replaygain:
+                yield from self._normalize_phase(
+                    playlist_info,
+                    download_results,
+                    expected_count=len(extracted_tracks),
+                    cancel_token=cancel_token,
+                )
+
+            # Store complete result for retrieval via get_result()
+            self._last_result = self._build_final_result(
+                playlist_info, download_results, artifacts
             )
 
-        # Store complete result for retrieval via get_result()
-        self._last_result = self._build_final_result(
-            playlist_info, download_results, artifacts
-        )
-
-        kind = playlist_info.kind.value.capitalize()
-        logger.info("%s download complete", kind, extra={"status": "success"})
+            kind = playlist_info.kind.value.capitalize()
+            logger.info("%s download complete", kind, extra={"status": "success"})
 
     def download_playlist_all(
         self,
@@ -333,7 +342,10 @@ class PlaylistDownloadService:
         )
 
         for progress in self._extractor.extract(
-            url, max_items=self._config.max_items, cancel_token=cancel_token
+            url,
+            max_items=self._config.max_items,
+            cancel_token=cancel_token,
+            cache=self._cache,
         ):
             yield (
                 PlaylistProgress(
@@ -408,14 +420,7 @@ class PlaylistDownloadService:
 
         # Log individual skipped/failed track details
         for r in results:
-            if r.status == DownloadStatus.SKIPPED and r.skip_reason:
-                logger.warning(
-                    "  - %s by %s (%s)",
-                    r.track.title,
-                    ", ".join(r.track.artists),
-                    r.skip_reason.label,
-                )
-            elif r.status == DownloadStatus.FAILED:
+            if r.status == DownloadStatus.FAILED:
                 logger.warning(
                     "  - %s by %s (failed: %s)",
                     r.track.title,

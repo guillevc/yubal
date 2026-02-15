@@ -12,6 +12,7 @@ from yubal.models.enums import ContentKind, MatchResult, SkipReason, VideoType
 from yubal.models.progress import ExtractProgress
 from yubal.models.track import PlaylistInfo, TrackMetadata, UnavailableTrack
 from yubal.models.ytmusic import Album, AlbumTrack, Artist, PlaylistTrack, Thumbnail
+from yubal.services.cache import ExtractionCache
 from yubal.utils.url import parse_playlist_id, parse_video_id
 
 logger = logging.getLogger(__name__)
@@ -93,6 +94,7 @@ class MetadataExtractorService:
         url: str,
         max_items: int | None = None,
         cancel_token: CancelToken | None = None,
+        cache: ExtractionCache | None = None,
     ) -> Iterator[ExtractProgress]:
         """Extract metadata from any YouTube Music URL with progress updates.
 
@@ -200,11 +202,30 @@ class MetadataExtractorService:
         )
 
         extracted_count = 0
+        cached_count = 0
         skipped_by_reason: dict[SkipReason, int] = {}
         skipped_tracks: list[tuple[PlaylistTrack, SkipReason]] = []
 
         for track in tracks:
             self._check_cancellation(cancel_token)
+
+            # Fast path: use cached metadata if available
+            cached = cache.get(track.video_id) if cache else None
+            if cached is not None:
+                logger.debug("Using cached metadata for '%s'", track.title)
+                extracted_count += 1
+                cached_count += 1
+                yield ExtractProgress(
+                    current=extracted_count,
+                    total=total,
+                    playlist_total=playlist_total,
+                    skipped_by_reason=skipped_by_reason.copy(),
+                    track=cached,
+                    playlist_info=playlist_info,
+                )
+                continue
+
+            # Slow path: full extraction with API calls
             try:
                 metadata, skip_reason = self._extract_single_track(track)
                 self._check_cancellation(cancel_token)
@@ -254,16 +275,20 @@ class MetadataExtractorService:
         total_in_playlist = extracted_count + total_skipped
         kind_label = kind.value.capitalize()
 
+        # Build summary message parts
+        detail_parts: list[str] = []
+        if cached_count:
+            detail_parts.append(f"{cached_count} cached")
         if total_skipped:
-            parts: list[str] = []
-            for reason, count in all_skipped_by_reason.items():
-                parts.append(f"{count} {reason.label}")
-            msg = (
-                f"{kind_label} contains {total_in_playlist} tracks"
-                f" ({total_skipped} skipped: {', '.join(parts)})"
-            )
-        else:
-            msg = f"{kind_label} contains {total_in_playlist} tracks"
+            skip_parts = [
+                f"{count} {reason.label}"
+                for reason, count in all_skipped_by_reason.items()
+            ]
+            detail_parts.append(f"{total_skipped} skipped: {', '.join(skip_parts)}")
+
+        msg = f"{kind_label} contains {total_in_playlist} tracks"
+        if detail_parts:
+            msg += f" ({', '.join(detail_parts)})"
 
         # WARNING for unavailable or UGC tracks, INFO otherwise
         has_unavailable = any(ut.reason for ut in unavailable_for_info)
@@ -276,6 +301,7 @@ class MetadataExtractorService:
                 "stats": {
                     "stats_type": "extraction",
                     "success": extracted_count,
+                    "cached": cached_count,
                     "failed": 0,
                     "skipped_by_reason": {
                         k.value: v for k, v in all_skipped_by_reason.items()
