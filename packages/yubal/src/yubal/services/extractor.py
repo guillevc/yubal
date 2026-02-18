@@ -344,7 +344,7 @@ class MetadataExtractorService:
         for skipped_track, reason in skipped_tracks:
             detail = reason.label
             if reason == SkipReason.UGC:
-                detail += " — enable download_ugc to include"
+                detail += " — see README to enable UGC downloads"
             logger.warning(
                 "  - %s by %s (%s)",
                 skipped_track.title,
@@ -400,6 +400,11 @@ class MetadataExtractorService:
         # Yield progress with skip reason if skipped
         if metadata is None and skip_reason is not None:
             logger.info("Track skipped: %s", skip_reason.label)
+            if skip_reason == SkipReason.UGC:
+                logger.info(
+                    "UGC downloads are disabled. See the README configuration "
+                    "section to enable downloading user-generated content."
+                )
             yield ExtractProgress(
                 current=1,
                 total=1,
