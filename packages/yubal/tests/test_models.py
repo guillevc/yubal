@@ -4,6 +4,7 @@ import pytest
 from pydantic import ValidationError
 from yubal.models.enums import VideoType
 from yubal.models.track import TrackMetadata
+from yubal.models.ytmusic import AlbumRef, Playlist
 
 
 class TestVideoType:
@@ -91,3 +92,46 @@ class TestTrackMetadata:
                 album_artists=[],
                 video_type=VideoType.ATV,
             )
+
+
+class TestAlbumRef:
+    """Tests for AlbumRef model."""
+
+    def test_accepts_null_id(self) -> None:
+        """Should accept null album id (some tracks lack album IDs)."""
+        ref = AlbumRef(id=None, name="Some Album")
+        assert ref.id is None
+        assert ref.name == "Some Album"
+
+    def test_accepts_missing_id(self) -> None:
+        """Should default id to None when omitted."""
+        ref = AlbumRef(name="Some Album")
+        assert ref.id is None
+
+
+class TestPlaylistWithNullAlbumId:
+    """Tests for parsing playlists where some tracks have null album IDs."""
+
+    def test_parses_playlist_with_null_album_id(self) -> None:
+        """Should parse playlist tracks with album.id=null without error."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "v1",
+                        "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                        "title": "Song",
+                        "artists": [{"name": "Artist", "id": "a1"}],
+                        "album": {"name": "Album", "id": None},
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 120}
+                        ],
+                        "duration_seconds": 200,
+                    }
+                ]
+            }
+        )
+        assert len(playlist.tracks) == 1
+        assert playlist.tracks[0].album is not None
+        assert playlist.tracks[0].album.id is None
+        assert playlist.tracks[0].album.name == "Album"

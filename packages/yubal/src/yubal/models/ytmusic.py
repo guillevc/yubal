@@ -44,7 +44,7 @@ class Artist(YTMusicModel):
 class AlbumRef(YTMusicModel):
     """Album reference (in playlist/search results)."""
 
-    id: str
+    id: str | None = None
     name: str
 
 

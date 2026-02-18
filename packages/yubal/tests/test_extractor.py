@@ -152,6 +152,43 @@ class TestMetadataExtractorService:
         assert "Artist" in mock.search_songs_calls[0]
         assert "Test Song" in mock.search_songs_calls[0]
 
+    def test_extract_searches_album_when_album_id_is_null(
+        self,
+        sample_album: Album,
+        sample_search_result: SearchResult,
+    ) -> None:
+        """Should search for album when album ref has null id."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "v1",
+                        "videoType": "MUSIC_VIDEO_TYPE_OMV",
+                        "title": "Test Song",
+                        "artists": [{"name": "Artist", "id": "a1"}],
+                        "album": {"name": "Some Album", "id": None},
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    }
+                ]
+            }
+        )
+
+        mock = MockYTMusicClient(
+            playlist=playlist,
+            album=sample_album,
+            search_results=[sample_search_result],
+        )
+
+        service = MetadataExtractorService(mock)
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
+
+        # Should have searched for the song since album_id is None
+        assert len(mock.search_songs_calls) == 1
+        assert len(tracks) == 1
+
     def test_extract_fallback_when_no_album_found(
         self,
     ) -> None:

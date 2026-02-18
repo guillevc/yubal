@@ -285,7 +285,7 @@ def find_best_album_match(
     had_results_with_album = False
 
     for result in search_results:
-        if not result.album:
+        if not result.album or not result.album.id:
             continue
 
         had_results_with_album = True
