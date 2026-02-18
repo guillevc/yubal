@@ -11,7 +11,11 @@ from yubal.models.enums import MatchResult, SkipReason, VideoType
 from yubal.models.track import TrackMetadata
 from yubal.models.ytmusic import Album, Artist, Playlist, SearchResult, Thumbnail
 from yubal.services import MetadataExtractorService
-from yubal.services.extractor import _format_artists, _get_square_thumbnail
+from yubal.services.extractor import (
+    _format_artists,
+    _get_square_thumbnail,
+    _upscale_thumbnail_url,
+)
 
 
 def extract_all(
@@ -1547,25 +1551,74 @@ class TestFormatArtists:
         assert _format_artists(artists) == "Valid Artist"
 
 
+class TestUpscaleThumbnailUrl:
+    """Tests for _upscale_thumbnail_url function."""
+
+    def test_replaces_size_parameters(self) -> None:
+        """Should replace w/h parameters in Google thumbnail URLs."""
+        url = "https://lh3.googleusercontent.com/abc123=w120-h120-l90-rj"
+        result = _upscale_thumbnail_url(url)
+        assert result == "https://lh3.googleusercontent.com/abc123=w544-h544-l90-rj"
+
+    def test_custom_size(self) -> None:
+        """Should use specified size."""
+        url = "https://lh3.googleusercontent.com/abc123=w120-h120-l90-rj"
+        result = _upscale_thumbnail_url(url, size=1200)
+        assert result == "https://lh3.googleusercontent.com/abc123=w1200-h1200-l90-rj"
+
+    def test_preserves_url_without_size_params(self) -> None:
+        """Should return URL unchanged if no size parameters found."""
+        url = "https://example.com/image.jpg"
+        assert _upscale_thumbnail_url(url) == url
+
+    def test_handles_various_sizes(self) -> None:
+        """Should replace any numeric size values."""
+        url = "https://lh3.googleusercontent.com/abc=w226-h226-l90-rj"
+        result = _upscale_thumbnail_url(url)
+        assert result == "https://lh3.googleusercontent.com/abc=w544-h544-l90-rj"
+
+
 class TestGetSquareThumbnail:
     """Tests for _get_square_thumbnail function."""
 
-    def test_returns_largest_square(self) -> None:
-        """Should return the largest square thumbnail."""
+    def test_returns_largest_square_upscaled(self) -> None:
+        """Should return the largest square thumbnail, upscaled."""
         thumbnails = [
-            Thumbnail(url="https://small.jpg", width=120, height=120),
-            Thumbnail(url="https://large.jpg", width=544, height=544),
-            Thumbnail(url="https://medium.jpg", width=320, height=320),
+            Thumbnail(
+                url="https://lh3.googleusercontent.com/a=w120-h120-l90-rj",
+                width=120,
+                height=120,
+            ),
+            Thumbnail(
+                url="https://lh3.googleusercontent.com/b=w544-h544-l90-rj",
+                width=544,
+                height=544,
+            ),
+            Thumbnail(
+                url="https://lh3.googleusercontent.com/c=w320-h320-l90-rj",
+                width=320,
+                height=320,
+            ),
         ]
-        assert _get_square_thumbnail(thumbnails) == "https://large.jpg"
+        assert (
+            _get_square_thumbnail(thumbnails)
+            == "https://lh3.googleusercontent.com/b=w544-h544-l90-rj"
+        )
 
     def test_prefers_square_over_rectangular(self) -> None:
         """Should prefer square thumbnails over larger rectangular ones."""
         thumbnails = [
             Thumbnail(url="https://rect.jpg", width=1280, height=720),
-            Thumbnail(url="https://square.jpg", width=544, height=544),
+            Thumbnail(
+                url="https://lh3.googleusercontent.com/a=w544-h544-l90-rj",
+                width=544,
+                height=544,
+            ),
         ]
-        assert _get_square_thumbnail(thumbnails) == "https://square.jpg"
+        assert (
+            _get_square_thumbnail(thumbnails)
+            == "https://lh3.googleusercontent.com/a=w544-h544-l90-rj"
+        )
 
     def test_falls_back_to_last_thumbnail(self) -> None:
         """Should return last thumbnail if no square ones exist."""
@@ -1583,6 +1636,20 @@ class TestGetSquareThumbnail:
         """Should work with a single square thumbnail."""
         thumbnails = [Thumbnail(url="https://only.jpg", width=544, height=544)]
         assert _get_square_thumbnail(thumbnails) == "https://only.jpg"
+
+    def test_upscales_small_thumbnail(self) -> None:
+        """Should upscale a small thumbnail URL to 544px."""
+        thumbnails = [
+            Thumbnail(
+                url="https://lh3.googleusercontent.com/a=w120-h120-l90-rj",
+                width=120,
+                height=120,
+            ),
+        ]
+        assert (
+            _get_square_thumbnail(thumbnails)
+            == "https://lh3.googleusercontent.com/a=w544-h544-l90-rj"
+        )
 
 
 class TestUGCDownload:

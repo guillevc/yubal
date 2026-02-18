@@ -28,14 +28,37 @@ def _format_artists(artists: list[Artist]) -> str:
     return "; ".join(a.name for a in artists if a.name)
 
 
+def _upscale_thumbnail_url(url: str, size: int = 544) -> str:
+    """Replace size parameters in a Google thumbnail URL to request a larger image.
+
+    YouTube Music thumbnails are hosted on lh3.googleusercontent.com and support
+    URL-based size parameters like ``=w120-h120-l90-rj``. For some albums, the
+    API returns only small thumbnail URLs (e.g. 120x120). By replacing the width
+    and height parameters, we can request the same image at a higher resolution.
+
+    Args:
+        url: Thumbnail URL (may or may not contain size parameters).
+        size: Desired width and height in pixels.
+
+    Returns:
+        URL with updated size parameters, or the original URL if no size
+        parameters were found.
+    """
+    import re
+
+    return re.sub(r"=w\d+-h\d+", f"=w{size}-h{size}", url)
+
+
 def _get_square_thumbnail(thumbnails: list[Thumbnail]) -> str | None:
-    """Get the largest square thumbnail URL."""
+    """Get the largest square thumbnail URL, upscaled if possible."""
     if not thumbnails:
         return None
     square = [t for t in thumbnails if t.width == t.height]
     if square:
-        return max(square, key=lambda t: t.width).url
-    return thumbnails[-1].url
+        url = max(square, key=lambda t: t.width).url
+    else:
+        url = thumbnails[-1].url
+    return _upscale_thumbnail_url(url)
 
 
 @dataclass(frozen=True)

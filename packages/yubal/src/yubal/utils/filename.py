@@ -68,6 +68,7 @@ def build_track_path(
     """Build a filesystem path for a track following the convention.
 
     Creates a path structure: base/Artist/YEAR - Album/NN - Title
+    When year is unknown: base/Artist/Album/NN - Title
 
     Args:
         base: Base directory for downloads.
@@ -97,8 +98,7 @@ def build_track_path(
     )
 
     # Build album folder name
-    year_str = year or "0000"
-    album_folder = f"{year_str} - {safe_album}"
+    album_folder = f"{year} - {safe_album}" if year else safe_album
 
     # Build track filename
     if track_number is not None:
