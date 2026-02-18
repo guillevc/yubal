@@ -1,6 +1,6 @@
 [project]
 name = "yubal"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
   "ytmusicapi>=1.9.0",
   "pydantic>=2.0.0",
