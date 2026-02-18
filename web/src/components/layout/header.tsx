@@ -196,6 +196,16 @@ export function Header() {
           </NavbarMenuItem>
         ))}
         <NavbarMenuItem>
+          <CookieDropdown
+            variant="mobile"
+            cookiesConfigured={cookiesConfigured}
+            isUploading={isUploading}
+            isDeleting={isDeleting}
+            onDropdownAction={handleDropdownAction}
+            onUploadClick={triggerFileUpload}
+          />
+        </NavbarMenuItem>
+        <NavbarMenuItem>
           <Link
             href="https://github.com/guillevc/yubal"
             isExternal

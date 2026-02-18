@@ -66,7 +66,6 @@ export function CookieDropdown({
     <Dropdown>
       <DropdownTrigger>
         <Link as="button" color="foreground" className="w-full gap-2" size="lg">
-          <CookieIcon className="text-success h-4 w-4" />
           Cookies configured
         </Link>
       </DropdownTrigger>
@@ -80,7 +79,6 @@ export function CookieDropdown({
       size="lg"
       onPress={onUploadClick}
     >
-      <CookieIcon className="h-4 w-4" />
       Upload cookies
     </Link>
   );
