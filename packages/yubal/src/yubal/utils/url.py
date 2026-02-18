@@ -8,8 +8,53 @@ from yubal.exceptions import PlaylistParseError
 PLAYLIST_ID_PATTERN = re.compile(r"list=([A-Za-z0-9_-]+)")
 VIDEO_ID_PATTERN = re.compile(r"v=([A-Za-z0-9_-]+)")
 
+# Path-based video ID patterns (youtu.be, shorts, live, embed)
+_PATH_VIDEO_ID_PATTERN = re.compile(r"^/(?:shorts|live|embed|e|v|vi)/([A-Za-z0-9_-]+)")
+
+# Recognized YouTube hostnames for path-based video ID extraction
+_YOUTUBE_HOSTS = {
+    "youtube.com",
+    "www.youtube.com",
+    "m.youtube.com",
+    "music.youtube.com",
+    "youtube-nocookie.com",
+    "www.youtube-nocookie.com",
+}
+
 # Maximum URL length to prevent potential abuse (standard browser limit)
 MAX_URL_LENGTH = 2048
+
+
+def _parse_video_id_from_path(url: str) -> str | None:
+    """Extract video ID from path-based YouTube URLs.
+
+    Handles youtu.be short URLs and path-based formats like /shorts/, /live/,
+    /embed/, /e/, /v/, /vi/ on YouTube domains.
+
+    Args:
+        url: Full URL to parse.
+
+    Returns:
+        Video ID string, or None if not a recognized path-based URL.
+    """
+    parsed = urlparse(url)
+    host = parsed.hostname or ""
+    path = parsed.path or ""
+
+    # youtu.be/VIDEO_ID
+    if host == "youtu.be" and len(path) > 1:
+        # Path is /VIDEO_ID — strip leading slash
+        video_id = path.split("/")[1]
+        if re.fullmatch(r"[A-Za-z0-9_-]+", video_id):
+            return video_id
+        return None
+
+    # /shorts/ID, /live/ID, /embed/ID, /e/ID, /v/ID, /vi/ID on YouTube hosts
+    if host in _YOUTUBE_HOSTS:
+        if match := _PATH_VIDEO_ID_PATTERN.match(path):
+            return match.group(1)
+
+    return None
 
 
 def parse_playlist_id(url: str) -> str:
@@ -32,12 +77,15 @@ def parse_playlist_id(url: str) -> str:
 
 
 def parse_video_id(url: str) -> str | None:
-    """Extract video ID from YouTube watch URL.
+    """Extract video ID from a YouTube URL.
+
+    Supports standard watch URLs (v= parameter), youtu.be short URLs,
+    and path-based formats (/shorts/, /live/, /embed/, /e/, /v/, /vi/).
 
     Returns None if a playlist ID is present (playlist URLs take priority).
 
     Args:
-        url: Full YouTube or YouTube Music watch URL.
+        url: YouTube, YouTube Music, or youtu.be URL.
 
     Returns:
         The video ID string, or None if not found, URL is too long,
@@ -55,7 +103,8 @@ def parse_video_id(url: str) -> str | None:
     if match := VIDEO_ID_PATTERN.search(url):
         return match.group(1)
 
-    return None
+    # Extract video ID from path-based URLs (youtu.be, shorts, live, embed)
+    return _parse_video_id_from_path(url)
 
 
 def is_single_track_url(url: str) -> bool:
@@ -89,6 +138,9 @@ def is_supported_url(url: str) -> bool:
         return True
     # Single track URL (has v= parameter without list=)
     if VIDEO_ID_PATTERN.search(url):
+        return True
+    # Path-based video URL (youtu.be, shorts, live, embed)
+    if _parse_video_id_from_path(url):
         return True
     # Browse URL (album pages on music.youtube.com)
     parsed = urlparse(url)

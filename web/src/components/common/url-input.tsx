@@ -1,4 +1,4 @@
-import { YOUTUBE_MUSIC_URL_PATTERN } from "@/lib/url";
+import { YOUTUBE_URL_PATTERN } from "@/lib/url";
 import { Input } from "@heroui/react";
 import { LinkIcon } from "lucide-react";
 
@@ -15,7 +15,7 @@ export function UrlInput({
   disabled,
   placeholder = "Album or playlist URL",
 }: Props) {
-  const isValid = value === "" || YOUTUBE_MUSIC_URL_PATTERN.test(value);
+  const isValid = value === "" || YOUTUBE_URL_PATTERN.test(value);
 
   return (
     <Input
