@@ -7,7 +7,7 @@ import { useVersionCheck } from "@/hooks/use-version-check";
 import {
   Button,
   Chip,
-  Link,
+  Link as HeroUILink,
   Navbar,
   NavbarBrand,
   NavbarContent,
@@ -16,7 +16,7 @@ import {
   NavbarMenuItem,
   NavbarMenuToggle,
 } from "@heroui/react";
-import { useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Disc3Icon,
   DownloadIcon,
@@ -69,7 +69,7 @@ export function Header() {
       </NavbarContent>
 
       <NavbarBrand className="mr-4">
-        <Link href="/" className="flex items-center">
+        <Link to="/" className="flex items-center">
           <Disc3Icon
             className={`text-primary h-7 w-7 ${hasActiveJobs ? "animate-[spin_4s_linear_infinite] motion-reduce:animate-none" : ""}`}
           />
@@ -85,35 +85,27 @@ export function Header() {
             className="group"
             isActive={currentPath === item.href}
           >
-            <Button
-              disableRipple
-              variant="light"
-              size="sm"
-              as={Link}
-              radius="lg"
-              href={item.href}
-              startContent={<item.startIcon className="h-4 w-4" />}
-              endContent={
-                item.href === "/playlists" &&
-                subscriptionCount > 0 && (
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    radius="sm"
-                    className="font-mono"
-                    classNames={{
-                      content:
-                        "text-foreground-400 text-xs group-data-[active=true]:text-foreground",
-                    }}
-                  >
-                    {subscriptionCount}
-                  </Chip>
-                )
-              }
-              className="text-foreground-400 text-small group-data-[active=true]:text-foreground flex items-center gap-2 font-medium"
+            <Link
+              to={item.href}
+              className="text-foreground-400 text-small group-data-[active=true]:text-foreground tap-highlight-transparent active:opacity-disabled inline-flex items-center gap-2 rounded-lg px-3 py-1.5 font-medium hover:opacity-80"
             >
+              <item.startIcon className="h-4 w-4" />
               {item.label}
-            </Button>
+              {item.href === "/playlists" && subscriptionCount > 0 && (
+                <Chip
+                  size="sm"
+                  variant="flat"
+                  radius="sm"
+                  className="font-mono"
+                  classNames={{
+                    content:
+                      "text-foreground-400 text-xs group-data-[active=true]:text-foreground",
+                  }}
+                >
+                  {subscriptionCount}
+                </Chip>
+              )}
+            </Link>
           </NavbarItem>
         ))}
       </NavbarContent>
@@ -180,11 +172,9 @@ export function Header() {
         {navItems.map((item) => (
           <NavbarMenuItem key={item.href} isActive={currentPath === item.href}>
             <Link
-              href={item.href}
-              color={currentPath === item.href ? "primary" : "foreground"}
-              className="flex w-full items-center gap-2"
-              size="lg"
-              onPress={() => setIsMenuOpen(false)}
+              to={item.href}
+              onClick={() => setIsMenuOpen(false)}
+              className={`flex w-full items-center gap-2 text-lg ${currentPath === item.href ? "text-primary" : "text-foreground"}`}
             >
               {item.label}
               {item.href === "/playlists" && subscriptionCount > 0 && (
@@ -206,7 +196,7 @@ export function Header() {
           />
         </NavbarMenuItem>
         <NavbarMenuItem>
-          <Link
+          <HeroUILink
             href="https://github.com/guillevc/yubal"
             isExternal
             showAnchorIcon
@@ -215,7 +205,7 @@ export function Header() {
             size="lg"
           >
             Star on GitHub
-          </Link>
+          </HeroUILink>
         </NavbarMenuItem>
       </NavbarMenu>
 
