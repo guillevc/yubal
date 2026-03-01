@@ -9,7 +9,7 @@ import {
 } from "@/lib/icons";
 import { yubalUrl } from "@/lib/storage";
 import { el, setButtonState } from "@/lib/ui";
-import { getContentType, isYouTubeUrl } from "@/lib/youtube";
+import { extractTrackInfo, getContentType, isYouTubeUrl } from "@/lib/youtube";
 
 const app = document.getElementById("app")!;
 
@@ -82,16 +82,14 @@ function renderSetup(showBack = false) {
 
   const container = el("div", { class: "p-4 flex flex-col gap-4" });
 
-  const heading = el(
-    "h1",
-    { class: "text-base font-semibold" },
-    "Connect to Server"
-  );
-
-  const desc = el(
-    "p",
-    { class: "text-xs text-mist-400 leading-relaxed" },
-    "Enter your self-hosted yubal server URL to start downloading tracks directly from your browser."
+  const hdr = el("div", { class: "flex flex-col gap-1" });
+  hdr.append(
+    el("h1", { class: "text-base font-semibold" }, "Connect to Server"),
+    el(
+      "p",
+      { class: "text-xs text-mist-400 leading-relaxed" },
+      "Enter your self-hosted yubal server URL to start downloading tracks directly from your browser."
+    )
   );
 
   const input = el("input", {
@@ -101,19 +99,19 @@ function renderSetup(showBack = false) {
     placeholder: "http://localhost:8642",
   }) as HTMLInputElement;
 
-  const statusMsg = el("p", { class: "text-xs" });
+  const statusMsg = el("p", { class: "text-xs empty:hidden" });
 
   const saveBtn = el("button", {
     type: "button",
     class:
-      "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-mist-950 transition-colors hover:bg-primary-700 [&>svg]:size-[18px]",
+      "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-mist-950 transition-colors hover:bg-primary-700 [&>svg]:size-[18px]",
   });
   saveBtn.innerHTML = `${CIRCLE_CHECK_ICON} Save Configuration`;
 
   const testBtn = el("button", {
     type: "button",
     class:
-      "w-full flex items-center justify-center gap-2 rounded-lg border border-mist-700 bg-transparent px-4 py-2 text-sm text-mist-400 transition-colors hover:border-mist-600 hover:text-mist-200 [&>svg]:size-[18px]",
+      "w-full flex items-center justify-center gap-2 rounded-lg border border-mist-700 bg-transparent px-4 py-2.5 text-sm font-semibold text-mist-400 transition-colors hover:border-mist-600 hover:text-mist-200 [&>svg]:size-[18px]",
   });
   testBtn.innerHTML = `${WIFI_ICON} Test connection`;
 
@@ -137,6 +135,13 @@ function renderSetup(showBack = false) {
     await main();
   };
 
+  const testBaseClass =
+    "w-full flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-colors [&>svg]:size-[18px]";
+  const testDefaultClass = `${testBaseClass} border-mist-700 bg-transparent text-mist-400 hover:border-mist-600 hover:text-mist-200`;
+  const testSuccessClass = `${testBaseClass} border-green-500/30 bg-green-500/10 text-green-500`;
+  const testErrorClass = `${testBaseClass} border-red-400/30 bg-red-400/10 text-red-400`;
+  const testDefaultHTML = `${WIFI_ICON} Test connection`;
+
   testBtn.onclick = async () => {
     const value = input.value.trim().replace(/\/+$/, "");
     if (!value) {
@@ -144,18 +149,21 @@ function renderSetup(showBack = false) {
       statusMsg.className = "text-xs text-red-400";
       return;
     }
-    statusMsg.textContent = "Connecting...";
-    statusMsg.className = "text-xs text-mist-400";
+    testBtn.innerHTML = `${WIFI_ICON} Connecting...`;
+    testBtn.disabled = true;
     const res = await healthCheck(value);
     if (res.ok) {
-      statusMsg.textContent = "Connected!";
-      statusMsg.className = "text-xs text-primary-600";
+      testBtn.innerHTML = `${CIRCLE_CHECK_ICON} Connected!`;
+      testBtn.className = testSuccessClass;
+      setTimeout(() => {
+        testBtn.innerHTML = testDefaultHTML;
+        testBtn.className = testDefaultClass;
+        testBtn.disabled = false;
+      }, 2000);
     } else {
-      statusMsg.textContent =
-        res.error === "network_error"
-          ? "Could not connect"
-          : `Error: ${res.message}`;
-      statusMsg.className = "text-xs text-red-400";
+      testBtn.innerHTML = `${WIFI_ICON} ${res.error === "network_error" ? "Could not connect" : `Error: ${res.message}`}`;
+      testBtn.className = testErrorClass;
+      testBtn.disabled = false;
     }
   };
 
@@ -164,7 +172,9 @@ function renderSetup(showBack = false) {
     if (v) input.value = v;
   });
 
-  container.append(heading, desc, input, statusMsg, saveBtn, testBtn);
+  const actions = el("div", { class: "flex flex-col gap-2" });
+  actions.append(saveBtn, testBtn);
+  container.append(hdr, input, statusMsg, actions);
   app.append(container);
 }
 
@@ -216,7 +226,7 @@ function renderNotYouTube() {
 
 // --- YouTube View ---
 
-function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
+async function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
   app.innerHTML = "";
 
   app.append(renderHeader(() => renderSetup(true)));
@@ -224,12 +234,23 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
   const tabUrl = tab.url ?? "";
   const contentType = getContentType(tabUrl);
 
-  // Title
+  // Title & artist — extract from page DOM, fall back to tab title
+  const info =
+    tab.id != null
+      ? await extractTrackInfo(tab.id)
+      : { title: null, artist: null };
   const title = el(
     "h2",
-    { class: "px-4 pt-3 text-sm font-bold leading-snug line-clamp-2" },
-    tab.title ?? "Untitled"
+    { class: "px-4 pt-2 text-lg font-bold leading-snug line-clamp-2" },
+    info.title ?? tab.title ?? "Untitled"
   );
+  const artist = info.artist
+    ? el(
+        "p",
+        { class: "px-4 pt-0.5 text-sm text-mist-400 line-clamp-2" },
+        info.artist
+      )
+    : null;
 
   // Content type pill
   let pill: HTMLElement | null = null;
@@ -238,7 +259,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
       "span",
       {
         class:
-          "mx-4 mt-2 inline-block rounded-full bg-primary-600/15 px-3 py-0.5 text-xs font-medium text-primary-600",
+          "mx-4 mt-3 inline-block rounded-full bg-primary-600/15 px-3 py-0.5 text-xs font-medium text-primary-600",
       },
       "Track"
     );
@@ -247,7 +268,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
       "span",
       {
         class:
-          "mx-4 mt-2 inline-block rounded-full bg-secondary-700/15 px-3 py-0.5 text-xs font-medium text-secondary-700",
+          "mx-4 mt-3 inline-block rounded-full bg-secondary-700/15 px-3 py-0.5 text-xs font-medium text-secondary-700",
       },
       "Playlist / Album"
     );
@@ -261,7 +282,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
     {
       type: "button",
       class:
-        "w-full rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-mist-950 transition-colors hover:bg-primary-700 disabled:opacity-50",
+        "w-full rounded-lg text-sm bg-primary-600 px-4 py-2.5 font-semibold text-mist-950 transition-colors hover:bg-primary-700 disabled:opacity-50",
     },
     "Download"
   );
@@ -294,7 +315,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
       {
         type: "button",
         class:
-          "w-full rounded-lg border border-mist-700 bg-mist-800 px-4 py-2.5 text-mist-200 transition-colors hover:border-mist-600 disabled:opacity-50",
+          "w-full text-sm rounded-lg border font-semibold border-mist-700 bg-mist-800 px-4 py-2.5 text-mist-200 transition-colors hover:border-mist-600 disabled:opacity-50",
       },
       "Subscribe"
     );
@@ -323,8 +344,9 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
   }
 
   // Assemble
-  app.append(title);
   if (pill) app.append(pill);
+  app.append(title);
+  if (artist) app.append(artist);
   app.append(buttons);
 }
 
