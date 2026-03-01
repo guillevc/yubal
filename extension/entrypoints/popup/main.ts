@@ -1,6 +1,12 @@
 import "@/assets/index.css";
 import { createJob, createSubscription, healthCheck } from "@/lib/api";
-import { EXTERNAL_LINK_ICON, GEAR_ICON, YUBAL_ICON } from "@/lib/icons";
+import {
+  CIRCLE_CHECK_ICON,
+  EXTERNAL_LINK_ICON,
+  SETTINGS_ICON,
+  WIFI_ICON,
+  YUBAL_ICON,
+} from "@/lib/icons";
 import { yubalUrl } from "@/lib/storage";
 import { el, setButtonState } from "@/lib/ui";
 import { getContentType, isYouTubeUrl } from "@/lib/youtube";
@@ -28,63 +34,106 @@ async function main() {
   renderYouTube(baseUrl, tab);
 }
 
+// --- Header ---
+
+function renderHeader(onSettings?: () => void) {
+  const header = el("header", {
+    class:
+      "flex items-center justify-between border-b border-mist-800 bg-mist-900 px-4 py-3",
+  });
+
+  const left = el("div", { class: "flex items-center gap-2.5" });
+
+  const iconBox = el("div", {
+    class:
+      "flex items-center justify-center size-7 rounded-lg bg-primary-600/20",
+  });
+  iconBox.innerHTML = YUBAL_ICON;
+
+  const title = el(
+    "span",
+    { class: "text-base font-bold text-mist-100" },
+    "yubal"
+  );
+
+  left.append(iconBox, title);
+  header.append(left);
+
+  if (onSettings) {
+    const settingsBtn = el("button", {
+      type: "button",
+      class:
+        "flex items-center justify-center size-8 rounded-lg text-mist-400 hover:text-mist-200 hover:bg-mist-800 transition-colors",
+    });
+    settingsBtn.innerHTML = SETTINGS_ICON;
+    settingsBtn.onclick = onSettings;
+    header.append(settingsBtn);
+  }
+
+  return header;
+}
+
 // --- Setup View ---
 
 function renderSetup(showBack = false) {
   app.innerHTML = "";
 
+  app.append(renderHeader(showBack ? () => main() : undefined));
+
+  const container = el("div", { class: "p-4 flex flex-col gap-4" });
+
   const heading = el(
     "h1",
-    { class: "text-lg font-semibold" },
-    "Connect to yubal"
+    { class: "text-base font-semibold" },
+    "Connect to Server"
+  );
+
+  const desc = el(
+    "p",
+    { class: "text-xs text-mist-400 leading-relaxed" },
+    "Enter your self-hosted yubal server URL to start downloading tracks directly from your browser."
   );
 
   const input = el("input", {
     type: "url",
     class:
-      "mt-3 w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3 py-2 font-mono text-sm text-neutral-200 outline-none focus:border-primary-600",
+      "w-full rounded-lg border border-mist-700 bg-mist-900 px-3 py-2 font-mono text-sm text-mist-200 outline-none focus:border-primary-600",
     placeholder: "http://localhost:8642",
   }) as HTMLInputElement;
 
-  const statusMsg = el("p", { class: "mt-2 text-xs" });
+  const statusMsg = el("p", { class: "text-xs" });
 
-  const saveBtn = el(
-    "button",
-    {
-      type: "button",
-      class:
-        "mt-3 w-full rounded-lg bg-primary-600 px-4 py-2 font-semibold text-black transition-colors hover:bg-primary-700",
-    },
-    "Save"
-  );
+  const saveBtn = el("button", {
+    type: "button",
+    class:
+      "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-mist-950 transition-colors hover:bg-primary-700",
+  });
+  saveBtn.innerHTML = `${CIRCLE_CHECK_ICON} Save Configuration`;
 
-  const testBtn = el(
-    "button",
-    {
-      type: "button",
-      class:
-        "mt-2 w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2 text-sm text-neutral-300 transition-colors hover:border-neutral-600",
-    },
-    "Test connection"
-  );
+  const testBtn = el("button", {
+    type: "button",
+    class:
+      "w-full flex items-center justify-center gap-2 rounded-lg border border-mist-700 bg-transparent px-4 py-2 text-sm text-mist-400 transition-colors hover:border-mist-600 hover:text-mist-200",
+  });
+  testBtn.innerHTML = `${WIFI_ICON} Test connection`;
 
   saveBtn.onclick = async () => {
     const value = input.value.trim().replace(/\/+$/, "");
     if (!value) {
       statusMsg.textContent = "URL is required";
-      statusMsg.className = "mt-2 text-xs text-red-400";
+      statusMsg.className = "text-xs text-red-400";
       return;
     }
     try {
       new URL(value);
     } catch {
       statusMsg.textContent = "Invalid URL format";
-      statusMsg.className = "mt-2 text-xs text-red-400";
+      statusMsg.className = "text-xs text-red-400";
       return;
     }
     await yubalUrl.setValue(value);
     statusMsg.textContent = "Saved!";
-    statusMsg.className = "mt-2 text-xs text-primary-600";
+    statusMsg.className = "text-xs text-primary-600";
     await main();
   };
 
@@ -92,21 +141,21 @@ function renderSetup(showBack = false) {
     const value = input.value.trim().replace(/\/+$/, "");
     if (!value) {
       statusMsg.textContent = "Enter a URL first";
-      statusMsg.className = "mt-2 text-xs text-red-400";
+      statusMsg.className = "text-xs text-red-400";
       return;
     }
     statusMsg.textContent = "Connecting...";
-    statusMsg.className = "mt-2 text-xs text-neutral-400";
+    statusMsg.className = "text-xs text-mist-400";
     const res = await healthCheck(value);
     if (res.ok) {
       statusMsg.textContent = "Connected!";
-      statusMsg.className = "mt-2 text-xs text-primary-600";
+      statusMsg.className = "text-xs text-primary-600";
     } else {
       statusMsg.textContent =
         res.error === "network_error"
           ? "Could not connect"
           : `Error: ${res.message}`;
-      statusMsg.className = "mt-2 text-xs text-red-400";
+      statusMsg.className = "text-xs text-red-400";
     }
   };
 
@@ -115,22 +164,7 @@ function renderSetup(showBack = false) {
     if (v) input.value = v;
   });
 
-  const container = el("div", { class: "p-4" });
-
-  if (showBack) {
-    const backBtn = el(
-      "button",
-      {
-        type: "button",
-        class: "mb-3 text-sm text-neutral-400 hover:text-neutral-200",
-      },
-      "\u2190 Back"
-    );
-    backBtn.onclick = () => main();
-    container.append(backBtn);
-  }
-
-  container.append(heading, input, statusMsg, saveBtn, testBtn);
+  container.append(heading, desc, input, statusMsg, saveBtn, testBtn);
   app.append(container);
 }
 
@@ -139,11 +173,13 @@ function renderSetup(showBack = false) {
 function renderNotYouTube() {
   app.innerHTML = "";
 
+  app.append(renderHeader(() => renderSetup(true)));
+
   const container = el("div", { class: "p-6 text-center" });
 
   const msg = el(
     "p",
-    { class: "text-sm text-neutral-400" },
+    { class: "text-sm text-mist-400" },
     "Navigate to a YouTube Music track or playlist."
   );
 
@@ -183,25 +219,10 @@ function renderNotYouTube() {
 function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
   app.innerHTML = "";
 
+  app.append(renderHeader(() => renderSetup(true)));
+
   const tabUrl = tab.url ?? "";
   const contentType = getContentType(tabUrl);
-
-  // Header
-  const header = el("div", {
-    class: "flex items-center justify-between p-4 pb-0",
-  });
-
-  const iconContainer = el("div", null);
-  iconContainer.innerHTML = YUBAL_ICON;
-
-  const gearBtn = el("button", {
-    type: "button",
-    class: "text-neutral-400 hover:text-neutral-200 transition-colors",
-  });
-  gearBtn.innerHTML = GEAR_ICON;
-  gearBtn.onclick = () => renderSetup(true);
-
-  header.append(iconContainer, gearBtn);
 
   // Title
   const title = el(
@@ -240,7 +261,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
     {
       type: "button",
       class:
-        "w-full rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-black transition-colors hover:bg-primary-700 disabled:opacity-50",
+        "w-full rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-mist-950 transition-colors hover:bg-primary-700 disabled:opacity-50",
     },
     "Download"
   );
@@ -273,7 +294,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
       {
         type: "button",
         class:
-          "w-full rounded-lg border border-neutral-700 bg-neutral-800 px-4 py-2.5 text-neutral-200 transition-colors hover:border-neutral-600 disabled:opacity-50",
+          "w-full rounded-lg border border-mist-700 bg-mist-800 px-4 py-2.5 text-mist-200 transition-colors hover:border-mist-600 disabled:opacity-50",
       },
       "Subscribe"
     );
@@ -302,7 +323,7 @@ function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
   }
 
   // Assemble
-  app.append(header, title);
+  app.append(title);
   if (pill) app.append(pill);
   app.append(buttons);
 }
