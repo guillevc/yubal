@@ -1,3 +1,5 @@
 export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id });
+  browser.runtime.onInstalled.addListener(({ reason }) => {
+    console.log("Yubal extension installed:", reason);
+  });
 });

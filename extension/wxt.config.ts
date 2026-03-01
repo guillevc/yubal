@@ -1,8 +1,17 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "wxt";
 
-// See https://wxt.dev/api/config.html
 export default defineConfig({
+  manifest: {
+    name: "Yubal",
+    description: "Queue YouTube content to your yubal instance",
+    permissions: ["storage", "activeTab"],
+    browser_specific_settings: {
+      gecko: {
+        id: "yubal@guillevc.xyz",
+      },
+    },
+  },
   vite: () => ({
     plugins: [tailwindcss()],
   }),

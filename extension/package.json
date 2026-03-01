@@ -1,6 +1,6 @@
 {
-  "name": "wxt-starter",
-  "description": "manifest.json description",
+  "name": "yubal",
+  "description": "Queue YouTube content to your yubal instance",
   "private": true,
   "version": "0.1.0",
   "type": "module",
