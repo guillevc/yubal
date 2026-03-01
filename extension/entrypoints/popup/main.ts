@@ -1,6 +1,7 @@
 import "@/assets/index.css";
 import { createJob, createSubscription, healthCheck } from "@/lib/api";
 import {
+  ARROW_LEFT_ICON,
   CIRCLE_CHECK_ICON,
   EXTERNAL_LINK_ICON,
   SETTINGS_ICON,
@@ -36,13 +37,29 @@ async function main() {
 
 // --- Header ---
 
-function renderHeader(onSettings?: () => void) {
+interface HeaderOptions {
+  onBack?: () => void;
+  onSettings?: () => void;
+}
+
+function renderHeader({ onBack, onSettings }: HeaderOptions = {}) {
   const header = el("header", {
     class:
       "flex items-center justify-between border-b border-mist-800 bg-mist-900 px-4 py-3",
   });
 
   const left = el("div", { class: "flex items-center gap-2.5" });
+
+  if (onBack) {
+    const backBtn = el("button", {
+      type: "button",
+      class:
+        "flex items-center justify-center size-8 -ml-1 rounded-lg text-mist-400 hover:text-mist-200 hover:bg-mist-800 transition-colors [&>svg]:size-[18px]",
+    });
+    backBtn.innerHTML = ARROW_LEFT_ICON;
+    backBtn.onclick = onBack;
+    left.append(backBtn);
+  }
 
   const iconBox = el("div", {
     class:
@@ -78,7 +95,7 @@ function renderHeader(onSettings?: () => void) {
 function renderSetup(showBack = false) {
   app.innerHTML = "";
 
-  app.append(renderHeader(showBack ? () => main() : undefined));
+  app.append(renderHeader(showBack ? { onBack: () => main() } : {}));
 
   const container = el("div", { class: "p-4 flex flex-col gap-4" });
 
@@ -87,7 +104,7 @@ function renderSetup(showBack = false) {
     el("h1", { class: "text-base font-semibold" }, "Connect to Server"),
     el(
       "p",
-      { class: "text-xs text-mist-400 leading-relaxed" },
+      { class: "text-sm text-mist-400" },
       "Enter your self-hosted yubal server URL to start downloading tracks directly from your browser."
     )
   );
@@ -183,9 +200,9 @@ function renderSetup(showBack = false) {
 function renderNotYouTube() {
   app.innerHTML = "";
 
-  app.append(renderHeader(() => renderSetup(true)));
+  app.append(renderHeader({ onSettings: () => renderSetup(true) }));
 
-  const container = el("div", { class: "p-6 text-center" });
+  const container = el("div", { class: "p-4 text-center" });
 
   const msg = el(
     "p",
@@ -229,7 +246,7 @@ function renderNotYouTube() {
 async function renderYouTube(baseUrl: string, tab: Browser.tabs.Tab) {
   app.innerHTML = "";
 
-  app.append(renderHeader(() => renderSetup(true)));
+  app.append(renderHeader({ onSettings: () => renderSetup(true) }));
 
   const tabUrl = tab.url ?? "";
   const contentType = getContentType(tabUrl);
