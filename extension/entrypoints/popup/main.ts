@@ -46,7 +46,7 @@ function renderHeader(onSettings?: () => void) {
 
   const iconBox = el("div", {
     class:
-      "flex items-center justify-center size-7 rounded-lg bg-primary-600/20",
+      "flex items-center justify-center size-7 rounded-lg bg-primary-600/20 [&>svg]:size-5",
   });
   iconBox.innerHTML = YUBAL_ICON;
 
@@ -63,7 +63,7 @@ function renderHeader(onSettings?: () => void) {
     const settingsBtn = el("button", {
       type: "button",
       class:
-        "flex items-center justify-center size-8 rounded-lg text-mist-400 hover:text-mist-200 hover:bg-mist-800 transition-colors",
+        "flex items-center justify-center size-8 rounded-lg text-mist-400 hover:text-mist-200 hover:bg-mist-800 transition-colors [&>svg]:size-[18px]",
     });
     settingsBtn.innerHTML = SETTINGS_ICON;
     settingsBtn.onclick = onSettings;
@@ -106,14 +106,14 @@ function renderSetup(showBack = false) {
   const saveBtn = el("button", {
     type: "button",
     class:
-      "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-mist-950 transition-colors hover:bg-primary-700",
+      "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2 font-semibold text-mist-950 transition-colors hover:bg-primary-700 [&>svg]:size-[18px]",
   });
   saveBtn.innerHTML = `${CIRCLE_CHECK_ICON} Save Configuration`;
 
   const testBtn = el("button", {
     type: "button",
     class:
-      "w-full flex items-center justify-center gap-2 rounded-lg border border-mist-700 bg-transparent px-4 py-2 text-sm text-mist-400 transition-colors hover:border-mist-600 hover:text-mist-200",
+      "w-full flex items-center justify-center gap-2 rounded-lg border border-mist-700 bg-transparent px-4 py-2 text-sm text-mist-400 transition-colors hover:border-mist-600 hover:text-mist-200 [&>svg]:size-[18px]",
   });
   testBtn.innerHTML = `${WIFI_ICON} Test connection`;
 
@@ -191,7 +191,7 @@ function renderNotYouTube() {
       href: "https://www.youtube.com",
       target: "_blank",
       class:
-        "inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700",
+        "inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 [&>svg]:size-3.5 [&>svg]:inline [&>svg]:align-[-1px]",
     },
     "YouTube"
   );
@@ -203,7 +203,7 @@ function renderNotYouTube() {
       href: "https://music.youtube.com",
       target: "_blank",
       class:
-        "inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700",
+        "inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 [&>svg]:size-3.5 [&>svg]:inline [&>svg]:align-[-1px]",
     },
     "YouTube Music"
   );
