@@ -3,11 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Default Popup Title</title>
+    <title>Yubal</title>
     <meta name="manifest.type" content="browser_action" />
   </head>
-  <body>
-    <div id="app"></div>
+  <body class="m-0 min-w-80 bg-neutral-900 text-white/87 antialiased">
+    <div id="app" class="mx-auto max-w-xs p-6 text-center">
+      <div class="flex justify-center gap-4">
+        <a href="https://wxt.dev" target="_blank">
+          <img
+            src="/wxt.svg"
+            class="h-16 transition-all hover:drop-shadow-[0_0_2em_#54bc4ae0]"
+            alt="WXT logo"
+          />
+        </a>
+      </div>
+      <h1 class="mt-4 text-2xl font-bold">Yubal Extension</h1>
+      <div class="mt-4">
+        <button
+          id="counter"
+          type="button"
+          class="cursor-pointer rounded-lg border border-transparent bg-neutral-800 px-4 py-2 font-medium transition-colors hover:border-indigo-400"
+        ></button>
+      </div>
+      <p class="mt-4 text-sm text-neutral-400">WXT + TailwindCSS</p>
+    </div>
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
