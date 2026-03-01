@@ -3,7 +3,7 @@
 from typing import Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel, Field, WithJsonSchema
-from yubal import AudioCodec, is_supported_url
+from yubal import is_supported_url
 
 from yubal_api.domain.job import Job
 
@@ -40,10 +40,6 @@ class CreateJobRequest(BaseModel):
             "https://music.youtube.com/playlist?list=OLAK5uy_...",
             "https://www.youtube.com/watch?v=VIDEO_ID",
         ],
-    )
-    audio_format: AudioCodec | None = Field(
-        default=None,
-        description="Audio format for downloads. Uses server default if not set.",
     )
     max_items: int | None = Field(
         default=None,

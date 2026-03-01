@@ -435,8 +435,6 @@ export interface components {
              * @example https://www.youtube.com/watch?v=VIDEO_ID
              */
             url: string;
-            /** @description Audio format for downloads. Uses server default if not set. */
-            audio_format?: components["schemas"]["AudioCodec"] | null;
             /**
              * Max Items
              * @description Maximum number of tracks to download
