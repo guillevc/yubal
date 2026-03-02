@@ -1,3 +1,5 @@
+## Test URLs
+
 | Kind  | Description                       | URL                                                                               |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------- |
 | OLAK  | Top songs playlist                | https://music.youtube.com/playlist?list=OLAK5uy_meFrWp55M2SJ6yzAtKBPF1Uq_viHSihmE |
@@ -14,6 +16,15 @@
 | Video | UGC                               | https://www.youtube.com/watch?v=jNQXAC9IVRw                                       |
 | Video | OMV                               | https://music.youtube.com/watch?v=Lw2J5rZ8kvM                                     |
 | Video | OMV (no ATV match)                | https://www.youtube.com/watch?v=-HJ0ZGkdlTk                                       |
-|       |                                   |                                                                                   |
-|       |                                   |                                                                                   |
-|       |                                   |                                                                                   |
+
+## Supported URLs
+
+| Domain           | Downloaded content | URL path            | Example URL                                                                           |
+| ---------------- | ------------------ | ------------------- | ------------------------------------------------------------------------------------- |
+| (\*.)youtube.com | Album/Playlist     | /playlist           | https://music.youtube.com/playlist?list=OLAK5uy_kxotrr0UBs54oag6GEmyYhZHfylB4I3To     |
+| (\*.)youtube.com | Album/Playlist     | /watch?v={}&list={} | https://music.youtube.com/watch?v=Tdv8XKco7PY&list=PLbE6wFkAlDUer3k6jGlQtV-4Sn5g-XhDv |
+| (\*.)youtube.com | Track              | /watch?v={}         | https://youtube.com/watch?v=psG9hPSkqJg                                               |
+| (\*.)youtube.com | N/A                | /                   | https://www.youtube.com/                                                              |
+| (\*.)youtube.com | N/A                | /channel/{}         | https://www.youtube.com/channel/UCfIXdjDQH9Fau7y99_Orpjw                              |
+
+Anything that is not `/playlist` or `/watch`, N/A.
