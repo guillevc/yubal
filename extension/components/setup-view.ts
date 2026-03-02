@@ -119,13 +119,29 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
       const row = "inline-flex items-center gap-2 [&>svg]:size-[18px]";
       switch (testPhase.val) {
         case "idle":
-          return van.tags.span({ class: row }, rawHtml(WIFI_ICON), " Test connection");
+          return van.tags.span(
+            { class: row },
+            rawHtml(WIFI_ICON),
+            " Test connection",
+          );
         case "loading":
-          return van.tags.span({ class: row }, rawHtml(WIFI_ICON), " Connecting...");
+          return van.tags.span(
+            { class: row },
+            rawHtml(WIFI_ICON),
+            " Connecting...",
+          );
         case "success":
-          return van.tags.span({ class: row }, rawHtml(CIRCLE_CHECK_ICON), " Connected!");
+          return van.tags.span(
+            { class: row },
+            rawHtml(CIRCLE_CHECK_ICON),
+            " Connected!",
+          );
         case "error":
-          return van.tags.span({ class: row }, rawHtml(WIFI_ICON), ` ${testErrorMsg.val}`);
+          return van.tags.span(
+            { class: row },
+            rawHtml(WIFI_ICON),
+            ` ${testErrorMsg.val}`,
+          );
       }
     },
   );

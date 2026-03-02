@@ -27,8 +27,7 @@ async function main() {
   if (!isYouTubeUrl(tabUrl)) {
     navigate(
       NotYouTubeView({
-        onSettings: () =>
-          navigate(SetupView({ showBack: true, onBack: main })),
+        onSettings: () => navigate(SetupView({ showBack: true, onBack: main })),
       }),
     );
     return;

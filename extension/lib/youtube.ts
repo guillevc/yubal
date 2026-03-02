@@ -31,13 +31,13 @@ export async function extractTrackInfo(tabId: number): Promise<TrackInfo> {
 
         // YouTube Music
         const ytmTitle = document.querySelector<HTMLElement>(
-          "ytmusic-player-bar .title"
+          "ytmusic-player-bar .title",
         );
         if (ytmTitle?.textContent) {
           title = ytmTitle.textContent.trim();
           // Byline contains "Artist1, Artist2 • 3m views • 62k likes"
           const byline = document.querySelector<HTMLElement>(
-            "ytmusic-player-bar .byline"
+            "ytmusic-player-bar .byline",
           );
           if (byline?.textContent) {
             artist = byline.textContent.split("•")[0].trim() || null;
@@ -47,12 +47,12 @@ export async function extractTrackInfo(tabId: number): Promise<TrackInfo> {
 
         // Regular YouTube
         const ytTitle = document.querySelector<HTMLElement>(
-          "ytd-watch-metadata h1, #above-the-fold #title h1"
+          "ytd-watch-metadata h1, #above-the-fold #title h1",
         );
         if (ytTitle?.textContent) {
           title = ytTitle.textContent.trim();
           const channel = document.querySelector<HTMLElement>(
-            "ytd-watch-metadata ytd-channel-name a, #owner #channel-name a"
+            "ytd-watch-metadata ytd-channel-name a, #owner #channel-name a",
           );
           if (channel?.textContent) {
             artist = channel.textContent.trim() || null;

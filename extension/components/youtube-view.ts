@@ -68,7 +68,8 @@ export async function YouTubeView({
     onClick: async () => {
       const res = await createJob(baseUrl, tabUrl);
       if (res.ok) return { status: "success" };
-      if (res.status === 409) return { status: "success", text: "Already downloading" };
+      if (res.status === 409)
+        return { status: "success", text: "Already downloading" };
       return { status: "error" };
     },
   });
@@ -85,7 +86,8 @@ export async function YouTubeView({
       onClick: async () => {
         const res = await createSubscription(baseUrl, tabUrl);
         if (res.ok) return { status: "success" };
-        if (res.status === 409) return { status: "success", text: "Already subscribed" };
+        if (res.status === 409)
+          return { status: "success", text: "Already subscribed" };
         return { status: "error" };
       },
     });

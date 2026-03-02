@@ -5,9 +5,7 @@ const { button, span: spanTag } = van.tags;
 
 type ButtonPhase = "idle" | "loading" | "success" | "error";
 
-type ClickResult =
-  | { status: "success"; text?: string }
-  | { status: "error" };
+type ClickResult = { status: "success"; text?: string } | { status: "error" };
 
 interface ActionButtonProps {
   icon?: string;
