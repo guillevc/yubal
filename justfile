@@ -17,6 +17,9 @@ alias p := prod
 alias b := build
 alias doc := docs-serve
 
+# Browser extension
+mod ext 'extension'
+
 # Install (frozen lockfiles for CI)
 [group('setup')]
 [doc("Install all dependencies (frozen)")]

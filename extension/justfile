@@ -1,0 +1,98 @@
+set dotenv-load
+
+# Aliases
+alias d := dev
+alias l := lint
+alias f := format
+alias b := build
+alias t := typecheck
+
+# Setup
+[group('setup')]
+[doc("Install dependencies (frozen)")]
+install:
+    bun install --frozen-lockfile
+
+[group('setup')]
+[doc("Sync dependencies")]
+sync:
+    bun install
+
+[group('setup')]
+[doc("Upgrade dependencies")]
+upgrade:
+    bun update
+
+[group('setup')]
+[doc("Upgrade all deps to latest")]
+upgrade-yolo:
+    bunx npm-check-updates -u
+    bun install
+
+# Dev
+[group('dev')]
+[doc("Start dev server")]
+dev:
+    bun run dev
+
+[group('dev')]
+[doc("Start dev server (Firefox)")]
+dev-firefox:
+    bun run dev:firefox
+
+# Build
+[group('build')]
+[doc("Build extension")]
+build:
+    bun run build
+
+[group('build')]
+[doc("Build extension (Firefox)")]
+build-firefox:
+    bun run build:firefox
+
+[group('build')]
+[doc("Zip extension for distribution")]
+zip:
+    bun run zip
+
+# Lint
+[group('lint')]
+[doc("Lint")]
+lint:
+    bun run lint
+
+[group('lint')]
+[doc("Lint and fix")]
+lint-fix:
+    bun run lint:fix
+
+# Format
+[group('format')]
+[doc("Format")]
+format:
+    bun run format
+
+[group('format')]
+[doc("Check formatting")]
+format-check:
+    bun run format:check
+
+# Utils
+[group('utils')]
+[doc("Bump version, commit, and tag as ext-vVERSION")]
+[confirm]
+[script('bash')]
+version VERSION:
+    set -euo pipefail
+    npm pkg set version={{VERSION}}
+    bun install
+    git add package.json bun.lock
+    git commit -m "chore(extension): bump version to {{VERSION}}"
+    git tag ext-v{{VERSION}}
+
+# Typecheck
+[group('typecheck')]
+[doc("Typecheck")]
+typecheck:
+    bun run typecheck
