@@ -1,7 +1,7 @@
 import { healthCheck } from "@/lib/api";
 import { CIRCLE_CHECK_ICON, INFO_ICON, WIFI_ICON } from "@/lib/icons";
 import { rawHtml } from "@/lib/raw-html";
-import { yubalUrl } from "@/lib/storage";
+import { yubalUrl, yubalUrlDraft } from "@/lib/storage";
 import van from "vanjs-core";
 import { Header } from "./header";
 
@@ -44,11 +44,20 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
     class:
       "w-full rounded-lg border border-mist-700 bg-mist-900 px-3 py-2 font-mono text-sm text-mist-200 outline-none focus:border-primary-600",
     placeholder: "http://localhost:8642",
+    oninput: () => {
+      yubalUrlDraft.setValue((urlInput as HTMLInputElement).value);
+    },
   });
 
-  // Pre-fill if already configured
-  yubalUrl.getValue().then((v: string | null) => {
-    if (v) (urlInput as HTMLInputElement).value = v;
+  // Restore draft, then fall back to saved value
+  yubalUrlDraft.getValue().then((draft) => {
+    if (draft) {
+      (urlInput as HTMLInputElement).value = draft;
+    } else {
+      yubalUrl.getValue().then((v: string | null) => {
+        if (v) (urlInput as HTMLInputElement).value = v;
+      });
+    }
   });
 
   function getUrl() {
@@ -75,6 +84,7 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
           return;
         }
         await yubalUrl.setValue(value);
+        await yubalUrlDraft.removeValue();
         statusText.val = "Saved!";
         statusClass.val = "text-xs text-primary-600";
         onBack();
