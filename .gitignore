@@ -1,8 +1,6 @@
 /data/
 /config/
 /.env
-/.mcp.json
-/skills-lock.json
 
 /web/dist/
 /web/node_modules/
@@ -11,6 +9,8 @@ __pycache__/
 *.tsbuildinfo
 .coverage
 
+/CLAUDE.md
+/.mcp.json
+/skills-lock.json
 /.agents/
 /.claude/
-/CLAUDE.md
