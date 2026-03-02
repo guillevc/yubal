@@ -20,5 +20,8 @@
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3",
     "wxt": "^0.20.18"
+  },
+  "dependencies": {
+    "vanjs-core": "^1.6.0"
   }
 }

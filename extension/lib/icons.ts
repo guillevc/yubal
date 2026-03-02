@@ -1,5 +1,6 @@
 import arrowLeft from "lucide-static/icons/arrow-left.svg?raw";
 import circleCheck from "lucide-static/icons/circle-check.svg?raw";
+import download from "lucide-static/icons/download.svg?raw";
 import externalLink from "lucide-static/icons/external-link.svg?raw";
 import settings from "lucide-static/icons/settings.svg?raw";
 import wifi from "lucide-static/icons/wifi.svg?raw";
@@ -14,7 +15,8 @@ export const YUBAL_ICON = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 </svg>`;
 
 export const ARROW_LEFT_ICON = arrowLeft;
-export const SETTINGS_ICON = settings;
 export const CIRCLE_CHECK_ICON = circleCheck;
-export const WIFI_ICON = wifi;
+export const DOWNLOAD_ICON = download;
 export const EXTERNAL_LINK_ICON = externalLink;
+export const SETTINGS_ICON = settings;
+export const WIFI_ICON = wifi;
