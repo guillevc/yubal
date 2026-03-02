@@ -91,6 +91,11 @@ version VERSION:
     git commit -m "chore(extension): bump version to {{VERSION}}"
     git tag ext-v{{VERSION}}
 
+# CI
+[group('ci')]
+[doc("Run all checks")]
+check: format-check lint typecheck
+
 # Typecheck
 [group('typecheck')]
 [doc("Typecheck")]

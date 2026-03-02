@@ -15,10 +15,10 @@ export function isYouTubeUrl(url: string): boolean {
   }
 }
 
-export interface TrackInfo {
+export type TrackInfo = {
   title: string | null;
   artist: string | null;
-}
+};
 
 /** Extract the track title and artist from the active tab's DOM. */
 export async function extractTrackInfo(tabId: number): Promise<TrackInfo> {
@@ -68,7 +68,9 @@ export async function extractTrackInfo(tabId: number): Promise<TrackInfo> {
   }
 }
 
-export function getContentType(url: string): "track" | "playlist" | null {
+export type ContentType = "track" | "playlist";
+
+export function getContentType(url: string): ContentType | null {
   try {
     const u = new URL(url);
     const params = u.searchParams;
