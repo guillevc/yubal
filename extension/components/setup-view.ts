@@ -67,8 +67,9 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
   const saveBtn = button(
     {
       type: "button",
+      disabled: testDisabled,
       class:
-        "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-mist-950 transition-colors hover:bg-primary-700 [&>svg]:size-[18px]",
+        "w-full flex items-center justify-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-mist-950 transition-colors hover:bg-primary-700 disabled:opacity-50 [&>svg]:size-[18px]",
       onclick: async () => {
         const value = getUrl();
         if (!value) {
@@ -83,10 +84,10 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
           statusClass.val = "text-xs text-red-400";
           return;
         }
+        const ok = await testConnection(value);
+        if (!ok) return;
         await yubalUrl.setValue(value);
         await yubalUrlDraft.removeValue();
-        statusText.val = "Saved!";
-        statusClass.val = "text-xs text-primary-600";
         onBack();
       },
     },
@@ -95,6 +96,25 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
   );
 
   let resetTimer: ReturnType<typeof setTimeout> | undefined;
+
+  async function testConnection(value: string): Promise<boolean> {
+    if (resetTimer) clearTimeout(resetTimer);
+    testPhase.val = "loading";
+    const res = await healthCheck(value);
+    if (res.ok) {
+      testPhase.val = "success";
+      resetTimer = setTimeout(() => {
+        testPhase.val = "idle";
+      }, 2000);
+      return true;
+    }
+    testErrorMsg.val =
+      res.error === "network_error"
+        ? "Can't reach server"
+        : `Error: ${res.message}`;
+    testPhase.val = "error";
+    return false;
+  }
 
   const testBtn = button(
     {
@@ -108,21 +128,7 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
           statusClass.val = "text-xs text-red-400";
           return;
         }
-        if (resetTimer) clearTimeout(resetTimer);
-        testPhase.val = "loading";
-        const res = await healthCheck(value);
-        if (res.ok) {
-          testPhase.val = "success";
-          resetTimer = setTimeout(() => {
-            testPhase.val = "idle";
-          }, 2000);
-        } else {
-          testErrorMsg.val =
-            res.error === "network_error"
-              ? "Can't reach server"
-              : `Error: ${res.message}`;
-          testPhase.val = "error";
-        }
+        await testConnection(value);
       },
     },
     () => {

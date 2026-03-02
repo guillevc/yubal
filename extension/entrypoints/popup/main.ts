@@ -6,12 +6,14 @@ import { SetupView } from "@/components/setup-view";
 import { ConnectionErrorView } from "@/components/connection-error-view";
 import { NotYouTubeView } from "@/components/not-youtube-view";
 import { YouTubeView } from "@/components/youtube-view";
+import { Footer } from "@/components/footer";
 import { healthCheck } from "@/lib/api";
 
 const view = van.state<Element>(document.createElement("div"));
+const connected = van.state(false);
 
 const app = document.getElementById("app")!;
-van.add(app, () => view.val);
+van.add(app, () => view.val, Footer({ connected }));
 
 let navId = 0;
 
@@ -32,6 +34,7 @@ async function refresh() {
   if (id !== navId) return;
 
   if (!baseUrl) {
+    connected.val = false;
     goToSetup(false);
     return;
   }
@@ -42,9 +45,12 @@ async function refresh() {
   if (id !== navId) return;
 
   if (!health.ok) {
+    connected.val = false;
     view.val = ConnectionErrorView({ onSettings });
     return;
   }
+
+  connected.val = true;
 
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
   if (id !== navId) return;

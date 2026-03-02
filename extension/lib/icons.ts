@@ -2,6 +2,7 @@ export { default as ARROW_LEFT_ICON } from "lucide-static/icons/arrow-left.svg?r
 export { default as CIRCLE_CHECK_ICON } from "lucide-static/icons/circle-check.svg?raw";
 export { default as DOWNLOAD_ICON } from "lucide-static/icons/download.svg?raw";
 export { default as EXTERNAL_LINK_ICON } from "lucide-static/icons/external-link.svg?raw";
+export { default as GITHUB_ICON } from "lucide-static/icons/github.svg?raw";
 export { default as GLOBE_X_ICON } from "lucide-static/icons/globe-x.svg?raw";
 export { default as HEADPHONE_OFF_ICON } from "lucide-static/icons/headphone-off.svg?raw";
 export { default as HEADPHONES_ICON } from "lucide-static/icons/headphones.svg?raw";
