@@ -54,7 +54,7 @@ export async function YouTubeView({
         class:
           "mx-4 mt-3 inline-block rounded-full bg-secondary-700/15 px-3 py-0.5 text-xs font-medium text-secondary-700",
       },
-      "Playlist / Album",
+      "Playlist",
     );
   }
 
@@ -62,14 +62,14 @@ export async function YouTubeView({
     icon: DOWNLOAD_ICON,
     label: "Download",
     successText: "Queued!",
-    errorText: "Failed \u2014 tap to retry",
+    errorText: "Failed \u2014 try again",
     style:
       "w-full flex items-center justify-center gap-2 rounded-lg text-sm bg-primary-600 px-4 py-2.5 font-semibold text-mist-950 transition-colors hover:bg-primary-700 disabled:opacity-50",
     onClick: async () => {
       const res = await createJob(baseUrl, tabUrl);
       if (res.ok) return { status: "success" };
       if (res.status === 409)
-        return { status: "success", text: "Already downloading" };
+        return { status: "success", text: "Already queued" };
       return { status: "error" };
     },
   });
@@ -80,7 +80,7 @@ export async function YouTubeView({
     const subBtn = ActionButton({
       label: "Subscribe",
       successText: "Subscribed!",
-      errorText: "Failed \u2014 tap to retry",
+      errorText: "Failed \u2014 try again",
       style:
         "w-full flex items-center justify-center gap-2 text-sm rounded-lg border font-semibold border-mist-700 bg-mist-800 px-4 py-2.5 text-mist-200 transition-colors hover:border-mist-600 disabled:opacity-50",
       onClick: async () => {

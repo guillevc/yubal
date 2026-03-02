@@ -1,11 +1,11 @@
-import van from "vanjs-core";
-import { CIRCLE_CHECK_ICON, WIFI_ICON } from "@/lib/icons";
-import { yubalUrl } from "@/lib/storage";
 import { healthCheck } from "@/lib/api";
+import { CIRCLE_CHECK_ICON, INFO_ICON, WIFI_ICON } from "@/lib/icons";
 import { rawHtml } from "@/lib/raw-html";
+import { yubalUrl } from "@/lib/storage";
+import van from "vanjs-core";
 import { Header } from "./header";
 
-const { div, h1, p, input, button } = van.tags;
+const { div, h1, p, label, span, input, button } = van.tags;
 
 type TestPhase = "idle" | "loading" | "success" | "error";
 
@@ -63,14 +63,14 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
       onclick: async () => {
         const value = getUrl();
         if (!value) {
-          statusText.val = "URL is required";
+          statusText.val = "Enter a server URL";
           statusClass.val = "text-xs text-red-400";
           return;
         }
         try {
           new URL(value);
         } catch {
-          statusText.val = "Invalid URL format";
+          statusText.val = "Not a valid URL";
           statusClass.val = "text-xs text-red-400";
           return;
         }
@@ -81,7 +81,7 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
       },
     },
     rawHtml(CIRCLE_CHECK_ICON),
-    " Save Configuration",
+    " Save",
   );
 
   let resetTimer: ReturnType<typeof setTimeout> | undefined;
@@ -94,7 +94,7 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
       onclick: async () => {
         const value = getUrl();
         if (!value) {
-          statusText.val = "Enter a URL first";
+          statusText.val = "Enter a server URL first";
           statusClass.val = "text-xs text-red-400";
           return;
         }
@@ -109,7 +109,7 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
         } else {
           testErrorMsg.val =
             res.error === "network_error"
-              ? "Could not connect"
+              ? "Can't reach server"
               : `Error: ${res.message}`;
           testPhase.val = "error";
         }
@@ -122,7 +122,7 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
           return van.tags.span(
             { class: row },
             rawHtml(WIFI_ICON),
-            " Test connection",
+            " Test Connection",
           );
         case "loading":
           return van.tags.span(
@@ -152,13 +152,25 @@ export function SetupView({ showBack, onBack }: SetupViewProps) {
       { class: "p-4 flex flex-col gap-4" },
       div(
         { class: "flex flex-col gap-1" },
-        h1({ class: "text-base font-semibold" }, "Connect to Server"),
+        h1({ class: "text-base font-semibold" }, "Server Setup"),
         p(
           { class: "text-sm text-mist-400" },
-          "Enter your self-hosted yubal server URL to start downloading tracks directly from your browser.",
+          "Connect to your yubal server to start downloading tracks.",
         ),
       ),
-      urlInput,
+      div(
+        { class: "flex flex-col gap-1.5" },
+        label({ class: "text-sm font-medium text-mist-200" }, "Server URL"),
+        urlInput,
+        span(
+          {
+            class:
+              "inline-flex items-center gap-1 text-xs text-mist-500 [&>svg]:size-3 [&>svg]:shrink-0",
+          },
+          rawHtml(INFO_ICON),
+          "Runs on port 8000 by default",
+        ),
+      ),
       () => p({ class: statusClass.val }, statusText.val),
       div({ class: "flex flex-col gap-2" }, saveBtn, testBtn),
     ),
