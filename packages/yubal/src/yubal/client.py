@@ -138,12 +138,12 @@ class YTMusicClient:
         except YTMusicError as e:
             logger.warning("YTMusic error for playlist %s: %s", playlist_id, e)
             raise UpstreamAPIError(f"Failed to fetch playlist: {e}") from e
-        except KeyError as e:
+        except (KeyError, TypeError) as e:
             error_msg = str(e)
             logger.warning("Missing data in playlist response %s: %s", playlist_id, e)
 
             # Check if YouTube returned a "Sign in" page (auth failure)
-            if self._is_sign_in_response(error_msg):
+            if isinstance(e, KeyError) and self._is_sign_in_response(error_msg):
                 raise AuthenticationRequiredError(
                     "Authentication failed. YouTube returned a 'Sign in' page instead "
                     "of playlist data. Your cookies may be invalid, expired, or from "

@@ -70,6 +70,7 @@ class Playlist(YTMusicModel):
         default_factory=list, alias="unavailable_tracks"
     )
     author: Artist | None = None  # Channel/creator name
+    year: str | None = None
 
     @property
     def unavailable_count(self) -> int:

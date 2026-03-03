@@ -1,13 +1,14 @@
 import "@/assets/index.css";
 import van from "vanjs-core";
 import { yubalUrl, yubalUrlDraft } from "@/lib/storage";
-import { isYouTubeUrl, getContentType } from "@/lib/youtube";
+import { isYouTubeUrl } from "@/lib/youtube";
 import { SetupPage } from "@/components/setup-page";
 import { ConnectionErrorPage } from "@/components/connection-error-page";
 import { UnsupportedUrlPage } from "@/components/unsupported-url-page";
+import { LoadingPage } from "@/components/loading-page";
 import { YouTubePage } from "@/components/youtube-page";
 import { Footer } from "@/components/footer";
-import { healthCheck } from "@/lib/api";
+import { healthCheck, getContentInfo } from "@/lib/api";
 
 const view = van.state<Element>(document.createElement("div"));
 const connected = van.state(false);
@@ -58,15 +59,27 @@ async function refresh() {
   const tab = tabs[0];
   const tabUrl = tab?.url ?? "";
 
-  if (!isYouTubeUrl(tabUrl) || !getContentType(tabUrl)) {
+  if (!isYouTubeUrl(tabUrl)) {
     view.val = UnsupportedUrlPage({ onSettings });
     return;
   }
 
-  const el = await YouTubePage({ baseUrl, tab, onSettings });
+  view.val = LoadingPage({ onSettings });
+
+  const info = await getContentInfo(baseUrl, tabUrl);
   if (id !== navId) return;
 
-  view.val = el;
+  if (!info.ok) {
+    view.val = UnsupportedUrlPage({ onSettings });
+    return;
+  }
+
+  view.val = YouTubePage({
+    baseUrl,
+    tabUrl,
+    contentInfo: info.data,
+    onSettings,
+  });
 }
 
 async function init() {

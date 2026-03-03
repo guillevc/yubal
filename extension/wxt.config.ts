@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: {
     name: "Yubal",
     description: "Queue YouTube content to your yubal instance",
-    permissions: ["storage", "activeTab", "scripting"],
+    permissions: ["storage", "activeTab"],
     browser_specific_settings: {
       gecko: {
         id: "yubal@guillevc.xyz",

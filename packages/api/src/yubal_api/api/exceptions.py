@@ -139,6 +139,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         AuthenticationRequiredError,
         PlaylistNotFoundError,
         PlaylistParseError,
+        TrackNotFoundError,
         UnsupportedPlaylistError,
         UpstreamAPIError,
     )
@@ -146,6 +147,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     # Map yubal core exceptions to HTTP responses
     _CORE_EXCEPTION_MAP: dict[type[Exception], tuple[int, str]] = {
         PlaylistNotFoundError: (404, "playlist_not_found"),
+        TrackNotFoundError: (404, "track_not_found"),
         AuthenticationRequiredError: (401, "authentication_required"),
         PlaylistParseError: (422, "playlist_parse_error"),
         UnsupportedPlaylistError: (422, "unsupported_playlist"),

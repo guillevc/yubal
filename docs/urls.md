@@ -21,7 +21,7 @@
 
 | Domain           | Downloaded content | URL path            | Example URL                                                                           |
 | ---------------- | ------------------ | ------------------- | ------------------------------------------------------------------------------------- |
-| (\*.)youtube.com | Album/Playlist     | /playlist           | https://music.youtube.com/playlist?list=OLAK5uy_kxotrr0UBs54oag6GEmyYhZHfylB4I3To     |
+| (\*.)youtube.com | Album/Playlist     | /playlist           | https://music.youtube.com/playlist?list=OLAK5uy_m0Ye5titJYUtPwc3RZUwl5iXJ60NUJLEg     |
 | (\*.)youtube.com | Album/Playlist     | /watch?v={}&list={} | https://music.youtube.com/watch?v=Tdv8XKco7PY&list=PLbE6wFkAlDUer3k6jGlQtV-4Sn5g-XhDv |
 | (\*.)youtube.com | Track              | /watch?v={}         | https://youtube.com/watch?v=psG9hPSkqJg                                               |
 | (\*.)youtube.com | N/A                | /                   | https://www.youtube.com/                                                              |

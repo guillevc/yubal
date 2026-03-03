@@ -51,3 +51,18 @@ export function createSubscription(baseUrl: string, tabUrl: string) {
 export function healthCheck(baseUrl: string) {
   return request(`${baseUrl}/api/health`);
 }
+
+export type ContentInfo = {
+  title: string;
+  artist: string;
+  kind: "album" | "playlist" | "track";
+  year: number | null;
+  track_count: number | null;
+  thumbnail_url: string | null;
+};
+
+export function getContentInfo(baseUrl: string, url: string) {
+  return request<ContentInfo>(
+    `${baseUrl}/api/info?url=${encodeURIComponent(url)}`,
+  );
+}

@@ -1,75 +1,78 @@
-import { createJob, createSubscription } from "@/lib/api";
+import { type ContentInfo, createJob, createSubscription } from "@/lib/api";
 import { DOWNLOAD_ICON } from "@/lib/icons";
-import {
-  extractPlaylistInfo,
-  extractTrackInfo,
-  getContentType,
-} from "@/lib/youtube";
 import van from "vanjs-core";
 import { ActionButton } from "./action-button";
 import { Header } from "./header";
 
-const { div, h2, p, span } = van.tags;
+const { div, h2, img, p, span } = van.tags;
+
+const PILL_STYLES: Record<
+  ContentInfo["kind"],
+  { class: string; label: string }
+> = {
+  track: {
+    class:
+      "self-start rounded-full bg-primary-600/15 px-2.5 py-0.5 text-xs font-medium text-primary-600",
+    label: "Track",
+  },
+  playlist: {
+    class:
+      "self-start rounded-full bg-secondary-700/15 px-2.5 py-0.5 text-xs font-medium text-secondary-700",
+    label: "Playlist",
+  },
+  album: {
+    class:
+      "self-start rounded-full bg-secondary-700/15 px-2.5 py-0.5 text-xs font-medium text-secondary-700",
+    label: "Album",
+  },
+};
 
 interface YouTubePageProps {
   baseUrl: string;
-  tab: Browser.tabs.Tab;
+  tabUrl: string;
+  contentInfo: ContentInfo;
   onSettings: () => void;
 }
 
-export async function YouTubePage({
+export function YouTubePage({
   baseUrl,
-  tab,
+  tabUrl,
+  contentInfo,
   onSettings,
 }: YouTubePageProps) {
-  const tabUrl = tab.url ?? "";
-  const contentType = getContentType(tabUrl);
+  const { kind, title, artist, year, track_count, thumbnail_url } = contentInfo;
 
-  const isYouTubeMusic = new URL(tabUrl).hostname === "music.youtube.com";
+  const pillStyle = PILL_STYLES[kind];
+  const pill = span({ class: pillStyle.class }, pillStyle.label);
 
-  let displayTitle: string;
-  let artist: string | null = null;
-
-  if (isYouTubeMusic && tab.id != null) {
-    if (contentType === "playlist") {
-      const info = await extractPlaylistInfo(tab.id);
-      displayTitle = info.title ?? tab.title ?? "Untitled";
-    } else {
-      const info = await extractTrackInfo(tab.id);
-      displayTitle = info.title ?? "Untitled";
-      artist = info.artist;
-    }
-  } else {
-    displayTitle = tab.title ?? "Untitled";
-  }
-
-  const title = h2(
-    { class: "px-4 pt-2 text-lg font-bold leading-snug line-clamp-3" },
-    displayTitle,
+  const titleSuffix = kind === "album" && year ? ` (${year})` : "";
+  const titleEl = h2(
+    { class: "text-sm font-bold leading-snug line-clamp-2" },
+    title + titleSuffix,
   );
 
-  const artistEl = artist
-    ? p({ class: "px-4 pt-0.5 text-sm text-mist-400 line-clamp-3" }, artist)
-    : null;
-
-  let pill: Element | null = null;
-  if (contentType === "track") {
-    pill = span(
-      {
-        class:
-          "mx-4 mt-3 inline-block rounded-full bg-primary-600/15 px-3 py-0.5 text-xs font-medium text-primary-600",
-      },
-      "Track",
-    );
-  } else if (contentType === "playlist") {
-    pill = span(
-      {
-        class:
-          "mx-4 mt-3 inline-block rounded-full bg-secondary-700/15 px-3 py-0.5 text-xs font-medium text-secondary-700",
-      },
-      "Playlist/Album",
-    );
+  const metaParts: string[] = [artist];
+  if (kind !== "track" && track_count != null) {
+    metaParts.push(`${track_count} tracks`);
   }
+  const metaEl = p(
+    { class: "text-xs text-mist-400 line-clamp-1" },
+    metaParts.join(" \u00b7 "),
+  );
+
+  const infoSection = div(
+    { class: "flex items-center gap-3.5 px-4 pt-3" },
+    ...(thumbnail_url
+      ? [
+          img({
+            src: thumbnail_url,
+            alt: "",
+            class: "size-16 shrink-0 rounded-lg object-cover",
+          }),
+        ]
+      : []),
+    div({ class: "flex min-w-0 flex-col gap-1" }, pill, titleEl, metaEl),
+  );
 
   const downloadBtn = ActionButton({
     icon: DOWNLOAD_ICON,
@@ -89,7 +92,7 @@ export async function YouTubePage({
 
   const buttons = [downloadBtn];
 
-  if (contentType === "playlist") {
+  if (kind !== "track") {
     const subBtn = ActionButton({
       label: "Subscribe",
       successText: "Subscribed!",
@@ -109,9 +112,7 @@ export async function YouTubePage({
 
   return div(
     Header({ onSettings }),
-    ...(pill ? [pill] : []),
-    title,
-    ...(artistEl ? [artistEl] : []),
+    infoSection,
     div({ class: "flex flex-col gap-2 p-4" }, ...buttons),
   );
 }
