@@ -1,10 +1,13 @@
-import van from "vanjs-core";
 import { createJob, createSubscription } from "@/lib/api";
 import { DOWNLOAD_ICON } from "@/lib/icons";
-import { extractTrackInfo } from "@/lib/youtube";
-import { getContentType } from "@/lib/youtube";
-import { Header } from "./header";
+import {
+  extractPlaylistInfo,
+  extractTrackInfo,
+  getContentType,
+} from "@/lib/youtube";
+import van from "vanjs-core";
 import { ActionButton } from "./action-button";
+import { Header } from "./header";
 
 const { div, h2, p, span } = van.tags;
 
@@ -22,21 +25,31 @@ export async function YouTubeView({
   const tabUrl = tab.url ?? "";
   const contentType = getContentType(tabUrl);
 
-  const info =
-    tab.id != null
-      ? await extractTrackInfo(tab.id)
-      : { title: null, artist: null };
+  const isYouTubeMusic = new URL(tabUrl).hostname === "music.youtube.com";
+
+  let displayTitle: string;
+  let artist: string | null = null;
+
+  if (isYouTubeMusic && tab.id != null) {
+    if (contentType === "playlist") {
+      const info = await extractPlaylistInfo(tab.id);
+      displayTitle = info.title ?? tab.title ?? "Untitled";
+    } else {
+      const info = await extractTrackInfo(tab.id);
+      displayTitle = info.title ?? "Untitled";
+      artist = info.artist;
+    }
+  } else {
+    displayTitle = tab.title ?? "Untitled";
+  }
 
   const title = h2(
     { class: "px-4 pt-2 text-lg font-bold leading-snug line-clamp-2" },
-    info.title ?? tab.title ?? "Untitled",
+    displayTitle,
   );
 
-  const artistEl = info.artist
-    ? p(
-        { class: "px-4 pt-0.5 text-sm text-mist-400 line-clamp-2" },
-        info.artist,
-      )
+  const artistEl = artist
+    ? p({ class: "px-4 pt-0.5 text-sm text-mist-400 line-clamp-2" }, artist)
     : null;
 
   let pill: Element | null = null;
@@ -54,7 +67,7 @@ export async function YouTubeView({
         class:
           "mx-4 mt-3 inline-block rounded-full bg-secondary-700/15 px-3 py-0.5 text-xs font-medium text-secondary-700",
       },
-      "Playlist",
+      "Playlist/Album",
     );
   }
 

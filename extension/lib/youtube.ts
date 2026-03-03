@@ -68,17 +68,56 @@ export async function extractTrackInfo(tabId: number): Promise<TrackInfo> {
   }
 }
 
+export type PlaylistInfo = {
+  title: string | null;
+};
+
+/** Extract the playlist title from the active tab's DOM. */
+export async function extractPlaylistInfo(
+  tabId: number,
+): Promise<PlaylistInfo> {
+  try {
+    const [result] = await browser.scripting.executeScript({
+      target: { tabId },
+      func: (): PlaylistInfo => {
+        // Playlist page header
+        const header = document.querySelector<HTMLElement>(
+          [
+            "ytmusic-immersive-header-renderer .title",
+            "ytmusic-detail-header-renderer .title",
+            "ytmusic-responsive-header-renderer .title",
+          ].join(", "),
+        );
+        if (header?.textContent) {
+          return { title: header.textContent.trim() };
+        }
+        // Watch page queue panel — subtitle shows the playlist name
+        const queueSubtitle = document.querySelector<HTMLElement>(
+          "ytmusic-queue-header-renderer .subtitle",
+        );
+        if (queueSubtitle?.textContent) {
+          return { title: queueSubtitle.textContent.trim() };
+        }
+        return { title: null };
+      },
+    });
+    return (result?.result as PlaylistInfo) ?? { title: null };
+  } catch {
+    return { title: null };
+  }
+}
+
 export type ContentType = "track" | "playlist";
 
 export function getContentType(url: string): ContentType | null {
   try {
     const u = new URL(url);
     const params = u.searchParams;
-    if (params.has("list") || u.pathname.startsWith("/browse/")) {
+    if (u.pathname === "/playlist" && params.has("list")) {
       return "playlist";
     }
-    if (params.has("v")) {
-      return "track";
+    if (u.pathname === "/watch" && params.has("v")) {
+      return params.has("list") ? "playlist" : "track";
     }
     return null;
   } catch {

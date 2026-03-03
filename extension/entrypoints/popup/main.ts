@@ -1,7 +1,7 @@
 import "@/assets/index.css";
 import van from "vanjs-core";
 import { yubalUrl, yubalUrlDraft } from "@/lib/storage";
-import { isYouTubeUrl } from "@/lib/youtube";
+import { isYouTubeUrl, getContentType } from "@/lib/youtube";
 import { SetupView } from "@/components/setup-view";
 import { ConnectionErrorView } from "@/components/connection-error-view";
 import { NotYouTubeView } from "@/components/not-youtube-view";
@@ -58,7 +58,7 @@ async function refresh() {
   const tab = tabs[0];
   const tabUrl = tab?.url ?? "";
 
-  if (!isYouTubeUrl(tabUrl)) {
+  if (!isYouTubeUrl(tabUrl) || !getContentType(tabUrl)) {
     view.val = NotYouTubeView({ onSettings });
     return;
   }
