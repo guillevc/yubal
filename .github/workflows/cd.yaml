@@ -21,6 +21,7 @@ on:
       - "CLAUDE.md"
       - ".mcp.json"
       - ".claude/**"
+      - "extension/**"
 
 env:
   REGISTRY: ghcr.io

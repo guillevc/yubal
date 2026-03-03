@@ -7,8 +7,10 @@ permissions:
 on:
   push:
     branches: [master, next]
+    paths-ignore: ["extension/**"]
   pull_request:
     branches: [master, next]
+    paths-ignore: ["extension/**"]
 
 jobs:
   check:
