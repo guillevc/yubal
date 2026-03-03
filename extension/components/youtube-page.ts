@@ -11,17 +11,17 @@ import { Header } from "./header";
 
 const { div, h2, p, span } = van.tags;
 
-interface YouTubeViewProps {
+interface YouTubePageProps {
   baseUrl: string;
   tab: Browser.tabs.Tab;
   onSettings: () => void;
 }
 
-export async function YouTubeView({
+export async function YouTubePage({
   baseUrl,
   tab,
   onSettings,
-}: YouTubeViewProps) {
+}: YouTubePageProps) {
   const tabUrl = tab.url ?? "";
   const contentType = getContentType(tabUrl);
 
@@ -44,12 +44,12 @@ export async function YouTubeView({
   }
 
   const title = h2(
-    { class: "px-4 pt-2 text-lg font-bold leading-snug line-clamp-2" },
+    { class: "px-4 pt-2 text-lg font-bold leading-snug line-clamp-3" },
     displayTitle,
   );
 
   const artistEl = artist
-    ? p({ class: "px-4 pt-0.5 text-sm text-mist-400 line-clamp-2" }, artist)
+    ? p({ class: "px-4 pt-0.5 text-sm text-mist-400 line-clamp-3" }, artist)
     : null;
 
   let pill: Element | null = null;

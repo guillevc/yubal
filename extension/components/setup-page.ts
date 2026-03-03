@@ -9,12 +9,12 @@ const { div, h1, p, label, span, input, button } = van.tags;
 
 type TestPhase = "idle" | "loading" | "success" | "error";
 
-interface SetupViewProps {
+interface SetupPageProps {
   showBack: boolean;
   onBack: () => void;
 }
 
-export function SetupView({ showBack, onBack }: SetupViewProps) {
+export function SetupPage({ showBack, onBack }: SetupPageProps) {
   const statusText = van.state("");
   const statusClass = van.state("text-xs empty:hidden");
   const testPhase = van.state<TestPhase>("idle");

@@ -5,11 +5,11 @@ import { Header } from "./header";
 
 const { div, h1, p, button } = van.tags;
 
-interface ConnectionErrorViewProps {
+interface ConnectionErrorPageProps {
   onSettings: () => void;
 }
 
-export function ConnectionErrorView({ onSettings }: ConnectionErrorViewProps) {
+export function ConnectionErrorPage({ onSettings }: ConnectionErrorPageProps) {
   return div(
     Header({ onSettings }),
     div(

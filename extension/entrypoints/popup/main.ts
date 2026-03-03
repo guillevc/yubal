@@ -2,10 +2,10 @@ import "@/assets/index.css";
 import van from "vanjs-core";
 import { yubalUrl, yubalUrlDraft } from "@/lib/storage";
 import { isYouTubeUrl, getContentType } from "@/lib/youtube";
-import { SetupView } from "@/components/setup-view";
-import { ConnectionErrorView } from "@/components/connection-error-view";
-import { NotYouTubeView } from "@/components/not-youtube-view";
-import { YouTubeView } from "@/components/youtube-view";
+import { SetupPage } from "@/components/setup-page";
+import { ConnectionErrorPage } from "@/components/connection-error-page";
+import { UnsupportedUrlPage } from "@/components/unsupported-url-page";
+import { YouTubePage } from "@/components/youtube-page";
 import { Footer } from "@/components/footer";
 import { healthCheck } from "@/lib/api";
 
@@ -18,7 +18,7 @@ van.add(app, () => view.val, Footer({ connected }));
 let navId = 0;
 
 function goToSetup(showBack: boolean) {
-  view.val = SetupView({
+  view.val = SetupPage({
     showBack,
     onBack: () => {
       yubalUrlDraft.removeValue();
@@ -46,7 +46,7 @@ async function refresh() {
 
   if (!health.ok) {
     connected.val = false;
-    view.val = ConnectionErrorView({ onSettings });
+    view.val = ConnectionErrorPage({ onSettings });
     return;
   }
 
@@ -59,11 +59,11 @@ async function refresh() {
   const tabUrl = tab?.url ?? "";
 
   if (!isYouTubeUrl(tabUrl) || !getContentType(tabUrl)) {
-    view.val = NotYouTubeView({ onSettings });
+    view.val = UnsupportedUrlPage({ onSettings });
     return;
   }
 
-  const el = await YouTubeView({ baseUrl, tab, onSettings });
+  const el = await YouTubePage({ baseUrl, tab, onSettings });
   if (id !== navId) return;
 
   view.val = el;
