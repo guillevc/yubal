@@ -1,0 +1,31 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+---
+name: extension-release
+
+on:
+  push:
+    tags: ["ext-v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+        working-directory: extension
+      - run: bun run zip
+        working-directory: extension
+      - run: bun run zip:firefox
+        working-directory: extension
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#ext-}" >> "$GITHUB_OUTPUT"
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: "Extension ${{ steps.version.outputs.version }}"
+          files: extension/.output/*.zip
