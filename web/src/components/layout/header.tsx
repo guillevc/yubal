@@ -57,7 +57,7 @@ export function Header() {
       isMenuOpen={isMenuOpen}
       onMenuOpenChange={setIsMenuOpen}
       classNames={{
-        wrapper: "max-w-4xl",
+        wrapper: "max-w-5xl",
         brand: "grow-0",
       }}
     >

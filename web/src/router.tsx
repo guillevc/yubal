@@ -28,7 +28,7 @@ function RootLayout() {
       <ToastProvider />
       <div className="flex min-h-screen flex-col">
         <Header />
-        <main className="m-auto w-full max-w-4xl flex-1 px-4 py-6">
+        <main className="m-auto w-full max-w-5xl flex-1 px-4 py-6">
           <Outlet />
         </main>
         <Footer />
