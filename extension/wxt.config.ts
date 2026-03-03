@@ -13,8 +13,10 @@ export default defineConfig({
     developmentIndicator: false,
   },
   manifest: {
-    name: "Yubal",
-    description: "Queue YouTube content to your yubal instance",
+    name: "yubal companion extension",
+    short_name: "yubal",
+    description: "Send YouTube URLs to your yubal instance",
+    homepage_url: "https://yubal.guillevc.dev",
     permissions: ["storage", "activeTab", "tabs"],
     browser_specific_settings: {
       gecko: {
