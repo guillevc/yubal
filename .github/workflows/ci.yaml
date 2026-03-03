@@ -17,6 +17,8 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: jdx/mise-action@v3
+        env:
+          MISE_ENV: ci
         with:
           version: 2026.1.3
 

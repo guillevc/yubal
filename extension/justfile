@@ -56,6 +56,11 @@ build-firefox:
 zip:
     bun run zip
 
+[group('build')]
+[doc("Zip extension for distribution (Firefox)")]
+zip-firefox:
+    bun run zip:firefox
+
 # Lint
 [group('lint')]
 [doc("Lint")]
