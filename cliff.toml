@@ -33,6 +33,8 @@ commit_parsers = [
   { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
   { message = "^style", group = "<!-- 5 -->🎨 Styling" },
   { message = "^test", group = "<!-- 6 -->🧪 Testing" },
+  { scope = "extension", skip = true },
+  { scope = "ext", skip = true },
   { message = "^chore\\(release\\): prepare for", skip = true },
   { message = "^chore\\(deps.*\\)", skip = true },
   { message = "^chore\\(pr\\)", skip = true },

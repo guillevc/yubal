@@ -45,6 +45,10 @@ jobs:
           fi
         env:
           GIT_CLIFF_OUTPUT: CHANGES.md
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: extension/.output/*.zip
       - name: Create draft release
         uses: softprops/action-gh-release@v2
         with:
@@ -52,7 +56,3 @@ jobs:
           name: "Extension ${{ steps.version.outputs.version }}"
           body_path: CHANGES.md
           files: extension/.output/*.zip
-      - name: Attest build provenance
-        uses: actions/attest-build-provenance@v2
-        with:
-          subject-path: extension/.output/*.zip
