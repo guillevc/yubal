@@ -65,7 +65,7 @@ class TestExecutorTimeout:
         """Timeout should mark job FAILED and trigger cancel token."""
 
         def blocking_run(*_args: Any, **_kwargs: Any) -> SyncResult:
-            time.sleep(10)
+            time.sleep(0.5)
             return SyncResult(success=True)
 
         monkeypatch.setattr(
