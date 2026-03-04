@@ -28,11 +28,27 @@ jobs:
       - name: Extract version
         id: version
         run: echo "version=${GITHUB_REF_NAME#ext-}" >> "$GITHUB_OUTPUT"
+      - name: Find previous extension tag
+        id: prev-tag
+        run: |
+          prev=$(git tag --list 'ext-v*' --sort=-version:refname | grep -v "^$GITHUB_REF_NAME$" | head -1)
+          echo "tag=${prev:-none}" >> "$GITHUB_OUTPUT"
+      - name: Generate changelog
+        run: |
+          git cliff --config extension/cliff.toml --tag "$GITHUB_REF_NAME" --latest --strip all
+          prev="${{ steps.prev-tag.outputs.tag }}"
+          if [ "$prev" != "none" ]; then
+            echo "" >> CHANGES.md
+            echo "**Full diff**: [\`${prev}...${GITHUB_REF_NAME}\`](https://github.com/${{ github.repository }}/compare/${prev}...${GITHUB_REF_NAME})" >> CHANGES.md
+          fi
+        env:
+          GIT_CLIFF_OUTPUT: CHANGES.md
       - name: Create draft release
         uses: softprops/action-gh-release@v2
         with:
           draft: true
           name: "Extension ${{ steps.version.outputs.version }}"
+          body_path: CHANGES.md
           files: extension/.output/*.zip
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
