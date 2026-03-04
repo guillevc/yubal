@@ -14,7 +14,7 @@
         "eslint": "^10.0.2",
         "eslint-config-prettier": "^10.1.8",
         "globals": "^17.4.0",
-        "lucide-static": "^0.575.0",
+        "lucide-static": "^0.577.0",
         "prettier": "^3.8.1",
         "prettier-plugin-tailwindcss": "^0.7.2",
         "tailwindcss": "^4.2.1",
@@ -725,7 +725,7 @@
 
     "log-update": ["log-update@6.1.0", "", { "dependencies": { "ansi-escapes": "^7.0.0", "cli-cursor": "^5.0.0", "slice-ansi": "^7.1.0", "strip-ansi": "^7.1.0", "wrap-ansi": "^9.0.0" } }, "sha512-9ie8ItPR6tjY5uYJh8K/Zrv/RMZ5VOlOWvtZdEHYSTFKZfIBPQa9tOAEeAWhd+AnIneLJ22w5fjOYtoutpWq5w=="],
 
-    "lucide-static": ["lucide-static@0.575.0", "", {}, "sha512-XbHfIufz9ZDW6iLjUphffUmcEWg6gLjufIQOb6heDjYZCRk+ePRbkp8Ax/Rq3Ek4OkT8tyBO/gTCOPDvFMuC4w=="],
+    "lucide-static": ["lucide-static@0.577.0", "", {}, "sha512-hx39J5Tq4JWF2ALY+5YRg+SxQLpeAmLJDXNcqiBJH/UuVwp43it9fyki/onZO7AVFgG5ZbB+fWwZR9mwGHE2XQ=="],
 
     "magic-string": ["magic-string@0.30.21", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.5" } }, "sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ=="],
 

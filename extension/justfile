@@ -1,5 +1,8 @@
 set dotenv-load
 
+default:
+    @just --list
+
 # Aliases
 alias d := dev
 alias l := lint
