@@ -43,7 +43,7 @@ export function SetupPage({ showBack, onBack }: SetupPageProps) {
     type: "url",
     class:
       "w-full rounded-lg border border-mist-700 bg-mist-900 px-3 py-2 font-mono text-sm text-mist-200 outline-none focus:border-primary-600",
-    placeholder: "http://localhost:8642",
+    placeholder: "http://localhost:8000",
     oninput: () => {
       yubalUrlDraft.setValue((urlInput as HTMLInputElement).value);
     },
@@ -184,7 +184,7 @@ export function SetupPage({ showBack, onBack }: SetupPageProps) {
               "inline-flex items-center gap-1 text-xs text-mist-500 [&>svg]:size-3 [&>svg]:shrink-0",
           },
           rawHtml(INFO_ICON),
-          "Runs on port 8000 by default",
+          "yubal runs on 8000 by default",
         ),
       ),
       () => p({ class: statusClass.val }, statusText.val),

@@ -1,64 +1,77 @@
-import { isYouTubeUrl } from "@/lib/youtube";
+import { isYouTubeMediaUrl } from "@/lib/youtube";
 
-const ICON_SIZES = [16, 32, 48, 128] as const;
-const COLORED_PATHS = Object.fromEntries(
-  ICON_SIZES.map((s) => [String(s), `icons/${s}.png`]),
-);
+const SIZES = [16, 32, 48, 128] as const;
 
-let inactiveCache: Record<string, ImageData> | null = null;
+// MV3 (Chrome) uses `action`, MV2 (Firefox) uses `browserAction`
+const actionApi = browser.action ?? browser.browserAction;
 
-async function getInactiveIcons(): Promise<Record<string, ImageData>> {
-  if (inactiveCache) return inactiveCache;
+const activeTabs = new Set<number>();
 
+async function buildGrayscaleIcons(): Promise<Record<string, ImageData>> {
   const entries = await Promise.all(
-    ICON_SIZES.map(async (size) => {
-      const resp = await fetch(browser.runtime.getURL(`/icons/${size}.png`));
-      const blob = await resp.blob();
-      const bmp = await createImageBitmap(blob);
+    SIZES.map(async (size) => {
+      const url = browser.runtime.getURL(`/icons/${size}.png`);
+      const resp = await fetch(url);
+      const bitmap = await createImageBitmap(await resp.blob());
       const canvas = new OffscreenCanvas(size, size);
       const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(bmp, 0, 0);
-      const img = ctx.getImageData(0, 0, size, size);
-      const d = img.data;
-      for (let i = 0; i < d.length; i += 4) {
+      ctx.drawImage(bitmap, 0, 0, size, size);
+      const imageData = ctx.getImageData(0, 0, size, size);
+
+      const { data } = imageData;
+      for (let i = 0; i < data.length; i += 4) {
         const gray = Math.round(
-          0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2],
+          0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2],
         );
-        d[i] = gray;
-        d[i + 1] = gray;
-        d[i + 2] = gray;
-        d[i + 3] = Math.round(d[i + 3] * 0.6);
+        data[i] = gray;
+        data[i + 1] = gray;
+        data[i + 2] = gray;
       }
-      return [String(size), img] as const;
+
+      return [String(size), imageData] as const;
     }),
   );
 
-  inactiveCache = Object.fromEntries(entries);
-  return inactiveCache;
+  return Object.fromEntries(entries);
+}
+
+function activeIconPaths(): Record<string, string> {
+  return Object.fromEntries(SIZES.map((s) => [String(s), `icons/${s}.png`]));
 }
 
 async function updateIcon(tabId: number): Promise<void> {
   try {
     const tab = await browser.tabs.get(tabId);
-    const active = tab.url ? isYouTubeUrl(tab.url) : false;
+    const isActive = tab.url ? isYouTubeMediaUrl(tab.url) : false;
+    const wasActive = activeTabs.has(tabId);
+    if (isActive === wasActive) return;
 
-    if (active) {
-      await browser.action.setIcon({ tabId, path: COLORED_PATHS });
+    if (isActive) {
+      activeTabs.add(tabId);
+      await actionApi.setIcon({ tabId, path: activeIconPaths() });
     } else {
-      const icons = await getInactiveIcons();
-      await browser.action.setIcon({
-        tabId,
-        imageData: icons as unknown as Record<string, ImageData>,
-      });
+      activeTabs.delete(tabId);
+      // Clear per-tab override so global grayscale default takes effect
+      await actionApi.setIcon({ tabId, path: {} });
     }
-  } catch {
-    // Tab may have been closed
+  } catch (err) {
+    console.error("updateIcon failed:", err);
   }
 }
 
 export default defineBackground(() => {
+  // Set grayscale as the global default icon so new/navigating tabs
+  // never flash the colored icon before our handler runs
+  buildGrayscaleIcons().then((imageData) => {
+    actionApi.setIcon({ imageData });
+  });
+
   browser.runtime.onInstalled.addListener(({ reason }) => {
     console.log("Yubal extension installed:", reason);
+  });
+
+  browser.tabs.onRemoved.addListener((tabId) => {
+    activeTabs.delete(tabId);
   });
 
   browser.tabs.onActivated.addListener(({ tabId }) => {

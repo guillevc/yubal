@@ -14,3 +14,16 @@ export function isYouTubeUrl(url: string): boolean {
     return false;
   }
 }
+
+/** Returns true if the URL points to a YouTube page with extractable media. */
+export function isYouTubeMediaUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (!SUPPORTED_HOSTS.has(u.hostname)) return false;
+    return (
+      u.pathname.startsWith("/watch") || u.pathname.startsWith("/playlist")
+    );
+  } catch {
+    return false;
+  }
+}
