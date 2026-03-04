@@ -43,8 +43,6 @@ async function updateIcon(tabId: number): Promise<void> {
   try {
     const tab = await browser.tabs.get(tabId);
     const isActive = tab.url ? isYouTubeMediaUrl(tab.url) : false;
-    const wasActive = activeTabs.has(tabId);
-    if (isActive === wasActive) return;
 
     if (isActive) {
       activeTabs.add(tabId);

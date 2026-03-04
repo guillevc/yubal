@@ -19,6 +19,7 @@ van.add(app, () => view.val, Footer({ connected }));
 let navId = 0;
 
 function goToSetup(showBack: boolean) {
+  navId++;
   view.val = SetupPage({
     showBack,
     onBack: () => {

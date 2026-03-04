@@ -22,6 +22,16 @@ class PlaylistMetadata:
     thumbnail_url: str | None
 
 
+@dataclass(frozen=True)
+class _Classification:
+    """Result of classifying a playlist as album or regular playlist."""
+
+    kind: ContentKind
+    year: int | None = None
+    artist: str | None = None
+    thumbnail_url: str | None = None
+
+
 class PlaylistInfoService:
     """Service to fetch playlist metadata from YouTube Music."""
 
@@ -87,52 +97,53 @@ class PlaylistInfoService:
         playlist_id = parse_playlist_id(url)
         playlist = self._client.get_playlist(playlist_id)
 
-        kind, year = self._classify_and_get_year(playlist)
+        cls = self._classify(playlist)
 
         return ContentInfo(
             title=playlist.title or "Unknown",
-            artist=playlist.author.name if playlist.author else "Unknown Artist",
-            year=year,
+            artist=cls.artist
+            or (playlist.author.name if playlist.author else "Unknown Artist"),
+            year=cls.year,
             track_count=len(playlist.tracks),
             playlist_id=playlist_id,
             url=url,
-            thumbnail_url=(
-                playlist.thumbnails[-1].url if playlist.thumbnails else None
-            ),
-            kind=kind,
+            thumbnail_url=cls.thumbnail_url
+            or (playlist.thumbnails[-1].url if playlist.thumbnails else None),
+            kind=cls.kind,
         )
 
-    def _classify_and_get_year(
-        self, playlist: Playlist
-    ) -> tuple[ContentKind, int | None]:
-        """Classify playlist as album or playlist and extract year if album.
+    def _classify(self, playlist: Playlist) -> "_Classification":
+        """Classify playlist as album or playlist and extract metadata.
 
         Uses the same logic as the regular extraction flow:
         1. All tracks must reference the same album ID
         2. The album must be fetchable
         3. The playlist must contain all album tracks
 
+        For confirmed albums, also extracts artist and thumbnail from the
+        album object (since album playlists have no author or thumbnails).
+
         Returns:
-            Tuple of (kind, year). Year is only set for confirmed albums.
+            Classification result with kind, year, artist, and thumbnail.
         """
         if not playlist.tracks:
-            return ContentKind.PLAYLIST, None
+            return _Classification(kind=ContentKind.PLAYLIST)
 
         # Check if all tracks reference the same album
         album_ids = {t.album.id for t in playlist.tracks if t.album and t.album.id}
         if len(album_ids) != 1:
-            return ContentKind.PLAYLIST, None
+            return _Classification(kind=ContentKind.PLAYLIST)
 
         album_id = next(iter(album_ids))
         try:
             album = self._client.get_album(album_id)
         except Exception:
             logger.debug("Could not fetch album %s for classification", album_id)
-            return ContentKind.PLAYLIST, None
+            return _Classification(kind=ContentKind.PLAYLIST)
 
         # Verify playlist contains all album tracks
         if len(playlist.tracks) != len(album.tracks):
-            return ContentKind.PLAYLIST, None
+            return _Classification(kind=ContentKind.PLAYLIST)
 
         year = None
         if album.year:
@@ -141,7 +152,15 @@ class PlaylistInfoService:
             except ValueError:
                 pass
 
-        return ContentKind.ALBUM, year
+        artist = album.artists[0].name if album.artists else None
+        thumbnail_url = album.thumbnails[-1].url if album.thumbnails else None
+
+        return _Classification(
+            kind=ContentKind.ALBUM,
+            year=year,
+            artist=artist,
+            thumbnail_url=thumbnail_url,
+        )
 
     def _get_track_content_info(self, video_id: str, url: str) -> ContentInfo:
         """Build ContentInfo from a single track URL."""

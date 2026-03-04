@@ -92,7 +92,7 @@ export function YouTubePage({
 
   const buttons = [downloadBtn];
 
-  if (kind !== "track") {
+  if (kind === "playlist") {
     const subBtn = ActionButton({
       label: "Subscribe",
       successText: "Subscribed!",
