@@ -1,5 +1,4 @@
 export function rawHtml(html: string): Element {
-  const t = document.createElement("template");
-  t.innerHTML = html.trim();
-  return t.content.firstElementChild!;
+  return new DOMParser().parseFromString(html.trim(), "text/html").body
+    .firstElementChild!;
 }

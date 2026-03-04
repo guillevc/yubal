@@ -21,6 +21,10 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         id: "yubal@guillevc.xyz",
+        data_collection_permissions: {
+          required: ["none"],
+          optional: [],
+        },
       },
     },
   },

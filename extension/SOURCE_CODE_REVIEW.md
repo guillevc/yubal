@@ -14,33 +14,37 @@ from the browser to a user-configured yubal server instance.
 - **UI**: [van.js](https://vanjs.org/) (minimal reactive UI library)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) v4
 
-Requires [Bun](https://bun.sh/) v1.3.6+.
+## Prerequisites
+
+- [Bun](https://bun.sh/) v1.3.6+ (preferred)
+- Or [Node.js](https://nodejs.org/) v22+ and npm v10+
 
 ## Build from Source
 
-From the `extension/` directory:
+From the root of the extracted sources:
+
+### Using Bun (preferred)
 
 ```sh
 # 1. Install dependencies
 bun install --frozen-lockfile
 
-# 2. Build for Chrome (Manifest V3)
-bun run build
-
-# 3. Build for Firefox
+# 2. Build for Firefox
 bun run build:firefox
 ```
 
-Build output is written to:
-
-- `.output/chrome-mv3/` — Chrome/Chromium build
-- `.output/firefox-mv2/` — Firefox build
-
-## Creating Distribution Zips
+### Using npm (alternative)
 
 ```sh
-bun run zip            # Chrome zip
-bun run zip:firefox    # Firefox zip
+# 1. Install dependencies
+npm install --legacy-peer-deps
+
+# 2. Build for Firefox
+npm run build:firefox
 ```
 
-Zips are written to `.output/`.
+## Build Output
+
+Build output is written to `.output/firefox-mv2/`.
+
+The generated files should match the contents of the submitted extension zip.
