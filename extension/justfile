@@ -61,6 +61,11 @@ zip:
 zip-firefox:
     bun run zip:firefox
 
+[group('build')]
+[doc("Remove build artifacts")]
+clean:
+    rm -rf .output .wxt stats.html stats-*.json
+
 # Lint
 [group('lint')]
 [doc("Lint")]

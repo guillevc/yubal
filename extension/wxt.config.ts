@@ -5,7 +5,7 @@ export default defineConfig({
   zip: {
     name: "yubal-extension",
     artifactTemplate: "{{name}}-{{packageVersion}}-{{browser}}.zip",
-    zipSources: false,
+    zipSources: true,
   },
   modules: ["@wxt-dev/auto-icons"],
   autoIcons: {
@@ -13,8 +13,7 @@ export default defineConfig({
     developmentIndicator: false,
   },
   manifest: {
-    name: "yubal companion extension",
-    short_name: "yubal",
+    name: "yubal",
     description: "Send YouTube URLs to your yubal instance",
     homepage_url: "https://yubal.guillevc.dev",
     permissions: ["storage", "activeTab", "tabs"],
