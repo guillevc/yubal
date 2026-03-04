@@ -21,6 +21,7 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         id: "yubal@guillevc.xyz",
+        // @ts-expect-error -- not yet in WXT's type definitions
         data_collection_permissions: {
           required: ["none"],
           optional: [],
