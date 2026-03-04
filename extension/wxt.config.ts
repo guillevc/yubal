@@ -5,6 +5,7 @@ export default defineConfig({
   zip: {
     name: "yubal-extension",
     artifactTemplate: "{{name}}-{{packageVersion}}-{{browser}}.zip",
+    sourcesTemplate: "{{name}}-{{packageVersion}}-sources.zip",
     zipSources: true,
   },
   modules: ["@wxt-dev/auto-icons"],
