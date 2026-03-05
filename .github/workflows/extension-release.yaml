@@ -45,10 +45,30 @@ jobs:
           fi
         env:
           GIT_CLIFF_OUTPUT: CHANGES.md
-      - name: Attest build provenance
+      - name: Attest Chrome zip
+        id: attest-chrome
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: extension/.output/*.zip
+          subject-path: extension/.output/*-chrome.zip
+      - name: Attest Firefox zip
+        id: attest-firefox
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: extension/.output/*-firefox.zip
+      - name: Attest sources zip
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: extension/.output/*-sources.zip
+      - name: Append attestation links to changelog
+        run: |
+          {
+            echo ""
+            echo "**Build attestations**:"
+            echo "- [Chrome zip](${{ steps.attest-chrome.outputs.attestation-url }})"
+            echo "- [Firefox zip](${{ steps.attest-firefox.outputs.attestation-url }})"
+            echo ""
+            echo "Verify locally: \`gh attestation verify <file> --repo ${{ github.repository }}\`"
+          } >> CHANGES.md
       - name: Create draft release
         uses: softprops/action-gh-release@v2
         with:
