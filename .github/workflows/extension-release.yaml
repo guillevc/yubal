@@ -61,13 +61,27 @@ jobs:
           subject-path: extension/.output/*-sources.zip
       - name: Append attestation links to changelog
         run: |
+          version="${GITHUB_REF_NAME#ext-}"
+          chrome="yubal-extension-${version}-chrome.zip"
+          firefox="yubal-extension-${version}-firefox.zip"
+          owner="${{ github.repository_owner }}"
           {
             echo ""
-            echo "**Build attestations**:"
-            echo "- [Chrome zip](${{ steps.attest-chrome.outputs.attestation-url }})"
-            echo "- [Firefox zip](${{ steps.attest-firefox.outputs.attestation-url }})"
+            echo "### Build attestations"
             echo ""
-            echo "Verify locally: \`gh attestation verify <file> --repo ${{ github.repository }}\`"
+            echo "Each zip is signed with [build provenance](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations/using-artifact-attestations-to-establish-provenance-for-builds) during CI."
+            echo ""
+            echo "| Artifact | Attestation |"
+            echo "| --- | --- |"
+            echo "| \`${chrome}\` | [view](${{ steps.attest-chrome.outputs.attestation-url }}) |"
+            echo "| \`${firefox}\` | [view](${{ steps.attest-firefox.outputs.attestation-url }}) |"
+            echo ""
+            echo "Verify with the [GitHub CLI](https://cli.github.com/):"
+            echo ""
+            echo "\`\`\`sh"
+            echo "gh attestation verify ${chrome} --owner ${owner}"
+            echo "gh attestation verify ${firefox} --owner ${owner}"
+            echo "\`\`\`"
           } >> CHANGES.md
       - name: Create draft release
         uses: softprops/action-gh-release@v2
