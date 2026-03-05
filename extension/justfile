@@ -104,6 +104,11 @@ version VERSION:
     git commit -m "chore(extension): bump version to {{VERSION}}"
     git tag ext-v{{VERSION}}
 
+[group('utils')]
+[doc("Preview changelog between two versions")]
+changelog from to:
+    git cliff --config cliff.toml ext-v{{from}}..ext-v{{to}}
+
 # CI
 [group('ci')]
 [doc("Run all checks")]

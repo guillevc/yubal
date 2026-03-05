@@ -25,7 +25,10 @@ trim = true
 [git]
 conventional_commits = true
 filter_unconventional = true
+tag_pattern = "^v[0-9]"
 commit_parsers = [
+  { message = "\\(extension\\)", skip = true },
+  { message = "\\(ext\\)", skip = true },
   { message = "^feat", group = "<!-- 0 -->🚀 Features" },
   { message = "^fix", group = "<!-- 1 -->🐛 Bug Fixes" },
   { message = "^doc", group = "<!-- 3 -->📚 Documentation" },
@@ -33,8 +36,6 @@ commit_parsers = [
   { message = "^refactor", group = "<!-- 2 -->🚜 Refactor" },
   { message = "^style", group = "<!-- 5 -->🎨 Styling" },
   { message = "^test", group = "<!-- 6 -->🧪 Testing" },
-  { scope = "extension", skip = true },
-  { scope = "ext", skip = true },
   { message = "^chore\\(release\\): prepare for", skip = true },
   { message = "^chore\\(deps.*\\)", skip = true },
   { message = "^chore\\(pr\\)", skip = true },

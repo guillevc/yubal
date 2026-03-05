@@ -279,9 +279,9 @@ version VERSION:
     git tag v{{VERSION}}
 
 [group('utils')]
-[doc("Preview changelog for next release")]
-changelog version:
-    git cliff --tag {{version}} --unreleased
+[doc("Preview changelog between two versions")]
+changelog from to:
+    git cliff v{{from}}..v{{to}}
 
 [group('utils')]
 [doc("Write full changelog to CHANGELOG.md")]
