@@ -10,12 +10,13 @@ const SPINNER_SVG = `<svg aria-hidden="true" class="size-8 text-mist-700 animate
 </svg>`;
 
 interface LoadingPageProps {
+  instanceUrl: string;
   onSettings: () => void;
 }
 
-export function LoadingPage({ onSettings }: LoadingPageProps) {
+export function LoadingPage({ instanceUrl, onSettings }: LoadingPageProps) {
   return div(
-    Header({ onSettings }),
+    Header({ instanceUrl, onSettings }),
     div(
       { class: "flex items-center justify-center py-12", role: "status" },
       rawHtml(SPINNER_SVG),

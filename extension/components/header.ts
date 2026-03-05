@@ -1,15 +1,47 @@
-import van from "vanjs-core";
-import { ARROW_LEFT_ICON, SETTINGS_ICON, YUBAL_ICON } from "@/lib/icons";
+import {
+  ARROW_LEFT_ICON,
+  EXTERNAL_LINK_ICON,
+  SETTINGS_ICON,
+  YUBAL_ICON,
+} from "@/lib/icons";
 import { rawHtml } from "@/lib/raw-html";
+import van from "vanjs-core";
 
-const { header, div, span, button } = van.tags;
+const { a, header, div, span, button } = van.tags;
 
 interface HeaderProps {
+  instanceUrl?: string;
   onBack?: () => void;
   onSettings?: () => void;
 }
 
-export function Header({ onBack, onSettings }: HeaderProps = {}) {
+export function Header({ instanceUrl, onBack, onSettings }: HeaderProps = {}) {
+  const logo = div(
+    {
+      class:
+        "flex items-center justify-center size-7 rounded-lg bg-primary-600/20 [&>svg]:size-5",
+    },
+    rawHtml(YUBAL_ICON),
+  );
+  const title = span({ class: "text-base font-bold text-mist-100" }, "yubal");
+
+  const brand = instanceUrl
+    ? a(
+        {
+          href: instanceUrl,
+          target: "_blank",
+          class:
+            "flex items-center gap-2.5 hover:opacity-80 transition-opacity",
+        },
+        logo,
+        title,
+        span(
+          { class: "self-center text-mist-500 [&>svg]:size-4" },
+          rawHtml(EXTERNAL_LINK_ICON),
+        ),
+      )
+    : div({ class: "flex items-center gap-2.5" }, logo, title);
+
   const left = div(
     { class: "flex items-center gap-2.5" },
     ...(onBack
@@ -25,14 +57,7 @@ export function Header({ onBack, onSettings }: HeaderProps = {}) {
           ),
         ]
       : []),
-    div(
-      {
-        class:
-          "flex items-center justify-center size-7 rounded-lg bg-primary-600/20 [&>svg]:size-5",
-      },
-      rawHtml(YUBAL_ICON),
-    ),
-    span({ class: "text-base font-bold text-mist-100" }, "yubal"),
+    brand,
   );
 
   return header(

@@ -61,17 +61,17 @@ async function refresh() {
   const tabUrl = tab?.url ?? "";
 
   if (!isYouTubeUrl(tabUrl)) {
-    view.val = UnsupportedUrlPage({ onSettings });
+    view.val = UnsupportedUrlPage({ instanceUrl: baseUrl, onSettings });
     return;
   }
 
-  view.val = LoadingPage({ onSettings });
+  view.val = LoadingPage({ instanceUrl: baseUrl, onSettings });
 
   const info = await getContentInfo(baseUrl, tabUrl);
   if (id !== navId) return;
 
   if (!info.ok) {
-    view.val = UnsupportedUrlPage({ onSettings });
+    view.val = UnsupportedUrlPage({ instanceUrl: baseUrl, onSettings });
     return;
   }
 

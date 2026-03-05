@@ -11,15 +11,19 @@ import { Header } from "./header";
 const { div, h1, p, a, span } = van.tags;
 
 interface UnsupportedUrlPageProps {
+  instanceUrl: string;
   onSettings: () => void;
 }
 
-export function UnsupportedUrlPage({ onSettings }: UnsupportedUrlPageProps) {
+export function UnsupportedUrlPage({
+  instanceUrl,
+  onSettings,
+}: UnsupportedUrlPageProps) {
   const btnClass =
     "w-full flex items-center gap-2 rounded-lg border border-mist-700 bg-mist-800/50 px-4 py-2.5 text-sm font-semibold text-mist-200 transition-colors hover:border-mist-600 hover:bg-mist-800 [&>svg]:size-[18px] [&>svg]:shrink-0 [&>svg]:text-mist-400";
 
   return div(
-    Header({ onSettings }),
+    Header({ instanceUrl, onSettings }),
     div(
       { class: "p-4 flex flex-col gap-4" },
       div(

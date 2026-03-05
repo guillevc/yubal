@@ -111,7 +111,7 @@ export function YouTubePage({
   }
 
   return div(
-    Header({ onSettings }),
+    Header({ instanceUrl: baseUrl, onSettings }),
     infoSection,
     div({ class: "flex flex-col gap-2 p-4" }, ...buttons),
   );
