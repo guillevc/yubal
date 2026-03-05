@@ -1288,10 +1288,10 @@ class TestMetadataExtractorService:
         assert metadata is None
         assert skip_reason is SkipReason.UGC
 
-    def test_extract_skips_official_source_music_video_type(
+    def test_extract_official_source_music_as_unmatched(
         self,
     ) -> None:
-        """Should skip OFFICIAL_SOURCE_MUSIC video types with UNSUPPORTED_VIDEO_TYPE."""
+        """Should extract OFFICIAL_SOURCE_MUSIC as unmatched (no album search)."""
         playlist = Playlist.model_validate(
             {
                 "tracks": [
@@ -1303,7 +1303,7 @@ class TestMetadataExtractorService:
                         "thumbnails": [
                             {"url": "https://t.jpg", "width": 120, "height": 90}
                         ],
-                        "duration_seconds": 180,
+                        "duration_seconds": 3600,
                     }
                 ]
             }
@@ -1314,13 +1314,16 @@ class TestMetadataExtractorService:
 
         tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
-        # OFFICIAL_SOURCE_MUSIC track should be skipped
-        assert len(tracks) == 0
-
-        # Truly unsupported types use UNSUPPORTED_VIDEO_TYPE (not UGC)
-        metadata, skip_reason = service._extract_single_track(playlist.tracks[0])
-        assert metadata is None
-        assert skip_reason is SkipReason.UNSUPPORTED_VIDEO_TYPE
+        assert len(tracks) == 1
+        track = tracks[0]
+        assert track.video_type == VideoType.OFFICIAL_SOURCE_MUSIC
+        assert track.match_result == MatchResult.UNMATCHED
+        assert track.title == "Official Source Track"
+        assert track.album == "Unknown Album"
+        # Uses original OSM video ID for download (no ATV substitution)
+        assert track.omv_video_id == "osm123"
+        assert track.atv_video_id is None
+        assert track.video_id == "osm123"
 
     def test_extract_skips_unknown_video_type(
         self,

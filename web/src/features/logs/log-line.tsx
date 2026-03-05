@@ -87,10 +87,12 @@ function formatSkippedMessage(skippedByReason: SkippedByReason): string {
 function ExtractionStatsLog({
   success,
   cached,
+  unmatched,
   skippedByReason,
 }: {
   success: number;
   cached: number;
+  unmatched: number;
   skippedByReason: SkippedByReason;
 }) {
   const totalSkipped = Object.values(skippedByReason).reduce(
@@ -98,12 +100,16 @@ function ExtractionStatsLog({
     0,
   );
 
+  const details: string[] = [];
+  if (cached > 0) details.push(`${cached} cached`);
+  if (unmatched > 0) details.push(`${unmatched} unmatched`);
+
   return (
     <div className="flex items-center gap-1">
       <CheckIcon className={`${ICON_CLASS} text-success`} />
       <span className="text-success">{success} extracted</span>
-      {cached > 0 && (
-        <span className="text-foreground-400">({cached} cached)</span>
+      {details.length > 0 && (
+        <span className="text-foreground-400">({details.join(", ")})</span>
       )}
       {totalSkipped > 0 && (
         <>
@@ -241,6 +247,7 @@ export function LogLine({ entry }: { entry: LogEntry }) {
           <ExtractionStatsLog
             success={stats.success ?? 0}
             cached={stats.cached ?? 0}
+            unmatched={stats.unmatched ?? 0}
             skippedByReason={skippedByReason}
           />
         );

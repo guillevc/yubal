@@ -17,8 +17,10 @@ from yubal.utils.url import parse_playlist_id, parse_video_id
 
 logger = logging.getLogger(__name__)
 
-# Supported video types for download (Audio Track Video and Official Music Video)
-SUPPORTED_VIDEO_TYPES = frozenset({VideoType.ATV, VideoType.OMV})
+# Supported video types for download
+SUPPORTED_VIDEO_TYPES = frozenset(
+    {VideoType.ATV, VideoType.OMV, VideoType.OFFICIAL_SOURCE_MUSIC}
+)
 
 
 def _format_artists(artists: list[Artist]) -> str:
@@ -226,6 +228,7 @@ class MetadataExtractorService:
 
         extracted_count = 0
         cached_count = 0
+        unmatched_count = 0
         skipped_by_reason: dict[SkipReason, int] = {}
         skipped_tracks: list[tuple[PlaylistTrack, SkipReason]] = []
 
@@ -277,6 +280,8 @@ class MetadataExtractorService:
                 continue
 
             extracted_count += 1
+            if metadata and metadata.match_result == MatchResult.UNMATCHED:
+                unmatched_count += 1
             yield ExtractProgress(
                 current=extracted_count,
                 total=total,
@@ -302,6 +307,8 @@ class MetadataExtractorService:
         detail_parts: list[str] = []
         if cached_count:
             detail_parts.append(f"{cached_count} cached")
+        if unmatched_count:
+            detail_parts.append(f"{unmatched_count} unmatched")
         if total_skipped:
             skip_parts = [
                 f"{count} {reason.label}"
@@ -325,6 +332,7 @@ class MetadataExtractorService:
                     "stats_type": "extraction",
                     "success": extracted_count,
                     "cached": cached_count,
+                    "unmatched": unmatched_count,
                     "failed": 0,
                     "skipped_by_reason": {
                         k.value: v for k, v in all_skipped_by_reason.items()
@@ -565,6 +573,16 @@ class MetadataExtractorService:
         album_id = track.album.id if track.album else None
         search_atv_id: str | None = None
 
+        # OSM tracks without album: skip search, route to _Unmatched/.
+        # These are channel uploads (ambient, covers, loops) — searching would
+        # match a different version (e.g., 3 min album cut vs 1 hour loop).
+        if not album_id and video_type == VideoType.OFFICIAL_SOURCE_MUSIC:
+            metadata = self._create_fallback_metadata(
+                track, video_type, match_result=MatchResult.UNMATCHED
+            )
+            assert metadata is not None  # video_type validated above
+            return metadata, None
+
         # For tracks without album, search for album info
         if not album_id:
             match self._search_for_album(track):
@@ -605,9 +623,9 @@ class MetadataExtractorService:
         """Validate and determine the video type from track information.
 
         Why this matters: YouTube Music has different video types (ATV = Audio Track
-        Video, OMV = Official Music Video, UGC = User Generated Content, etc).
-        We only support ATV and OMV because they have reliable metadata. UGC videos
-        often have incorrect or missing metadata.
+        Video, OMV = Official Music Video, OSM = Official Source Music, UGC = User
+        Generated Content, etc). We support ATV, OMV, and OSM because they have
+        reliable metadata. UGC videos often have incorrect or missing metadata.
 
         Args:
             track: Playlist track to check.
@@ -632,7 +650,7 @@ class MetadataExtractorService:
             )
             return None
 
-        # Only ATV and OMV are supported
+        # Only ATV, OMV, and OSM are supported
         if video_type not in SUPPORTED_VIDEO_TYPES:
             logger.debug(
                 "Unsupported video type '%s' for track '%s'",

@@ -50,6 +50,7 @@ class LogStats(BaseModel):
     )
     success: int = 0
     cached: int = 0
+    unmatched: int = 0
     failed: int = 0
     skipped_by_reason: dict[SkipReasonType, int] = Field(
         default_factory=dict,

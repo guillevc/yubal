@@ -16,6 +16,9 @@
 | Video | UGC                               | https://www.youtube.com/watch?v=jNQXAC9IVRw                                       |
 | Video | OMV                               | https://music.youtube.com/watch?v=Lw2J5rZ8kvM                                     |
 | Video | OMV (no ATV match)                | https://www.youtube.com/watch?v=-HJ0ZGkdlTk                                       |
+| Video | OFFICIAL_SOURCE_MUSIC             | https://music.youtube.com/watch?v=FPYgJks1Zy0                                     |
+| Video | OFFICIAL_SOURCE_MUSIC             | https://music.youtube.com/watch?v=k3UevKvP9RU                                     |
+| PL    | 1 OFFICIAL_SOURCE_MUSIC           | https://music.youtube.com/playlist?list=PLbE6wFkAlDUf_oicZwbgEAEmBfKIy43Rf        |
 
 ## Supported URLs
 

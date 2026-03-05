@@ -723,6 +723,11 @@ export interface components {
              */
             cached: number;
             /**
+             * Unmatched
+             * @default 0
+             */
+            unmatched: number;
+            /**
              * Failed
              * @default 0
              */
