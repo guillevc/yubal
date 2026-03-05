@@ -41,7 +41,9 @@ jobs:
           prev="${{ steps.prev-tag.outputs.tag }}"
           if [ "$prev" != "none" ]; then
             echo "" >> CHANGES.md
-            echo "**Full diff**: [\`${prev}...${GITHUB_REF_NAME}\`](https://github.com/${{ github.repository }}/compare/${prev}...${GITHUB_REF_NAME})" >> CHANGES.md
+            echo "---" >> CHANGES.md
+            echo "" >> CHANGES.md
+            echo "**Full diff**:[\`${prev}...${GITHUB_REF_NAME}\`](https://github.com/${{ github.repository }}/compare/${prev}...${GITHUB_REF_NAME})" >> CHANGES.md
           fi
         env:
           GIT_CLIFF_OUTPUT: CHANGES.md
