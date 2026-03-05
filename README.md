@@ -21,11 +21,6 @@ Playlist sync. Artist/year sorting. Duplicate detection. Media server ready.
 
 <br/>
 
-> [!IMPORTANT]
-> **Upgrading from v0.3?** Folder and file names now preserve unicode characters (`Bjork` → `Björk`), which may create duplicates alongside existing ASCII-named items.
->
-> To keep the previous ASCII behavior, set `YUBAL_ASCII_FILENAMES=true`. Otherwise, check your library and merge any duplicates after upgrading.
-
 ## 📖 How It Works
 
 Downloading music is easy. _Organizing_ it is the hard part.
