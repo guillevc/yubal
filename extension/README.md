@@ -8,6 +8,11 @@ Browser extension for Chrome and Firefox that lets you send YouTube and YouTube 
   <img src="docs/extension-settings.png" width="32%" alt="Settings view" />
 </p>
 
+## Install from store
+
+- [Chrome Web Store](https://chromewebstore.google.com/detail/yubal/TODO)
+- [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/yubal/)
+
 ## Install from releases
 
 Pre-built zips are available on the [releases page](https://github.com/guillevc/yubal/releases?q=ext-v). Download the zip for your browser and follow the instructions below to install it.
@@ -32,11 +37,11 @@ See [Chrome's documentation](https://developer.chrome.com/docs/extensions/get-st
 ### Firefox
 
 1. Download the `-firefox.zip` file from the release
-2. Open `about:addons`
-3. Click the gear icon and select **Install Add-on From File...**
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on...**
 4. Select the downloaded zip file
 
-See [Firefox's documentation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) for more details.
+Note: the extension will be removed when Firefox is closed. See [Firefox's documentation](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/) for more details.
 
 ## Build from source
 
