@@ -2,7 +2,7 @@
   "name": "yubal",
   "description": "Queue YouTube content to your yubal instance",
   "private": true,
-  "version": "v0.1.0-alpha.7",
+  "version": "0.1.0-alpha.8",
   "type": "module",
   "scripts": {
     "dev": "wxt",
