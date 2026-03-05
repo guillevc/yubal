@@ -1,10 +1,12 @@
 <div align="center">
 
+<img src="https://raw.githubusercontent.com/guillevc/yubal/master/web/public/favicon.svg" width="120" alt="yubal">
+
 # yubal
 
-**Self-hosted YouTube Music downloader with automatic metadata tagging and playlist sync.**
+Self-hosted YouTube Music downloader. Paste a link, get a tagged, organized library.
 
-Paste a link, get a properly tagged and organized library. Subscribe to playlists to keep them synced. Albums sorted by artist and year. No duplicates. Media server ready.
+Playlist sync. Artist/year sorting. Duplicate detection. Media server ready.
 
 [![CI](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
 [![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
@@ -75,6 +77,18 @@ When downloading a playlist, each track goes to its album folder—the M3U file 
 - **Format options** — Native `opus` (best quality), mp3, or m4a (direct download when available, transcoded otherwise)
 - **Media server ready** — Tested with [Navidrome, Jellyfin, and Gonic](#-media-server-integration)
 - **[CLI](packages/yubal/src/yubal/cli/README.md)** — Download and inspect metadata from the terminal
+
+## 🧩 Browser Extension
+
+Download tracks and subscribe to playlists directly from YouTube and YouTube Music without leaving the page.
+
+<p>
+  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-track.png" alt="Track view" width="33%">
+  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-playlist.png" alt="Playlist view" width="33%">
+  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-settings.png" alt="Settings view" width="32%">
+</p>
+
+Install from [Chrome Web Store](https://chrome.google.com/webstore/detail/YOUR_ID) · [Firefox Add-ons](https://addons.mozilla.org/addon/yubal/) · [GitHub Releases](https://github.com/guillevc/yubal/releases?q=ext-v)
 
 ## 🚀 Quick Start
 
