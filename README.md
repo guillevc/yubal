@@ -82,8 +82,11 @@ Download tracks and subscribe to playlists directly from YouTube and YouTube Mus
   <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-playlist.png" alt="Playlist view" width="33%">
   <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-settings.png" alt="Settings view" width="32%">
 </p>
-
-Install from [Chrome Web Store](https://chrome.google.com/webstore/detail/YOUR_ID) · [Firefox Add-ons](https://addons.mozilla.org/addon/yubal/) · [GitHub Releases](https://github.com/guillevc/yubal/releases?q=ext-v)
+<p>
+  <a href="https://chrome.google.com/webstore/detail/YOUR_ID"><img src="https://img.shields.io/badge/Chrome-download-4285F4?logo=googlechrome&logoColor=white&style=for-the-badge" alt="Get it on Chrome Web Store"></a>
+  <a href="https://addons.mozilla.org/addon/yubal/"><img src="https://img.shields.io/badge/Firefox-download-FF7139?logo=firefox&logoColor=white&style=for-the-badge" alt="Get the add-on for Firefox"></a>
+  <a href="https://github.com/guillevc/yubal/releases?q=ext-v"><img src="https://img.shields.io/badge/Manual_install-GitHub_Releases-181717?logo=github&logoColor=white&style=for-the-badge" alt="GitHub Releases"></a>
+</p>
 
 ## 🚀 Quick Start
 
