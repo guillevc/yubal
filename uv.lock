@@ -1253,8 +1253,8 @@ wheels = [
 
 [[package]]
 name = "yt-dlp"
-version = "2026.2.4"
-source = { git = "https://github.com/yt-dlp/yt-dlp.git?rev=442c90da3ec680037b7d94abf91ec63b2e5a9ade#442c90da3ec680037b7d94abf91ec63b2e5a9ade" }
+version = "2026.3.3"
+source = { git = "https://github.com/yt-dlp/yt-dlp.git?rev=b8058cdf378cbbf60669b665dea146fb7dc90117#b8058cdf378cbbf60669b665dea146fb7dc90117" }
 
 [[package]]
 name = "ytmusicapi"
@@ -1270,7 +1270,7 @@ wheels = [
 
 [[package]]
 name = "yubal"
-version = "0.7.0a1"
+version = "0.6.3"
 source = { editable = "packages/yubal" }
 dependencies = [
     { name = "httpx" },
@@ -1301,14 +1301,14 @@ requires-dist = [
     { name = "rich", marker = "extra == 'cli'", specifier = ">=13.0.0" },
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.21.1" },
     { name = "unidecode", specifier = ">=1.3.0" },
-    { name = "yt-dlp", git = "https://github.com/yt-dlp/yt-dlp.git?rev=442c90da3ec680037b7d94abf91ec63b2e5a9ade" },
+    { name = "yt-dlp", git = "https://github.com/yt-dlp/yt-dlp.git?rev=b8058cdf378cbbf60669b665dea146fb7dc90117" },
     { name = "ytmusicapi", specifier = ">=1.9.0" },
 ]
 provides-extras = ["cli"]
 
 [[package]]
 name = "yubal-api"
-version = "0.7.0a1"
+version = "0.6.3"
 source = { editable = "packages/api" }
 dependencies = [
     { name = "alembic" },
@@ -1337,7 +1337,7 @@ requires-dist = [
 
 [[package]]
 name = "yubal-workspace"
-version = "0.7.0a1"
+version = "0.6.3"
 source = { virtual = "." }
 
 [package.dev-dependencies]

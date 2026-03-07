@@ -1,6 +1,6 @@
 [project]
 name = "yubal-api"
-version = "0.7.0a1"
+version = "0.6.3"
 dependencies = [
   "alembic>=1.18.3",
   "croniter>=6.0.0",
