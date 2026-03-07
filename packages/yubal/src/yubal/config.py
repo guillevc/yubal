@@ -11,6 +11,7 @@ class AudioCodec(StrEnum):
     OPUS = "opus"
     MP3 = "mp3"
     M4A = "m4a"
+    FLAC = "flac"
 
 
 @dataclass(frozen=True)

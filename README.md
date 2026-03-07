@@ -72,7 +72,7 @@ When downloading a playlist, each track goes to its album folder—the M3U file 
 - **Reliable downloads** — Automatic retry on failures, graceful cancellation
 - **Automatic lyrics** — Synced `.lrc` files downloaded alongside tracks when available
 - **ReplayGain tagging** — Track and album ReplayGain/R128 tags for consistent playback volume
-- **Format options** — Native `opus` (best quality), mp3, or m4a (direct download when available, transcoded otherwise)
+- **Format options** — Native `opus` (best quality), mp3, m4a, or `flac` (lossless) (direct download when available, transcoded otherwise)
 - **Media server ready** — Tested with [Navidrome, Jellyfin, and Gonic](#-media-server-integration)
 - **[CLI](packages/yubal/src/yubal/cli/README.md)** — Download and inspect metadata from the terminal
 
@@ -114,7 +114,7 @@ docker compose up -d
 
 | Variable                    | Description                                       | Default (Docker) |
 | --------------------------- | ------------------------------------------------- | ---------------- |
-| `YUBAL_AUDIO_FORMAT`        | `opus`, `mp3`, or `m4a`                           | `opus`           |
+| `YUBAL_AUDIO_FORMAT`        | `opus`, `mp3`, `m4a`, or `flac`                           | `opus`           |
 | `YUBAL_AUDIO_QUALITY`       | Transcode quality (0=best, 10=worst)              | `0`              |
 | `YUBAL_SCHEDULER_ENABLED`   | Enable automatic scheduled sync                   | `true`           |
 | `YUBAL_SCHEDULER_CRON`      | Cron schedule for auto-sync                       | `0 0 * * *`      |

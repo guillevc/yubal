@@ -117,17 +117,25 @@ class YTDLPDownloader:
             Dictionary of yt-dlp options.
         """
         codec = self._config.codec.value
+        
+        # Build format selector based on codec
+        if codec == "flac":
+            # For FLAC, prioritize lossless audio sources
+            format_selector = "bestaudio[ext=flac]/bestaudio[acodec=flac]/bestaudio/best"
+        else:
+            # For lossy codecs, use existing logic
+            format_selector = f"bestaudio[ext={codec}]/bestaudio[acodec={codec}]/bestaudio/best"
+        
         opts: dict[str, Any] = {
-            "format": (
-                f"bestaudio[ext={codec}]/bestaudio[acodec={codec}]/bestaudio/best"
-            ),
+            "format": format_selector,
             "outtmpl": str(output_path),
             "color": "never",  # Disable ANSI codes in error messages
             "postprocessors": [
                 {
                     "key": "FFmpegExtractAudio",
                     "preferredcodec": self._config.codec.value,
-                    "preferredquality": str(self._config.quality),
+                    # Don't set quality for FLAC (lossless), only for lossy codecs
+                    **({"preferredquality": str(self._config.quality)} if codec != "flac" else {})
                 }
             ],
             "quiet": self._config.quiet,

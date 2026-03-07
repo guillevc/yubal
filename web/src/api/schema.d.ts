@@ -319,7 +319,7 @@ export interface components {
          * @description Supported audio output codecs.
          * @enum {string}
          */
-        AudioCodec: "opus" | "mp3" | "m4a";
+        AudioCodec: "opus" | "mp3" | "m4a" | "flac";
         /**
          * CancelJobResponse
          * @description Response when a job is cancelled.
