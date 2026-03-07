@@ -256,11 +256,23 @@ gen-api:
     @python scripts/generate_openapi.py
 
 [group('utils')]
+[doc("Pin yt-dlp to latest master commit")]
+[script('bash')]
+update-ytdlp:
+    set -euo pipefail
+    sha=$(git ls-remote https://github.com/yt-dlp/yt-dlp.git refs/heads/master | cut -f1)
+    uv add --package yubal "yt-dlp @ git+https://github.com/yt-dlp/yt-dlp.git@${sha}"
+    echo "yt-dlp pinned to ${sha:0:12}"
+
+[group('utils')]
 [doc("Bump version across all packages")]
 [confirm]
 [script('bash')]
 version VERSION:
     set -euo pipefail
+
+    # Pin yt-dlp to latest master
+    just update-ytdlp
 
     # Update Python packages
     uv version --frozen --package yubal {{VERSION}}
