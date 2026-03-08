@@ -287,7 +287,7 @@ version VERSION:
 
     # Commit and tag
     git add pyproject.toml packages/*/pyproject.toml uv.lock web/package.json web/bun.lock
-    git commit -m "chore: bump version to {{VERSION}}"
+    git diff --cached --quiet || git commit -m "chore: bump version to {{VERSION}}"
     git tag v{{VERSION}}
 
 [group('utils')]

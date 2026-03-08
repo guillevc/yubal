@@ -101,7 +101,7 @@ version VERSION:
     npm pkg set version={{VERSION}}
     bun install
     git add package.json bun.lock
-    git commit -m "chore(extension): bump version to {{VERSION}}"
+    git diff --cached --quiet || git commit -m "chore(extension): bump version to {{VERSION}}"
     git tag ext-v{{VERSION}}
 
 [group('utils')]
