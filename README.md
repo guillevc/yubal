@@ -78,9 +78,9 @@ When downloading a playlist, each track goes to its album folder—the M3U file 
 Download tracks and subscribe to playlists directly from YouTube and YouTube Music without leaving the page.
 
 <p>
-  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-track.png" alt="Track view" width="33%">
-  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-playlist.png" alt="Playlist view" width="33%">
-  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-settings.png" alt="Settings view" width="32%">
+  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/images/extension-track.png" alt="Track view" width="32%">
+  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/images/extension-playlist.png" alt="Playlist view" width="32%">
+  <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/images/extension-settings.png" alt="Settings view" width="32%">
 </p>
 <p>
   <a href="https://addons.mozilla.org/addon/yubal/"><img src="https://img.shields.io/badge/Firefox-get_add--on-FF7139?logo=firefox&logoColor=white&style=for-the-badge" alt="Get the add-on for Firefox"></a>
