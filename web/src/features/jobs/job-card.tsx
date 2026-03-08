@@ -115,7 +115,15 @@ function Thumbnail({
   return (
     <div className="relative h-18 w-18 shrink-0">
       {url ? (
-        <Image src={url} radius="sm" isBlurred />
+        <Image
+          src={url}
+          radius="sm"
+          isBlurred
+          classNames={{
+            wrapper: "h-full w-full",
+            img: "h-full w-full object-cover",
+          }}
+        />
       ) : (
         <div className="bg-content3 rounded-small flex h-full w-full shrink-0 items-center justify-center"></div>
       )}
