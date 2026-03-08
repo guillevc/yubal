@@ -222,7 +222,7 @@ class TestMetadataExtractorService:
 
         assert len(tracks) == 1
         assert tracks[0].title == "Unknown Song"
-        assert tracks[0].album == "Unknown Album"  # Fallback when no album found
+        assert tracks[0].album == "Unknown Song"  # Uses title as album for singles
         assert tracks[0].track_number is None
 
     def test_extract_continues_on_track_error(
@@ -1155,7 +1155,7 @@ class TestMetadataExtractorService:
         # Should have returned fallback metadata
         assert len(tracks) == 1
         assert tracks[0].title == "Test Song"
-        assert tracks[0].album == "Unknown Album"  # Fallback when no album found
+        assert tracks[0].album == "Test Song"  # Uses title as album for singles
 
     def test_extract_low_artist_match_marks_unmatched(
         self,
@@ -1319,7 +1319,7 @@ class TestMetadataExtractorService:
         assert track.video_type == VideoType.OFFICIAL_SOURCE_MUSIC
         assert track.match_result == MatchResult.UNMATCHED
         assert track.title == "Official Source Track"
-        assert track.album == "Unknown Album"
+        assert track.album == "Official Source Track"  # Uses title as album for singles
         # Uses original OSM video ID for download (no ATV substitution)
         assert track.omv_video_id == "osm123"
         assert track.atv_video_id is None
@@ -1744,6 +1744,7 @@ class TestUGCDownload:
         assert tracks[0].atv_video_id is None
         # video_id property falls back to source_video_id
         assert tracks[0].video_id == "ugc123"
+        assert tracks[0].album == "User Upload"  # Uses title as album for singles
 
     def test_ugc_mixed_with_supported_types(self) -> None:
         """Should extract both supported and UGC tracks when enabled."""

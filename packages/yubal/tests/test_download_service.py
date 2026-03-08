@@ -357,7 +357,7 @@ class TestDownloadService:
             atv_video_id=None,
             title="Mercury Retrograde",
             artists=["Wiz Khalifa"],
-            album="Unknown Album",
+            album="Mercury Retrograde",
             album_artists=["Wiz Khalifa"],
             match_result=MatchResult.UNMATCHED,
         )
@@ -383,7 +383,7 @@ class TestDownloadService:
             atv_video_id=None,
             title="User Upload",
             artists=["Some User"],
-            album="Unknown Album",
+            album="User Upload",
             album_artists=["Some User"],
             video_type=VideoType.UGC,
             match_result=MatchResult.UNOFFICIAL,

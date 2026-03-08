@@ -1011,7 +1011,7 @@ class MetadataExtractorService:
             atv_video_id=atv_id,
             title=track.title,
             artists=[a.name for a in track.artists],
-            album=track.album.name if track.album else "Unknown Album",
+            album=track.album.name if track.album else track.title,
             album_artists=[a.name for a in track.artists],
             track_number=None,
             total_tracks=None,
