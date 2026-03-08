@@ -1258,14 +1258,10 @@ source = { git = "https://github.com/yt-dlp/yt-dlp.git?rev=b8058cdf378cbbf60669b
 
 [[package]]
 name = "ytmusicapi"
-version = "1.11.5"
-source = { registry = "https://pypi.org/simple" }
+version = "1.11.6.dev4+ga8a120f37"
+source = { git = "https://github.com/sigma67/ytmusicapi.git?rev=a8a120f37c5363ffb4d36d226c1afb2051bd4d79#a8a120f37c5363ffb4d36d226c1afb2051bd4d79" }
 dependencies = [
     { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ac/4b/a44292f732903dc26a90236ad1cf284da974ed5491df388cf15713b38429/ytmusicapi-1.11.5.tar.gz", hash = "sha256:48f35901291c8af9934ec0aa9cd6b9fd1a19c543f843c39c9e8b396356b47801", size = 413046, upload-time = "2026-01-31T09:51:27.86Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/aa/a8/8feb17eaa8b2bf36b0617ba37f949a7036b6ece652672bd4517a54326f0e/ytmusicapi-1.11.5-py3-none-any.whl", hash = "sha256:f6b1e031408cce45bef207bfda449e3ecf548f7c4ff0c091c575d4a27eb21da6", size = 102313, upload-time = "2026-01-31T09:51:26.255Z" },
 ]
 
 [[package]]
@@ -1302,7 +1298,7 @@ requires-dist = [
     { name = "typer", marker = "extra == 'cli'", specifier = ">=0.21.1" },
     { name = "unidecode", specifier = ">=1.3.0" },
     { name = "yt-dlp", git = "https://github.com/yt-dlp/yt-dlp.git?rev=b8058cdf378cbbf60669b665dea146fb7dc90117" },
-    { name = "ytmusicapi", specifier = ">=1.9.0" },
+    { name = "ytmusicapi", git = "https://github.com/sigma67/ytmusicapi.git?rev=a8a120f37c5363ffb4d36d226c1afb2051bd4d79" },
 ]
 provides-extras = ["cli"]
 

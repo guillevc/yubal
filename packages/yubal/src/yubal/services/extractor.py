@@ -78,8 +78,8 @@ class MetadataExtractorService:
     ==================
     1. extract() - Main entry point: fetches playlist, classifies content type,
                    yields progress updates as tracks are processed
-    2. _classify_playlist_as_album_or_playlist() - Determines if OLAK5uy_
-                   playlists represent complete albums vs curated playlists
+    2. _classify_playlist_as_album_or_playlist() - Determines if playlists
+                   represent complete albums vs curated playlists
     3. _extract_single_track() - Processes each track: validates video type,
                    searches for album info, builds complete metadata
     4. _match_playlist_track_to_album() - Four-tier matching strategy to find
@@ -194,7 +194,7 @@ class MetadataExtractorService:
             unavailable_count,
         )
 
-        # Classify content: determines if OLAK5uy_ playlist is a complete album
+        # Classify content: determines if playlist is a complete album
         # (all tracks from one album) or a curated playlist (e.g., "Top songs")
         kind = self._classify_playlist_as_album_or_playlist(
             playlist_id, playlist.tracks
@@ -447,12 +447,11 @@ class MetadataExtractorService:
         artist"). We need to distinguish these because they require different
         metadata handling strategies.
 
-        Classification strategy (5 checks, all must pass):
-        1. OLAK5uy_ prefix - YouTube's album playlist identifier
-        2. Has tracks - Not empty
-        3. Single album reference - All tracks point to same album ID
-        4. Album exists - Can fetch the album from YouTube Music
-        5. Complete match - Playlist contains ALL tracks from the album
+        Classification strategy (4 checks, all must pass):
+        1. Has tracks - Not empty
+        2. Single album reference - All tracks point to same album ID
+        3. Album exists - Can fetch the album from YouTube Music
+        4. Complete match - Playlist contains ALL tracks from the album
 
         Why so strict: Prevents false positives like "Greatest Hits" playlists
         that contain a subset of tracks from a single album.
@@ -464,17 +463,12 @@ class MetadataExtractorService:
         Returns:
             ContentKind.ALBUM if complete album, ContentKind.PLAYLIST otherwise.
         """
-        # Check 1: Must have OLAK5uy_ prefix (album playlist format)
-        if not playlist_id.startswith("OLAK5uy_"):
-            logger.debug("Not an album: missing OLAK5uy_ prefix")
-            return ContentKind.PLAYLIST
-
-        # Check 2: Must have tracks
+        # Check 1: Must have tracks
         if not tracks:
             logger.debug("Not an album: no tracks")
             return ContentKind.PLAYLIST
 
-        # Check 3: All tracks must reference the same album
+        # Check 2: All tracks must reference the same album
         album_ids = {t.album.id for t in tracks if t.album and t.album.id}
         logger.debug("Album IDs found on tracks: %s", album_ids)
 
@@ -484,7 +478,7 @@ class MetadataExtractorService:
             )
             return ContentKind.PLAYLIST
 
-        # Check 4: Fetch the album to verify all tracks are present
+        # Check 3: Fetch the album to verify it exists
         album_id = next(iter(album_ids))
         try:
             album = self._client.get_album(album_id)
@@ -492,7 +486,7 @@ class MetadataExtractorService:
             logger.debug("Not an album: failed to fetch album %s: %s", album_id, e)
             return ContentKind.PLAYLIST
 
-        # Check 5: Playlist must contain all album tracks
+        # Check 4: Playlist must contain all album tracks
         matched_album_tracks: set[str] = set()
 
         for playlist_track in tracks:

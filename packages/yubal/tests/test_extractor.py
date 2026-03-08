@@ -68,8 +68,8 @@ class TestMetadataExtractorService:
         service = MetadataExtractorService(mock_client)
         tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
 
-        # Should have called get_album for the track's album
-        assert len(mock_client.get_album_calls) == 1
+        # get_album called twice: once during classification, once during extraction
+        assert len(mock_client.get_album_calls) == 2
         assert tracks[0].album == "Test Album"
         assert tracks[0].year == "2024"
 
