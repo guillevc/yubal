@@ -7,9 +7,9 @@ Self-hosted YouTube Music downloader. Paste a link, get a tagged, organized libr
 Playlist sync. Artist/year sorting. Duplicate detection. Media server ready.
 
 [![CI](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
+[![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
 [![Chrome Extension](https://img.shields.io/github/v/release/guillevc/yubal?filter=ext-v*&label=chrome%20extension&logo=googlechrome&logoColor=white&color=orange)](https://github.com/guillevc/yubal/releases?q=ext-v)
 [![Firefox Add-on](https://img.shields.io/amo/v/yubal?label=firefox%20add-on&logo=firefox&logoColor=white&color=orange)](https://addons.mozilla.org/firefox/addon/yubal/)
-[![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
 [![Docker](https://img.shields.io/badge/ghcr.io-blue?logo=docker&logoColor=white)](https://ghcr.io/guillevc/yubal)
 [![codecov](https://codecov.io/gh/guillevc/yubal/branch/master/graph/badge.svg)](https://codecov.io/gh/guillevc/yubal)
 
