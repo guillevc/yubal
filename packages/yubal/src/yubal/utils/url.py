@@ -82,21 +82,14 @@ def parse_video_id(url: str) -> str | None:
     Supports standard watch URLs (v= parameter), youtu.be short URLs,
     and path-based formats (/shorts/, /live/, /embed/, /e/, /v/, /vi/).
 
-    Returns None if a playlist ID is present (playlist URLs take priority).
-
     Args:
         url: YouTube, YouTube Music, or youtu.be URL.
 
     Returns:
-        The video ID string, or None if not found, URL is too long,
-        or if a playlist ID is present.
+        The video ID string, or None if not found or URL is too long.
     """
     # Validate URL length
     if not url or len(url) > MAX_URL_LENGTH:
-        return None
-
-    # Playlist URLs take priority - if list= is present, return None
-    if PLAYLIST_ID_PATTERN.search(url):
         return None
 
     # Extract video ID from v= parameter

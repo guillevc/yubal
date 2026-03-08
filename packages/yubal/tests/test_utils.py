@@ -38,10 +38,10 @@ class TestParseVideoId:
         url = "https://music.youtube.com/playlist?list=PLtest123"
         assert parse_video_id(url) is None
 
-    def test_returns_none_for_url_with_list_and_v(self) -> None:
-        """Should return None when URL has both list and v (playlist priority)."""
+    def test_extracts_video_id_when_list_also_present(self) -> None:
+        """Should extract video ID even when list= is present."""
         url = "https://music.youtube.com/watch?v=abc123&list=PLtest123"
-        assert parse_video_id(url) is None
+        assert parse_video_id(url) == "abc123"
 
     def test_returns_none_for_empty_url(self) -> None:
         """Should return None for empty URLs."""
@@ -67,9 +67,9 @@ class TestParseVideoId:
         """Should extract video ID from youtu.be with tracking params."""
         assert parse_video_id("https://youtu.be/dQw4w9WgXcQ?si=abc") == "dQw4w9WgXcQ"
 
-    def test_returns_none_for_youtu_be_with_list(self) -> None:
-        """Should return None for youtu.be with playlist parameter."""
-        assert parse_video_id("https://youtu.be/abc?list=PLtest") is None
+    def test_extracts_from_youtu_be_with_list(self) -> None:
+        """Should extract video ID from youtu.be even with list= parameter."""
+        assert parse_video_id("https://youtu.be/abc?list=PLtest") == "abc"
 
     def test_extracts_from_youtu_be_http(self) -> None:
         """Should extract video ID from http youtu.be."""
@@ -145,10 +145,10 @@ class TestIsSingleTrackUrl:
         url = "https://music.youtube.com/playlist?list=PLtest123"
         assert is_single_track_url(url) is False
 
-    def test_returns_false_for_url_with_both(self) -> None:
-        """Should return False when URL has both v and list."""
+    def test_returns_true_for_url_with_both(self) -> None:
+        """Should return True when URL has both v and list (track takes priority)."""
         url = "https://music.youtube.com/watch?v=abc123&list=PLtest123"
-        assert is_single_track_url(url) is False
+        assert is_single_track_url(url) is True
 
     def test_returns_false_for_empty_url(self) -> None:
         """Should return False for empty URL."""
