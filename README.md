@@ -1,7 +1,5 @@
 <div align="center">
 
-<img src="https://raw.githubusercontent.com/guillevc/yubal/master/web/public/favicon.svg" width="120" alt="yubal">
-
 # yubal
 
 Self-hosted YouTube Music downloader. Paste a link, get a tagged, organized library.
@@ -9,6 +7,8 @@ Self-hosted YouTube Music downloader. Paste a link, get a tagged, organized libr
 Playlist sync. Artist/year sorting. Duplicate detection. Media server ready.
 
 [![CI](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
+[![Chrome Extension](https://img.shields.io/github/v/release/guillevc/yubal?filter=ext-v*&label=chrome%20extension&logo=googlechrome&logoColor=white&color=orange)](https://github.com/guillevc/yubal/releases?q=ext-v)
+[![Firefox Add-on](https://img.shields.io/amo/v/yubal?label=firefox%20add-on&logo=firefox&logoColor=white&color=orange)](https://addons.mozilla.org/firefox/addon/yubal/)
 [![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
 [![Docker](https://img.shields.io/badge/ghcr.io-blue?logo=docker&logoColor=white)](https://ghcr.io/guillevc/yubal)
 [![codecov](https://codecov.io/gh/guillevc/yubal/branch/master/graph/badge.svg)](https://codecov.io/gh/guillevc/yubal)
@@ -83,9 +83,8 @@ Download tracks and subscribe to playlists directly from YouTube and YouTube Mus
   <img src="https://raw.githubusercontent.com/guillevc/yubal/refs/heads/master/extension/docs/extension-settings.png" alt="Settings view" width="32%">
 </p>
 <p>
-  <a href="https://chrome.google.com/webstore/detail/YOUR_ID"><img src="https://img.shields.io/badge/Chrome-download-4285F4?logo=googlechrome&logoColor=white&style=for-the-badge" alt="Get it on Chrome Web Store"></a>
-  <a href="https://addons.mozilla.org/addon/yubal/"><img src="https://img.shields.io/badge/Firefox-download-FF7139?logo=firefox&logoColor=white&style=for-the-badge" alt="Get the add-on for Firefox"></a>
-  <a href="extension/README.md"><img src="https://img.shields.io/badge/Manual_install-instructions-6c757d?logo=github&logoColor=white&style=for-the-badge" alt="Manual install"></a>
+  <a href="https://addons.mozilla.org/addon/yubal/"><img src="https://img.shields.io/badge/Firefox-get_add--on-FF7139?logo=firefox&logoColor=white&style=for-the-badge" alt="Get the add-on for Firefox"></a>
+  <a href="https://github.com/guillevc/yubal/releases?q=ext-v"><img src="https://img.shields.io/badge/Chrome-manual_install-4285F4?logo=googlechrome&logoColor=white&style=for-the-badge" alt="Chrome manual install"></a>
 </p>
 
 ## 🚀 Quick Start
@@ -215,8 +214,8 @@ Need age-restricted content, private playlists, or Premium quality? Add your coo
 - [x] Automatic lyrics (.lrc) ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
 - [x] Auto-sync playlists ([v0.4.0](https://github.com/guillevc/yubal/releases/tag/v0.4.0))
 - [x] UGC tracks (user-generated content, remixes, unofficial tracks) ([v0.5.0](https://github.com/guillevc/yubal/releases/tag/v0.5.0))
+- [x] Browser extension ([v0.7.0](https://github.com/guillevc/yubal/releases/tag/v0.7.0), [ext-v0.1.0](https://github.com/guillevc/yubal/releases/tag/ext-v0.1.0))
 - [ ] Flat folder mode
-- [ ] Browser extension
 - [ ] Post-download webhooks
 - [ ] New music automatic discovery
 
