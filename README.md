@@ -9,7 +9,7 @@ Playlist sync. Artist/year sorting. Duplicate detection. Media server ready.
 [![CI](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
 [![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
 [![Firefox Add-on](https://img.shields.io/amo/v/yubal?label=firefox%20add-on&logo=firefox&logoColor=white&color=orange)](https://addons.mozilla.org/firefox/addon/yubal/)
-[![Chrome Extension](https://img.shields.io/github/v/release/guillevc/yubal?filter=ext-v*&label=chrome%20extension&logo=googlechrome&logoColor=white&color=orange)](https://github.com/guillevc/yubal/releases?q=ext-v)
+[![Chrome Extension](https://img.shields.io/github/v/release/guillevc/yubal?filter=ext-v*&label=chrome%20extension&logo=googlechrome&logoColor=white&color=orange)](https://github.com/guillevc/yubal/releases?q=🧩)
 [![Docker](https://img.shields.io/badge/ghcr.io-blue?logo=docker&logoColor=white)](https://ghcr.io/guillevc/yubal)
 [![codecov](https://codecov.io/gh/guillevc/yubal/branch/master/graph/badge.svg)](https://codecov.io/gh/guillevc/yubal)
 
@@ -84,8 +84,10 @@ Download tracks and subscribe to playlists directly from YouTube and YouTube Mus
 </p>
 <p>
   <a href="https://addons.mozilla.org/addon/yubal/"><img src="https://img.shields.io/badge/Firefox-get_add--on-FF7139?logo=firefox&logoColor=white&style=for-the-badge" alt="Get the add-on for Firefox"></a>
-  <a href="https://github.com/guillevc/yubal/releases?q=ext-v"><img src="https://img.shields.io/badge/Chrome-manual_install-4285F4?logo=googlechrome&logoColor=white&style=for-the-badge" alt="Chrome manual install"></a>
+  <a href="https://github.com/guillevc/yubal/releases?q=🧩"><img src="https://img.shields.io/badge/Chrome-manual_install-4285F4?logo=googlechrome&logoColor=white&style=for-the-badge" alt="Chrome manual install"></a>
 </p>
+
+More info in the extension's [README.md](https://github.com/guillevc/yubal/blob/master/extension/README.md).
 
 ## 🚀 Quick Start
 
