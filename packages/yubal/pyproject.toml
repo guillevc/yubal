@@ -4,7 +4,7 @@ version = "0.7.0"
 dependencies = [
   "ytmusicapi>=1.9.0",
   "pydantic>=2.0.0",
-  "yt-dlp",
+  "yt-dlp==2026.3.3",
   "pathvalidate>=3.2.0",
   "rapidfuzz>=3.0.0",
   "mediafile>=0.12.0",
