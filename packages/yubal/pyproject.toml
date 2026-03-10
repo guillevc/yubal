@@ -26,4 +26,3 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 ytmusicapi = { git = "https://github.com/sigma67/ytmusicapi.git", rev = "a8a120f37c5363ffb4d36d226c1afb2051bd4d79" }
-yt-dlp = { git = "https://github.com/yt-dlp/yt-dlp.git", rev = "b8058cdf378cbbf60669b665dea146fb7dc90117" }

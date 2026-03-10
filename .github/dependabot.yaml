@@ -1,0 +1,10 @@
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/packages/yubal"
+    schedule:
+      interval: "daily"
+    allow:
+      - dependency-name: "yt-dlp"
+    commit-message:
+      prefix: "chore"
