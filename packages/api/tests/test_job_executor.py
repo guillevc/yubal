@@ -9,7 +9,7 @@ from yubal import AudioCodec
 from yubal_api.domain.enums import JobSource, JobStatus
 from yubal_api.domain.job import Job
 from yubal_api.services.job_executor import JobExecutor
-from yubal_api.services.sync_service import SyncResult
+from yubal_api.services.sync_service import SyncResult, SyncService
 
 
 class FakeJobStore:
@@ -109,3 +109,74 @@ class TestExecutorTimeout:
         assert JobStatus.COMPLETED in statuses
         assert JobStatus.FAILED not in statuses
         assert "test-job" in store.released
+
+
+@pytest.mark.enable_socket
+class TestExecutorAudioQuality:
+    """Tests for audio_quality propagation through JobExecutor to SyncService."""
+
+    @pytest.fixture
+    def store(self) -> FakeJobStore:
+        return FakeJobStore()
+
+    @pytest.mark.asyncio
+    async def test_audio_quality_passed_to_sync_service(
+        self,
+        store: FakeJobStore,
+        tmp_path: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """audio_quality should be forwarded to SyncService."""
+        executor = JobExecutor(job_store=store, base_path=tmp_path, audio_quality=5)
+
+        captured_quality: list[int] = []
+
+        original_init = SyncService.__init__
+
+        def spy_init(self: Any, *args: Any, **kwargs: Any) -> None:
+            original_init(self, *args, **kwargs)
+            captured_quality.append(self.audio_quality)
+
+        monkeypatch.setattr(
+            "yubal_api.services.job_executor.SyncService.__init__",
+            spy_init,
+        )
+        monkeypatch.setattr(
+            "yubal_api.services.job_executor.SyncService.run",
+            lambda *a, **kw: SyncResult(success=True),
+        )
+
+        await executor._run_job("test-job", "https://example.com")
+
+        assert captured_quality == [5]
+
+    @pytest.mark.asyncio
+    async def test_audio_quality_defaults_to_zero(
+        self,
+        store: FakeJobStore,
+        tmp_path: Any,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """audio_quality should default to 0 (best) when not specified."""
+        executor = JobExecutor(job_store=store, base_path=tmp_path)
+
+        captured_quality: list[int] = []
+
+        original_init = SyncService.__init__
+
+        def spy_init(self: Any, *args: Any, **kwargs: Any) -> None:
+            original_init(self, *args, **kwargs)
+            captured_quality.append(self.audio_quality)
+
+        monkeypatch.setattr(
+            "yubal_api.services.job_executor.SyncService.__init__",
+            spy_init,
+        )
+        monkeypatch.setattr(
+            "yubal_api.services.job_executor.SyncService.run",
+            lambda *a, **kw: SyncResult(success=True),
+        )
+
+        await executor._run_job("test-job", "https://example.com")
+
+        assert captured_quality == [0]

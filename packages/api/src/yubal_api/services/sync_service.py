@@ -275,6 +275,7 @@ class SyncService:
     ascii_filenames: bool = False
     download_ugc: bool = False
     cache_path: Path | None = None
+    audio_quality: int = 0
     _codec: AudioCodec = field(init=False)
 
     def __post_init__(self) -> None:
@@ -317,6 +318,7 @@ class SyncService:
             ascii_filenames=self.ascii_filenames,
             download_ugc=self.download_ugc,
             cache_path=self.cache_path,
+            audio_quality=self.audio_quality,
         )
         return workflow.execute()
 
@@ -347,6 +349,7 @@ class _SyncWorkflow:
     ascii_filenames: bool
     download_ugc: bool
     cache_path: Path | None
+    audio_quality: int
 
     # Workflow state
     content_info: ContentInfo | None = field(default=None, init=False)
@@ -391,6 +394,7 @@ class _SyncWorkflow:
             download=DownloadConfig(
                 base_path=self.base_path,
                 codec=self.codec,
+                quality=self.audio_quality,
                 quiet=True,
                 fetch_lyrics=self.fetch_lyrics,
                 ascii_filenames=self.ascii_filenames,

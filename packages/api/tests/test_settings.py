@@ -201,3 +201,17 @@ class TestCronExpression:
         """Should use daily at midnight as default."""
         settings = _create_settings()
         assert settings.scheduler_cron == "0 0 * * *"
+
+
+class TestAudioQuality:
+    """Tests for audio_quality setting."""
+
+    def test_default_audio_quality(self) -> None:
+        """Should default to 0 (best quality)."""
+        settings = _create_settings()
+        assert settings.audio_quality == "0"
+
+    def test_custom_audio_quality(self) -> None:
+        """Should accept custom audio quality values."""
+        settings = _create_settings(audio_quality="5")
+        assert settings.audio_quality == "5"

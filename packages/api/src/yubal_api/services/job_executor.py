@@ -46,6 +46,7 @@ class JobExecutor:
         job_store: JobExecutionStore,
         base_path: Path,
         audio_format: AudioCodec = AudioCodec.OPUS,
+        audio_quality: int = 0,
         cookies_path: Path | None = None,
         fetch_lyrics: bool = True,
         apply_replaygain: bool = False,
@@ -61,6 +62,7 @@ class JobExecutor:
             job_store: Store for job persistence (protocol-based for testability).
             base_path: Base directory for downloaded files.
             audio_format: Target audio format (opus, mp3, m4a).
+            audio_quality: Audio quality (0 = best, 10 = worst).
             cookies_path: Optional path to cookies.txt for authenticated requests.
             fetch_lyrics: Whether to fetch lyrics from lrclib.net.
             apply_replaygain: Whether to apply ReplayGain tags using rsgain.
@@ -73,6 +75,7 @@ class JobExecutor:
         self._job_store = job_store
         self._base_path = base_path
         self._audio_format = audio_format
+        self._audio_quality = audio_quality
         self._cookies_path = cookies_path
         self._fetch_lyrics = fetch_lyrics
         self._apply_replaygain = apply_replaygain
@@ -233,6 +236,7 @@ class JobExecutor:
                     self._ascii_filenames,
                     self._download_ugc,
                     self._cache_path,
+                    self._audio_quality,
                 )
                 result = await asyncio.to_thread(
                     sync_service.run,

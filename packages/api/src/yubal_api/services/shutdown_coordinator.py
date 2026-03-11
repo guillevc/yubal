@@ -26,11 +26,6 @@ class ShutdownCoordinator:
         """Set the job executor for cancellation during shutdown."""
         self._job_executor = executor
 
-    @property
-    def is_shutting_down(self) -> bool:
-        """Check if shutdown has been initiated."""
-        return self._shutting_down.is_set()
-
     def begin_shutdown(self) -> int:
         """Begin shutdown sequence - cancel all running jobs.
 

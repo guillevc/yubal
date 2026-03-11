@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends
-from yubal import AudioCodec
 
 from yubal_api.api.container import Services, get_services
 from yubal_api.services.job_event_bus import JobEventBus
@@ -79,7 +78,6 @@ LogBufferDep = Annotated[LogBuffer, Depends(_get_log_buffer)]
 
 # -- Settings dependencies --
 
-AudioFormatDep = Annotated[AudioCodec, Depends(lambda: get_settings().audio_format)]
 CookiesFileDep = Annotated[Path, Depends(lambda: get_settings().cookies_file)]
 YtdlpDirDep = Annotated[Path, Depends(lambda: get_settings().ytdlp_dir)]
 

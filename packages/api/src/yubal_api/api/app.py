@@ -163,6 +163,7 @@ def create_services(repository: SubscriptionRepository) -> Services:
         job_store=job_store,
         base_path=settings.data,
         audio_format=settings.audio_format,
+        audio_quality=int(settings.audio_quality),
         cookies_path=settings.cookies_file,
         fetch_lyrics=settings.fetch_lyrics,
         apply_replaygain=settings.replaygain,
