@@ -67,6 +67,13 @@ RUN set -eux \
          && rm /tmp/rsgain.deb; \
        fi \
     #
+    # --- gosu (for entrypoint privilege drop) ---
+    && dpkg_arch="$(dpkg --print-architecture)" \
+    && curl -fsSL -o /usr/local/bin/gosu \
+       "https://github.com/tianon/gosu/releases/download/1.17/gosu-${dpkg_arch}" \
+    && chmod +x /usr/local/bin/gosu \
+    && gosu --version \
+    #
     # --- Cleanup ---
     && apt-get purge -y curl xz-utils unzip \
     && apt-get autoremove -y \
@@ -79,6 +86,8 @@ RUN set -eux \
 # Copy built artifacts
 COPY --from=python-builder --chown=yubal:yubal /app/.venv /app/.venv
 COPY --from=web-builder --chown=yubal:yubal /app/web/dist ./web/dist
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
@@ -86,6 +95,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
     YUBAL_HOST=0.0.0.0 \
     YUBAL_PORT=8000
 
-USER yubal
 EXPOSE 8000
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "-m", "yubal_api"]
