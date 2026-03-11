@@ -28,7 +28,7 @@ jobs:
         with:
           version: 2026.1.3
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cache/uv
@@ -36,7 +36,7 @@ jobs:
           key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
           restore-keys: uv-${{ runner.os }}-
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: web/node_modules
           key: bun-${{ runner.os }}-${{ hashFiles('web/bun.lock') }}
