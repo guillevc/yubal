@@ -97,10 +97,11 @@ services:
   yubal:
     image: ghcr.io/guillevc/yubal:latest
     container_name: yubal
-    user: 1000:1000
     ports:
       - 8000:8000
     environment:
+      PUID: 1000
+      PGID: 1000
       YUBAL_SCHEDULER_CRON: "0 0 * * *"
       YUBAL_DOWNLOAD_UGC: false
       YUBAL_TZ: UTC
@@ -111,10 +112,7 @@ services:
 ```
 
 > [!TIP]
-> **Volume permissions:** The container runs as UID:GID `1000:1000` by default. If your host user has a different UID, either:
->
-> - Change `user:` to match your UID:GID (run `id` to check), or
-> - Set ownership on the volume directories: `chown 1000:1000 -R data config`
+> **Volume permissions:** Set `PUID`/`PGID` to match your host user (run `id` to check). This also ensures compatibility with podman rootless.
 
 ```bash
 docker compose up -d
@@ -127,6 +125,8 @@ docker compose up -d
 
 | Variable                    | Description                                       | Default (Docker) |
 | --------------------------- | ------------------------------------------------- | ---------------- |
+| `PUID`                      | User ID for file ownership                        | `1000`           |
+| `PGID`                      | Group ID for file ownership                       | `1000`           |
 | `YUBAL_AUDIO_FORMAT`        | `opus`, `mp3`, or `m4a`                           | `opus`           |
 | `YUBAL_AUDIO_QUALITY`       | Transcode quality (0=best, 10=worst)              | `0`              |
 | `YUBAL_SCHEDULER_ENABLED`   | Enable automatic scheduled sync                   | `true`           |
