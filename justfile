@@ -30,16 +30,6 @@ install: install-py install-web
 install-py:
     uv sync --frozen --all-packages --all-extras
 
-# Install without CLI extras (for CI / production)
-[group('setup')]
-[doc("Install all dependencies except CLI extras")]
-install-no-cli: install-py-no-cli install-web
-
-[group('setup')]
-[private]
-install-py-no-cli:
-    uv sync --frozen --all-packages
-
 [group('setup')]
 [private]
 [working-directory('web')]
