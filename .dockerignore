@@ -32,6 +32,9 @@ ytdlp/
 Dockerfile
 compose.yaml
 
+# Extension
+extension
+
 # Misc
 .env*
 *.log
