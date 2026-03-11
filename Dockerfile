@@ -31,7 +31,6 @@ RUN uv sync --package yubal-api --no-dev --frozen --no-cache --no-editable
 FROM python:3.12-slim-bookworm
 
 ARG TARGETARCH
-ARG DENO_VERSION=2.6.3
 ARG RSGAIN_VERSION=3.6
 
 WORKDIR /app
@@ -39,15 +38,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install runtime dependencies in a single layer:
 #   1. ffmpeg (static binary)
-#   2. deno (JS runtime for yt-dlp)
-#   3. rsgain (ReplayGain tagger, amd64 only)
-#   4. Cleanup temp packages
-#   5. Create non-root user
+#   2. rsgain (ReplayGain tagger, amd64 only)
+#   3. Cleanup temp packages
+#   4. Create non-root user
 # hadolint ignore=DL3008
 RUN set -eux \
     # --- Temp build deps ---
     && apt-get update \
-    && apt-get install -y --no-install-recommends curl xz-utils unzip ca-certificates \
+    && apt-get install -y --no-install-recommends curl xz-utils ca-certificates \
     #
     # --- ffmpeg (static) ---
     && curl -fsSL --retry 3 --retry-delay 5 -o /tmp/ffmpeg.tar.xz \
@@ -55,9 +53,6 @@ RUN set -eux \
     && tar -xJf /tmp/ffmpeg.tar.xz --strip-components=1 -C /usr/local/bin/ \
        --wildcards '*/ffmpeg' '*/ffprobe' \
     && rm /tmp/ffmpeg.tar.xz \
-    #
-    # --- deno (for yt-dlp) ---
-    && curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh -s v${DENO_VERSION} \
     #
     # --- rsgain (amd64 only) ---
     && if [ "$TARGETARCH" = "amd64" ]; then \
@@ -75,7 +70,7 @@ RUN set -eux \
     && gosu --version \
     #
     # --- Cleanup ---
-    && apt-get purge -y curl xz-utils unzip \
+    && apt-get purge -y curl xz-utils \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* \
     #
