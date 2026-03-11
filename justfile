@@ -289,9 +289,9 @@ version VERSION:
     git tag v{{VERSION}}
 
 [group('utils')]
-[doc("Preview changelog between two versions")]
-changelog from to:
-    git cliff v{{from}}..v{{to}}
+[doc("Preview changelog (from tag to HEAD, or between two tags)")]
+changelog from to="HEAD":
+    git cliff v{{from}}..{{to}}
 
 [group('utils')]
 [doc("Write full changelog to CHANGELOG.md")]
