@@ -21,11 +21,11 @@ Pre-built zips for both browsers are available on the [releases page](https://gi
 
 ### Firefox
 
-Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/yubal/).
+**(Recommended)** Install from [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/yubal/).
 
 Alternatively, to install from a release zip:
 
-1. Download the `-firefox.zip` file
+1. Go to the [latest extension release](https://github.com/guillevc/yubal/releases?q=%F0%9F%A7%A9) and download the `-firefox.zip` file
 2. Open `about:debugging#/runtime/this-firefox`
 3. Click **Load Temporary Add-on...** and select the zip
 
@@ -36,7 +36,7 @@ Alternatively, to install from a release zip:
 
 The extension is not yet available on the Chrome Web Store. To install from a release zip:
 
-1. Download the `-chrome.zip` file and extract it
+1. Go to the [latest extension release](https://github.com/guillevc/yubal/releases?q=%F0%9F%A7%A9), grab the `-chrome.zip` file and extract it
 2. Open `chrome://extensions/`
 3. Enable **Developer mode** (toggle in the top right)
 4. Click **Load unpacked** and select the extracted folder
