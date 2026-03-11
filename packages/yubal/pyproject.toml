@@ -12,6 +12,8 @@ dependencies = [
   "unidecode>=1.3.0",
   # Pin to 1.x for older CPU compatibility (X86_V2 requirement in 2.x)
   "numpy<2.0",
+  # JS runtime required by yt-dlp for YouTube's EJS challenge solver
+  "deno>=2.0",
 ]
 
 [project.optional-dependencies]

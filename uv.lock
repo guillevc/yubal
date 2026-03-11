@@ -239,6 +239,19 @@ wheels = [
 ]
 
 [[package]]
+name = "deno"
+version = "2.7.5"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/31/8bbaf3fb6a41929ae161be0b2a79b2747b5e5490811573ef60af7e3aeac3/deno-2.7.5.tar.gz", hash = "sha256:50635e0462697fa6e79d90bcacbe98e19f785e604c0e5061754de89b3668af83", size = 8166, upload-time = "2026-03-11T12:48:44.286Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/68/15/47c4b8da4e1b312ab14a2517e3f484c4d67a879cb5099cb6c33b8ce00c8c/deno-2.7.5-py3-none-macosx_10_12_x86_64.whl", hash = "sha256:29cb89cdaea5f36133841fb4da058b1c6cb70d117ebfc7a24c717747b58e8503", size = 46641593, upload-time = "2026-03-11T12:48:16.589Z" },
+    { url = "https://files.pythonhosted.org/packages/1c/3a/c3f8842b7499ff3faeb7508711a82b736d3a4c6e0ffb359191386bcf539d/deno-2.7.5-py3-none-macosx_11_0_arm64.whl", hash = "sha256:6456980341e97e4eb88e0c560fa57cd1b5f732e0eaadccc6c47d5ada73a71ff3", size = 43537874, upload-time = "2026-03-11T12:48:21.958Z" },
+    { url = "https://files.pythonhosted.org/packages/71/a2/53a013ba3509648582748678d5c6980210a45e0913934f91bfe1ec237e07/deno-2.7.5-py3-none-manylinux_2_27_aarch64.whl", hash = "sha256:fdc1e647a06ef792643237c030f45295692b0abc05d5bc9894fb11fd70876953", size = 47265090, upload-time = "2026-03-11T12:48:26.819Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/85/88c76daa72575f7229bb94191f15f4771f0614227bf8467bfe06e051f4ab/deno-2.7.5-py3-none-manylinux_2_27_x86_64.whl", hash = "sha256:c15e6b8ccf5f0808cd5ba243ea4eea7d8d78f6fdff228f5c6c85b96ba286bd3c", size = 49262188, upload-time = "2026-03-11T12:48:32.125Z" },
+    { url = "https://files.pythonhosted.org/packages/42/5e/501a92ef93d6d46ed8a1a8c03cff8bcbccbc06c1f59b163113ff09cd23cf/deno-2.7.5-py3-none-win_amd64.whl", hash = "sha256:3e3d06006ee39901dd23068c4a501a4a524fb71c323e22503b1b2ddf236da463", size = 48481169, upload-time = "2026-03-11T12:48:38.684Z" },
+]
+
+[[package]]
 name = "fastapi"
 version = "0.135.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1273,6 +1286,7 @@ name = "yubal"
 version = "0.7.0"
 source = { editable = "packages/yubal" }
 dependencies = [
+    { name = "deno" },
     { name = "httpx" },
     { name = "mediafile" },
     { name = "numpy" },
@@ -1292,6 +1306,7 @@ cli = [
 
 [package.metadata]
 requires-dist = [
+    { name = "deno", specifier = ">=2.0" },
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "mediafile", specifier = ">=0.12.0" },
     { name = "numpy", specifier = "<2.0" },
