@@ -9,8 +9,6 @@ import {
 import { isActive } from "@/lib/job-status";
 import { showErrorToast } from "@/lib/toast";
 
-export type { Job } from "@/api/jobs";
-
 const SSE_URL = "/api/jobs/sse";
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000] as const;
 

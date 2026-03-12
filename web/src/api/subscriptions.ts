@@ -4,11 +4,11 @@ import type { components } from "./schema";
 export type Subscription = components["schemas"]["SubscriptionResponse"];
 export type SchedulerStatus = components["schemas"]["SchedulerStatus"];
 
-export type AddSubscriptionResult =
+type AddSubscriptionResult =
   | { success: true; id: string }
   | { success: false; error: string };
 
-export type SyncResult =
+type SyncResult =
   | { success: true; jobIds: string[] }
   | { success: false; error: string };
 
