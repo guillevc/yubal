@@ -8,7 +8,7 @@ import {
 } from "react";
 import { useLocalStorage } from "./use-local-storage";
 
-export type Theme = "dark" | "light";
+type Theme = "dark" | "light";
 
 interface ThemeContextValue {
   theme: Theme;

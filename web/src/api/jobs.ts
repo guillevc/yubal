@@ -11,7 +11,7 @@ export type JobEvent =
   | components["schemas"]["DeletedEvent"]
   | components["schemas"]["ClearedEvent"];
 
-export type CreateJobResult =
+type CreateJobResult =
   | {
       success: true;
       jobId: string;
@@ -50,13 +50,6 @@ export async function createJob(
   }
 
   return { success: true, jobId: data.id };
-}
-
-export async function listJobs(): Promise<{ jobs: Job[] }> {
-  const { data, error } = await api.GET("/jobs");
-
-  if (error) return { jobs: [] };
-  return { jobs: data.jobs };
 }
 
 export async function deleteJob(jobId: string): Promise<void> {

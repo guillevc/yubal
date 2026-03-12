@@ -12,8 +12,6 @@ import {
 import { showErrorToast, showSuccessToast } from "@/lib/toast";
 import { useCallback, useEffect, useState } from "react";
 
-export type { SchedulerStatus, Subscription } from "@/api/subscriptions";
-
 export interface UseSubscriptionsResult {
   subscriptions: Subscription[];
   schedulerStatus: SchedulerStatus | null;
