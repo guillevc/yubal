@@ -156,7 +156,7 @@ def build_content_info(
         or (first_track.cover_url if first_track else None),
         audio_codec=audio_format.upper(),
         audio_bitrate=None,  # Set after first successful download
-        kind=playlist.kind.value,
+        kind=playlist.kind,
     )
 
 
@@ -180,7 +180,7 @@ def build_early_content_info(
         thumbnail_url=playlist.cover_url,
         audio_codec=audio_format.upper(),
         audio_bitrate=None,
-        kind=playlist.kind.value,
+        kind=playlist.kind,
     )
 
 
