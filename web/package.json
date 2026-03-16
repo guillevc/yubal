@@ -16,7 +16,6 @@
     "test": "bun test",
     "test:watch": "bun test --watch"
   },
-  "packageManager": "bun@1.3.6",
   "dependencies": {
     "@formkit/tempo": "^1.0.0",
     "@heroui/react": "^2.8.9",
