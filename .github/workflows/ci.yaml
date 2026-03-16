@@ -26,7 +26,7 @@ jobs:
         env:
           MISE_ENV: ci
         with:
-          version: 2026.1.3
+          version: 2026.3.9
 
       - uses: actions/cache@v5
         with:
