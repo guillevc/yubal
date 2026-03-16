@@ -105,14 +105,14 @@ dev-api:
 [private]
 [working-directory('web')]
 dev-web:
-    bun run dev
+    bun --bun run dev
 
 # Build
 [group('build')]
 [doc("Build web frontend")]
 [working-directory('web')]
 build:
-    bun run build
+    bun --bun run build
 
 # Production
 [group('prod')]
@@ -138,7 +138,7 @@ lint-py:
 [private]
 [working-directory('web')]
 lint-web:
-    bun run lint
+    bun --bun run lint
 
 # Lint fix
 [group('lint')]
@@ -154,7 +154,7 @@ lint-fix-py:
 [private]
 [working-directory('web')]
 lint-fix-web:
-    bun run lint --fix
+    bun --bun run lint --fix
 
 # Format
 [group('format')]
@@ -170,12 +170,12 @@ format-py:
 [private]
 [working-directory('web')]
 format-web:
-    bun run format
+    bun --bun run format
 
 [group('format')]
 [private]
 format-root:
-    bunx prettier --write "*.md" "*.yaml" --ignore-unknown
+    bunx --bun prettier --write "*.md" "*.yaml" --ignore-unknown
 
 # Format check
 [group('format')]
@@ -191,12 +191,12 @@ format-check-py:
 [private]
 [working-directory('web')]
 format-check-web:
-    bun run format:check
+    bun --bun run format:check
 
 [group('format')]
 [private]
 format-check-root:
-    bunx prettier --check "*.md" "*.yaml" --ignore-unknown
+    bunx --bun prettier --check "*.md" "*.yaml" --ignore-unknown
 
 # Typecheck
 [group('typecheck')]
@@ -212,7 +212,7 @@ typecheck-py:
 [private]
 [working-directory('web')]
 typecheck-web:
-    bun run typecheck
+    bun --bun run typecheck
 
 # Tests
 [group('test')]
@@ -229,7 +229,7 @@ test-py:
 [private]
 [working-directory('web')]
 test-web:
-    bun run test
+    bun --bun run test
 
 # Coverage
 [group('test')]
@@ -352,7 +352,7 @@ dead-code-py:
 [doc("Detect dead web code")]
 [working-directory('web')]
 dead-code-web:
-    bunx knip
+    bunx --bun knip
 
 # Documentation
 [group('docs')]

@@ -1,2 +1,2 @@
 [settings]
-disable_tools = ["deno", "git-cliff", "github:complexlogic/rsgain"]
+disable_tools = ["git-cliff", "github:complexlogic/rsgain"]
