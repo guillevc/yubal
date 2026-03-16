@@ -63,12 +63,26 @@ export default defineConfig({
     outDir: "dist",
     sourcemap: true,
     chunkSizeWarningLimit: 800,
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom"],
-          "vendor-heroui": ["@heroui/react"],
-          "vendor-icons": ["lucide-react"],
+        codeSplitting: {
+          groups: [
+            {
+              name: "vendor-react",
+              test: /node_modules[\\/]react/,
+              priority: 20,
+            },
+            {
+              name: "vendor-heroui",
+              test: /node_modules[\\/]@heroui/,
+              priority: 15,
+            },
+            {
+              name: "vendor-icons",
+              test: /node_modules[\\/]lucide-react/,
+              priority: 10,
+            },
+          ],
         },
       },
     },
