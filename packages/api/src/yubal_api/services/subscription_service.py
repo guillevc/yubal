@@ -1,5 +1,6 @@
 """Subscription business logic service."""
 
+import builtins
 import logging
 from datetime import UTC, datetime
 from uuid import UUID
@@ -46,7 +47,7 @@ class SubscriptionService:
         *,
         enabled: bool | None = None,
         type: SubscriptionType | None = None,
-    ) -> list[Subscription]:
+    ) -> builtins.list[Subscription]:
         return self._repository.list(enabled=enabled, type=type)
 
     def get(self, subscription_id: UUID) -> Subscription:

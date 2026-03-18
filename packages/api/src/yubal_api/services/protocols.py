@@ -1,5 +1,6 @@
 """Service protocols for dependency injection."""
 
+import builtins
 from datetime import datetime
 from typing import Protocol
 from uuid import UUID
@@ -69,7 +70,7 @@ class SubscriptionRepository(Protocol):
         *,
         enabled: bool | None = None,
         type: SubscriptionType | None = None,
-    ) -> list[Subscription]: ...
+    ) -> builtins.list[Subscription]: ...
 
     def get(self, id: UUID) -> Subscription | None: ...
 
