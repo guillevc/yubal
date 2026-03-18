@@ -238,7 +238,7 @@ class YTDLPDownloader:
                 except DownloadCancelled as e:
                     self._cleanup_partial_downloads(output_path)
                     raise CancellationError("Download cancelled") from e
-                except KeyboardInterrupt, SystemExit:
+                except (KeyboardInterrupt, SystemExit):
                     raise
                 except Exception as e:
                     error_msg = str(e)
