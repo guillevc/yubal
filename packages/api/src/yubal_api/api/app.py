@@ -209,7 +209,7 @@ def create_api_router() -> APIRouter:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Application lifespan handler for startup/shutdown."""
     settings = get_settings()
     logger.info("Starting application...")
