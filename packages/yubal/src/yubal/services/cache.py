@@ -1,5 +1,7 @@
 """Persistent extraction cache backed by SQLite."""
 
+from __future__ import annotations
+
 import logging
 import sqlite3
 from pathlib import Path

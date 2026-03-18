@@ -1,6 +1,5 @@
 """Database repository for subscriptions."""
 
-import builtins
 from uuid import UUID
 
 from sqlalchemy import Engine
@@ -21,7 +20,7 @@ class SubscriptionRepository:
         *,
         enabled: bool | None = None,
         type: SubscriptionType | None = None,
-    ) -> builtins.list[Subscription]:
+    ) -> list[Subscription]:
         """List subscriptions with optional filters."""
         with Session(self._engine) as session:
             stmt = select(Subscription).order_by(col(Subscription.created_at).desc())

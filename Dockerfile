@@ -16,7 +16,7 @@ RUN VITE_VERSION=$VERSION \
     bun run build
 
 # Install Python dependencies
-FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim AS python-builder
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS python-builder
 
 # hadolint ignore=DL3008
 RUN apt-get update && apt-get install -y --no-install-recommends git \
@@ -28,7 +28,7 @@ COPY packages/ ./packages/
 RUN uv sync --package yubal-api --no-dev --frozen --no-cache --no-editable
 
 # Final runtime image
-FROM python:3.14-slim-bookworm
+FROM python:3.12-slim-bookworm
 
 ARG TARGETARCH
 ARG RSGAIN_VERSION=3.6

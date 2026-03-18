@@ -112,7 +112,7 @@ class PlaylistInfoService:
             kind=cls.kind,
         )
 
-    def _classify(self, playlist: Playlist) -> _Classification:
+    def _classify(self, playlist: Playlist) -> "_Classification":
         """Classify playlist as album or playlist and extract metadata.
 
         Uses the same logic as the regular extraction flow:

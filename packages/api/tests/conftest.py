@@ -22,7 +22,7 @@ from yubal_api.db.subscription_repository import SubscriptionRepository
 
 
 @pytest.fixture
-def engine() -> Generator[Engine]:
+def engine() -> Generator[Engine, None, None]:
     """Create in-memory SQLite engine for tests."""
     engine = create_engine("sqlite:///:memory:")
     SQLModel.metadata.create_all(engine)
