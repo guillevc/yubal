@@ -8,6 +8,12 @@ updates:
       - dependency-name: "yt-dlp"
     commit-message:
       prefix: "chore"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
