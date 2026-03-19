@@ -75,6 +75,7 @@ jobs:
         run: |
           echo "version=$(git describe --tags --always)" >> $GITHUB_OUTPUT
           echo "commit=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "date=$(date -u +'%B %-d, %Y')" >> $GITHUB_OUTPUT
           if git describe --tags --exact-match HEAD 2>/dev/null; then
             echo "is_release=true" >> $GITHUB_OUTPUT
           else
@@ -117,7 +118,9 @@ jobs:
           prev="${{ steps.prev-tag.outputs.tag }}"
           if [ "$prev" != "none" ]; then
             echo "" >> CHANGES.md
-            echo "**Full diff**: [\`${prev}...${GITHUB_REF_NAME}\`](https://github.com/${{ github.repository }}/compare/${prev}...${GITHUB_REF_NAME})" >> CHANGES.md
+            echo "---" >> CHANGES.md
+            echo "" >> CHANGES.md
+            echo "Built by @guillevc · **Full Changelog**: [\`${prev}...${GITHUB_REF_NAME}\`](https://github.com/${{ github.repository }}/compare/${prev}...${GITHUB_REF_NAME})" >> CHANGES.md
           fi
         env:
           GIT_CLIFF_OUTPUT: CHANGES.md
@@ -126,5 +129,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           draft: true
-          name: ${{ steps.version.outputs.version }}
+          name: ${{ steps.version.outputs.version }} — ${{ steps.version.outputs.date }}
           body_path: CHANGES.md
