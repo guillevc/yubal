@@ -135,6 +135,7 @@ docker compose up -d
 | `YUBAL_DOWNLOAD_UGC`        | Download user-generated content to `_Unofficial/` | `false`          |
 | `YUBAL_REPLAYGAIN`          | Apply ReplayGain tags to downloads                | `true`           |
 | `YUBAL_JOB_TIMEOUT_SECONDS` | Job execution timeout in seconds                  | `1800`           |
+| `YUBAL_BASE_PATH`           | URL base path for reverse proxy subfolder         | —                |
 | `YUBAL_TZ`                  | Timezone (IANA format)                            | `UTC`            |
 
 <details>

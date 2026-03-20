@@ -10,6 +10,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib.metadata import version
 from importlib.resources import files
+from pathlib import Path
 from typing import Any
 
 from alembic import command
@@ -21,7 +22,7 @@ from pydantic import TypeAdapter
 from rich.console import Console
 from rich.logging import RichHandler
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.responses import Response
+from starlette.responses import HTMLResponse, Response
 from starlette.staticfiles import StaticFiles
 from starlette.types import Scope
 from yubal import cleanup_part_files
@@ -197,7 +198,8 @@ def create_services(repository: SubscriptionRepository) -> Services:
 
 def create_api_router() -> APIRouter:
     """Create the API router with all routes under /api prefix."""
-    api_router = APIRouter(prefix="/api")
+    base_path = get_settings().base_path
+    api_router = APIRouter(prefix=f"{base_path}/api")
     api_router.include_router(health.router)
     api_router.include_router(info.router)
     api_router.include_router(jobs.router)
@@ -290,8 +292,9 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
         schema["components"]["schemas"][name] = json_schema
 
     # Define SSE endpoint response schemas
+    base_path = get_settings().base_path
     sse_endpoints = {
-        "/api/jobs/sse": {
+        f"{base_path}/api/jobs/sse": {
             "schema": {
                 "oneOf": [
                     {"$ref": "#/components/schemas/SnapshotEvent"},
@@ -302,7 +305,7 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
                 ]
             },
         },
-        "/api/logs/sse": {
+        f"{base_path}/api/logs/sse": {
             "schema": {"$ref": "#/components/schemas/LogEntry"},
         },
     }
@@ -321,21 +324,41 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
 
 
 class SPAStaticFiles(StaticFiles):
-    """StaticFiles configured for SPA fallback to index.html."""
+    """SPA static files with base path injection into index.html."""
+
+    def __init__(
+        self, *, base_path: str = "", directory: Path | str, **kwargs: Any
+    ) -> None:
+        super().__init__(directory=directory, **kwargs)
+        self._base_path = base_path
+        self._dir = Path(directory)
+        self._cached_index: str | None = None
+
+    def _get_index_html(self) -> str:
+        """Get index.html content with base path injected (cached)."""
+        if self._cached_index is None:
+            html = (self._dir / "index.html").read_text()
+            base_href = f"{self._base_path}/" if self._base_path else "/"
+            html = html.replace("<head>", f'<head><base href="{base_href}">', 1)
+            self._cached_index = html
+        return self._cached_index
 
     async def get_response(self, path: str, scope: Scope) -> Response:
         """Serve static files, falling back to index.html for SPA routes."""
+        if path == "." or path == "index.html":
+            return HTMLResponse(self._get_index_html())
         try:
             return await super().get_response(path, scope)
         except StarletteHTTPException as ex:
             if ex.status_code == 404:
-                return await super().get_response("index.html", scope)
+                return HTMLResponse(self._get_index_html())
             raise
 
 
 def create_app() -> FastAPI:
     """Create and configure the main FastAPI application."""
     settings = get_settings()
+    base_path = settings.base_path
 
     app = FastAPI(
         title="yubal",
@@ -343,6 +366,10 @@ def create_app() -> FastAPI:
         version=version("yubal_api"),
         lifespan=lifespan,
         debug=settings.debug,
+        root_path=base_path,
+        docs_url=f"{base_path}/docs",
+        redoc_url=f"{base_path}/redoc",
+        openapi_url=f"{base_path}/openapi.json",
     )
 
     # Custom OpenAPI schema to include SSE event types
@@ -370,7 +397,12 @@ def create_app() -> FastAPI:
 
     web_build = settings.root / "web" / "dist"
     if web_build.exists():
-        app.mount("/", SPAStaticFiles(directory=web_build, html=True), name="spa")
+        mount_path = f"{base_path}/" if base_path else "/"
+        app.mount(
+            mount_path,
+            SPAStaticFiles(base_path=base_path, directory=web_build, html=True),
+            name="spa",
+        )
 
     return app
 

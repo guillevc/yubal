@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { LogEntry, LogLine } from "@/api/logs";
+import { basePath } from "@/lib/base-path";
 
-const SSE_URL = "/api/logs/sse";
+const SSE_URL = `${basePath}/api/logs/sse`;
 const MAX_LOG_LINES = 1000;
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000] as const;
 
