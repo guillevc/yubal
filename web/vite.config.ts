@@ -39,6 +39,7 @@ function isRelease(): boolean {
 }
 
 export default defineConfig({
+  base: "./",
   resolve: {
     alias: {
       "@": resolve(__dirname, "src"),

@@ -8,7 +8,7 @@ from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo
 
 from croniter import croniter
-from pydantic import BeforeValidator, Field, model_validator
+from pydantic import BeforeValidator, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from yubal import AudioCodec
 
@@ -56,6 +56,12 @@ class Settings(BaseSettings):
     # Path settings (default to root-relative paths)
     data: Path = Field(description="Music library")
     config: Path = Field(description="Config directory")
+
+    # Reverse proxy
+    base_path: str = Field(
+        default="",
+        description="URL base path for reverse proxy subfolder deployment",
+    )
 
     # Server settings
     host: str = Field(default="127.0.0.1", description="Server host")
@@ -117,6 +123,17 @@ class Settings(BaseSettings):
 
     # Timezone
     tz: Timezone = Field(default="UTC", description="Timezone for timestamps")
+
+    @field_validator("base_path")
+    @classmethod
+    def normalize_base_path(cls, v: str) -> str:
+        """Normalize: leading /, no trailing /, bare / becomes empty."""
+        v = v.strip().rstrip("/")
+        if not v or v == "/":
+            return ""
+        if not v.startswith("/"):
+            v = f"/{v}"
+        return v
 
     @model_validator(mode="before")
     @classmethod

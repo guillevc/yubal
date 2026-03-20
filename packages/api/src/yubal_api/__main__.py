@@ -20,6 +20,7 @@ def main() -> None:
         host=settings.host,
         port=settings.port,
         reload=settings.reload,
+        root_path=settings.base_path,
     )
 
 

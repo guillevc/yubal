@@ -2,6 +2,7 @@
 
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
+import { basePath } from "@/lib/base-path";
 import { JobsPage } from "@/pages/jobs";
 import { SubscriptionsPage } from "@/pages/subscriptions";
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
@@ -64,7 +65,7 @@ const subscriptionsRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([jobsRoute, subscriptionsRoute]);
 
-export const router = createRouter({ routeTree });
+export const router = createRouter({ routeTree, basepath: basePath || "/" });
 
 declare module "@react-types/shared" {
   interface RouterConfig {

@@ -6,10 +6,11 @@ import {
   type Job,
   type JobEvent,
 } from "@/api/jobs";
+import { basePath } from "@/lib/base-path";
 import { isActive } from "@/lib/job-status";
 import { showErrorToast } from "@/lib/toast";
 
-const SSE_URL = "/api/jobs/sse";
+const SSE_URL = `${basePath}/api/jobs/sse`;
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000] as const;
 
 export function useJobsState() {
