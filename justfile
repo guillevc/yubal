@@ -231,6 +231,13 @@ test-py:
 test-web:
     bun --bun run test
 
+# E2E
+[group('test')]
+[doc("Run Playwright e2e tests")]
+[working-directory('e2e')]
+test-e2e: build
+    bun install && bun run install-browsers && bun run test
+
 # Coverage
 [group('test')]
 [doc("Run all tests with coverage")]

@@ -203,6 +203,32 @@ class TestCronExpression:
         assert settings.scheduler_cron == "0 0 * * *"
 
 
+class TestBasePath:
+    """Tests for base_path normalization."""
+
+    def test_default_is_empty(self) -> None:
+        settings = _create_settings()
+        assert settings.base_path == ""
+
+    @pytest.mark.parametrize(
+        ("input_val", "expected"),
+        [
+            ("/yubal", "/yubal"),
+            ("yubal", "/yubal"),
+            ("/yubal/", "/yubal"),
+            ("yubal/", "/yubal"),
+            ("/", ""),
+            ("", ""),
+            ("  /yubal  ", "/yubal"),
+            ("/a/b/c", "/a/b/c"),
+            ("/a/b/c/", "/a/b/c"),
+        ],
+    )
+    def test_normalizes_base_path(self, input_val: str, expected: str) -> None:
+        settings = _create_settings(base_path=input_val)
+        assert settings.base_path == expected
+
+
 class TestAudioQuality:
     """Tests for audio_quality setting."""
 
