@@ -44,7 +44,7 @@ export function CookieDropdown({
       </Dropdown>
     ) : (
       <Tooltip
-        content="Upload cookies.txt for YouTube authentication"
+        content="Upload cookies.txt for age-restricted or Premium content"
         closeDelay={0}
       >
         <Button

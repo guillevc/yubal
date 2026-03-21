@@ -4,7 +4,7 @@
 
 Self-hosted YouTube Music downloader. Paste a link, get a tagged, organized library.
 
-Playlist sync. Artist/year sorting. Duplicate detection. Media server ready.
+Scheduled sync. Smart deduplication. Media server ready. Browser extension included.
 
 [![CI](https://github.com/guillevc/yubal/actions/workflows/ci.yaml/badge.svg)](https://github.com/guillevc/yubal/actions/workflows/ci.yaml)
 [![Release](https://img.shields.io/github/v/release/guillevc/yubal)](https://github.com/guillevc/yubal/releases)
@@ -62,14 +62,14 @@ When downloading a playlist, each track goes to its album folder—the M3U file 
 
 ## ✨ Features
 
-- **Web UI** — Real-time progress, job queue, responsive design
+- **Web UI** — Real-time progress, job queue, works on mobile
 - **Albums, playlists & tracks** — Paste any YouTube Music link, get organized files
-- **Scheduled sync** — Subscribe to playlists; new tracks download automatically
+- **Scheduled sync** — Subscribe to playlists; new tracks appear in your library automatically
 - **Smart deduplication** — Same track across 10 playlists? Stored once, referenced everywhere
 - **Reliable downloads** — Automatic retry on failures, graceful cancellation
-- **Automatic lyrics** — Synced `.lrc` files downloaded alongside tracks when available
-- **ReplayGain tagging** — Track and album ReplayGain/R128 tags for consistent playback volume
-- **Format options** — Native `opus` (best quality), mp3, or m4a (direct download when available, transcoded otherwise)
+- **Automatic lyrics** — Synced `.lrc` files for karaoke-style playback in supported players
+- **ReplayGain tagging** — Consistent volume across your library, no more reaching for the volume knob
+- **Format options** — `opus` (best quality/size), mp3, or m4a — direct download when available, transcoded otherwise
 - **Media server ready** — Tested with [Navidrome, Jellyfin, and Gonic](#-media-server-integration)
 - **[CLI](packages/yubal/src/yubal/cli/README.md)** — Download and inspect metadata from the terminal
 
@@ -166,6 +166,9 @@ Tested with Navidrome, Jellyfin, and Gonic. Artists link correctly, even on trac
 
 ✅ Supported · ⚙️ Requires configuration · ❌ Not supported
 
+> [!TIP]
+> **Recommended stack:** yubal + [Navidrome](https://www.navidrome.org/) gives you a self-hosted music streaming setup. Add a client like [Symfonium](https://symfonium.app/) (Android), [Amperfy](https://github.com/BLeeEZ/amperfy) or [Arpeggi](https://github.com/argie-w/Arpeggi-App) (iOS), or [Supersonic](https://github.com/dweymouth/supersonic) (desktop) to listen anywhere.
+
 <details>
 <summary>Detailed setup guides</summary>
 
@@ -210,25 +213,25 @@ Need age-restricted content, private playlists, or Premium quality? Add your coo
 > [!CAUTION]
 > Cookie usage may trigger stricter rate limiting and could put your account at risk. See [#3](https://github.com/guillevc/yubal/issues/3) and [yt-dlp wiki](https://github.com/yt-dlp/yt-dlp/wiki/Extractors#youtube).
 
-## 🗺️ What's Coming
+## 🗺️ Roadmap
 
-- [x] Playlist support with M3U generation ([v0.2.0](https://github.com/guillevc/yubal/releases/tag/v0.2.0))
-- [x] Single track downloads ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
-- [x] Automatic lyrics (.lrc) ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
-- [x] Auto-sync playlists ([v0.4.0](https://github.com/guillevc/yubal/releases/tag/v0.4.0))
-- [x] UGC tracks (user-generated content, remixes, unofficial tracks) ([v0.5.0](https://github.com/guillevc/yubal/releases/tag/v0.5.0))
-- [x] Browser extension ([v0.7.0](https://github.com/guillevc/yubal/releases/tag/v0.7.0), [ext-v0.1.0](https://github.com/guillevc/yubal/releases/tag/ext-v0.1.0))
 - [ ] Flat folder mode
 - [ ] Post-download webhooks
 - [ ] New music automatic discovery
+- [x] Browser extension ([v0.7.0](https://github.com/guillevc/yubal/releases/tag/v0.7.0))
+- [x] UGC tracks — remixes, unofficial content ([v0.5.0](https://github.com/guillevc/yubal/releases/tag/v0.5.0))
+- [x] Auto-sync playlists ([v0.4.0](https://github.com/guillevc/yubal/releases/tag/v0.4.0))
+- [x] Automatic lyrics (.lrc) ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
+- [x] Single track downloads ([v0.3.0](https://github.com/guillevc/yubal/releases/tag/v0.3.0))
+- [x] Playlist support with M3U generation ([v0.2.0](https://github.com/guillevc/yubal/releases/tag/v0.2.0))
 
 ## 💜 Support
 
-If yubal is useful to you, consider supporting its development:
+yubal is free, open-source, and built by one person. If it saves you time, consider supporting development:
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/guillevc) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/guillevc) [![BTC](https://img.shields.io/badge/BTC-on--chain_%26_Lightning-f7931a?logo=bitcoin)](https://guillevc.dev)
 
-A ⭐ also helps others discover yubal!
+A ⭐ also helps others find the project!
 
 ## 📈 Star History
 
