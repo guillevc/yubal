@@ -1,6 +1,8 @@
 # yubal browser extension
 
-Browser extension for Chrome and Firefox that lets you send YouTube and YouTube Music URLs to your [yubal](https://github.com/guillevc/yubal) instance for downloading.
+Browser extension for Chrome and Firefox. Download tracks and subscribe to playlists directly from YouTube and YouTube Music — no need to copy-paste URLs.
+
+Works with any [yubal](https://github.com/guillevc/yubal) instance.
 
 <p align="center">
   <img src="docs/images/extension-track.png" width="33%" alt="Track view" />
@@ -10,10 +12,10 @@ Browser extension for Chrome and Firefox that lets you send YouTube and YouTube 
 
 ## Features
 
-- Download tracks directly from YouTube and YouTube Music pages
-- Subscribe to playlists and albums for automatic syncing
-- Configurable yubal instance URL
-- Icon grays out on non-YouTube pages
+- One-click downloads from YouTube and YouTube Music pages
+- Subscribe to playlists for automatic syncing
+- Works with any yubal instance (just set the URL)
+- Only activates on YouTube pages
 
 ## Install
 

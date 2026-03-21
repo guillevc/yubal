@@ -2,7 +2,7 @@
 
 Command-line interface for extracting metadata and downloading tracks from YouTube Music.
 
-> **Note:** The CLI is maintained but may lack some features available in the web UI, which is the main focus of the project.
+> **Note:** The CLI covers core workflows (metadata inspection, downloading, tag inspection). For playlist sync and job management, use the web UI.
 
 ## Installation
 
