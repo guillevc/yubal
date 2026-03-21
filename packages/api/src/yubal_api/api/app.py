@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import mimetypes
+import re
 import shutil
 import uuid
 from collections.abc import AsyncGenerator
@@ -339,7 +340,12 @@ class SPAStaticFiles(StaticFiles):
         if self._cached_index is None:
             html = (self._dir / "index.html").read_text()
             base_href = f"{self._base_path}/" if self._base_path else "/"
-            html = html.replace("<head>", f'<head><base href="{base_href}">', 1)
+            html = re.sub(
+                r'<base\s+href="/"\s*/?>',
+                f'<base href="{base_href}">',
+                html,
+                count=1,
+            )
             self._cached_index = html
         return self._cached_index
 
@@ -366,7 +372,6 @@ def create_app() -> FastAPI:
         version=version("yubal_api"),
         lifespan=lifespan,
         debug=settings.debug,
-        root_path=base_path,
         docs_url=f"{base_path}/docs",
         redoc_url=f"{base_path}/redoc",
         openapi_url=f"{base_path}/openapi.json",

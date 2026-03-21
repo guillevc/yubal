@@ -1,0 +1,11 @@
+{
+  "name": "yubal-e2e",
+  "private": true,
+  "scripts": {
+    "install-browsers": "playwright install chromium --with-deps",
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}
