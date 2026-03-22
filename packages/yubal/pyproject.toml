@@ -1,6 +1,7 @@
 [project]
 name = "yubal"
 version = "0.7.2"
+description = "Self-hosted YouTube Music downloader and library manager"
 dependencies = [
   "ytmusicapi>=1.9.0",
   "pydantic>=2.0.0",
@@ -15,6 +16,11 @@ dependencies = [
   # JS runtime required by yt-dlp for YouTube's EJS challenge solver
   "deno>=2.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/guillevc/yubal"
+Repository = "https://github.com/guillevc/yubal"
+Issues = "https://github.com/guillevc/yubal/issues"
 
 [project.optional-dependencies]
 cli = ["typer>=0.21.1", "rich>=13.0.0"]
