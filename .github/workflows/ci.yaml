@@ -45,7 +45,7 @@ jobs:
       - run: just install
       - run: just check test-cov
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v6
         with:
           files: coverage/py.lcov,web/coverage/lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
