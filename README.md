@@ -225,7 +225,7 @@ Need age-restricted content, private playlists, or Premium quality? Add your coo
 
 If yubal is useful to you, consider supporting its development:
 
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/guillevc) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/guillevc)
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/guillevc) [![Sponsor](https://img.shields.io/badge/sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/guillevc) [![BTC](https://img.shields.io/badge/BTC-on--chain_%26_Lightning-f7931a?logo=bitcoin)](https://guillevc.dev)
 
 A ⭐ also helps others discover yubal!
 
