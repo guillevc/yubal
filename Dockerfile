@@ -28,7 +28,7 @@ COPY packages/ ./packages/
 RUN uv sync --package yubal-api --no-dev --frozen --no-cache --no-editable
 
 # Final runtime image
-FROM python:3.12-slim-bookworm
+FROM python:3.13.13-slim-bookworm
 
 ARG TARGETARCH
 ARG DENO_VERSION=2.6.3
