@@ -13,7 +13,7 @@ yubal = { workspace = true }
 dev = [
     "ruff>=0.14.11",
     "ty>=0.0.11",
-    "pytest>=9.0.2",
+    "pytest>=9.0.3",
     "pytest-cov>=7.0.0",
     "pytest-socket>=0.7.0",
     "pytest-asyncio>=1.3.0",
