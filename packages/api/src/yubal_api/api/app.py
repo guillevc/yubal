@@ -6,7 +6,7 @@ import mimetypes
 import re
 import shutil
 import uuid
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib.metadata import version
@@ -378,7 +378,7 @@ def create_app() -> FastAPI:
     )
 
     # Custom OpenAPI schema to include SSE event types
-    app.openapi = lambda: custom_openapi(app)  # type: ignore[method-assign]
+    app.openapi: Callable[[], dict[str, Any]] = lambda: custom_openapi(app)
 
     # Register exception handlers
     register_exception_handlers(app)

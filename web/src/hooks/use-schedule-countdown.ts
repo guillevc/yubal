@@ -1,6 +1,6 @@
 import { formatCountdown } from "@/lib/format";
 import { CronExpressionParser } from "cron-parser";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function computeNextRun(
   cronExpression: string | null | undefined,
@@ -27,15 +27,12 @@ export function useScheduleCountdown(
   cronExpression: string | null | undefined,
   timezone: string | null | undefined,
 ): string {
-  const [nextRun, setNextRun] = useState<Date | null>(() =>
-    computeNextRun(cronExpression, timezone),
-  );
+  const [recomputeCount, setRecomputeCount] = useState(0);
+  const nextRun = useMemo(() => {
+    void recomputeCount;
+    return computeNextRun(cronExpression, timezone);
+  }, [cronExpression, timezone, recomputeCount]);
   const [tick, setTick] = useState(0);
-
-  // Recompute when inputs change
-  useEffect(() => {
-    setNextRun(computeNextRun(cronExpression, timezone));
-  }, [cronExpression, timezone]);
 
   // Schedule recomputation when next run time passes
   useEffect(() => {
@@ -45,18 +42,18 @@ export function useScheduleCountdown(
     if (ms <= 0) {
       // Already passed, schedule immediate recompute
       const timeout = setTimeout(() => {
-        setNextRun(computeNextRun(cronExpression, timezone));
+        setRecomputeCount((count) => count + 1);
       }, 0);
       return () => clearTimeout(timeout);
     }
 
     // Schedule recomputation when next run time passes
     const timeout = setTimeout(() => {
-      setNextRun(computeNextRun(cronExpression, timezone));
+      setRecomputeCount((count) => count + 1);
     }, ms + 100); // Small buffer to ensure cron-parser moves to next interval
 
     return () => clearTimeout(timeout);
-  }, [nextRun, cronExpression, timezone]);
+  }, [nextRun]);
 
   // Tick every second for countdown display
   useEffect(() => {

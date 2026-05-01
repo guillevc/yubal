@@ -51,11 +51,11 @@ class Settings(BaseSettings):
     )
 
     # Project root (required, set via YUBAL_ROOT)
-    root: Path = Field(description="Project root directory")
+    root: Path = Field(default_factory=Path, description="Project root directory")
 
     # Path settings (default to root-relative paths)
-    data: Path = Field(description="Music library")
-    config: Path = Field(description="Config directory")
+    data: Path = Field(default_factory=Path, description="Music library")
+    config: Path = Field(default_factory=Path, description="Config directory")
 
     # Reverse proxy
     base_path: str = Field(
@@ -176,4 +176,4 @@ class Settings(BaseSettings):
 @cache
 def get_settings() -> Settings:
     """Get cached settings instance."""
-    return Settings()  # type: ignore[call-arg]
+    return Settings()
