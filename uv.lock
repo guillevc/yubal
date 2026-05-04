@@ -1294,7 +1294,7 @@ dependencies = [
 
 [[package]]
 name = "yubal"
-version = "0.7.2"
+version = "0.8.0"
 source = { editable = "packages/yubal" }
 dependencies = [
     { name = "deno" },
@@ -1334,7 +1334,7 @@ provides-extras = ["cli"]
 
 [[package]]
 name = "yubal-api"
-version = "0.7.2"
+version = "0.8.0"
 source = { editable = "packages/api" }
 dependencies = [
     { name = "alembic" },
@@ -1363,7 +1363,7 @@ requires-dist = [
 
 [[package]]
 name = "yubal-workspace"
-version = "0.7.2"
+version = "0.8.0"
 source = { virtual = "." }
 
 [package.dev-dependencies]

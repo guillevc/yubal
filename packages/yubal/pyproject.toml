@@ -1,6 +1,6 @@
 [project]
 name = "yubal"
-version = "0.7.2"
+version = "0.8.0"
 description = "Self-hosted YouTube Music downloader and library manager"
 dependencies = [
   "ytmusicapi>=1.9.0",
