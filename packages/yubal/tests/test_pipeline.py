@@ -2,6 +2,7 @@
 
 import logging
 from pathlib import Path
+from typing import Protocol, cast
 from unittest.mock import MagicMock
 
 import pytest
@@ -14,6 +15,14 @@ from yubal.models.results import DownloadResult
 from yubal.models.track import PlaylistInfo, TrackMetadata
 from yubal.services.artifacts import ArtifactPaths
 from yubal.services.playlist_download_service import PlaylistDownloadService
+
+
+class _FailedDownloadLogRecord(Protocol):
+    """LogRecord fields added by PlaylistDownloadService failed-download logging."""
+
+    status: str
+    track_title: str
+    track_artist: str
 
 
 @pytest.fixture
@@ -164,10 +173,14 @@ class TestDownloadTrack:
         assert "Failed Downloads (1 track)" in messages
         assert "The Kid LAROI - A COLD PLAY: Video unavailable" in messages
 
-        failed_record = next(
-            record
-            for record in caplog.records
-            if record.getMessage() == "The Kid LAROI - A COLD PLAY: Video unavailable"
+        failed_record = cast(
+            _FailedDownloadLogRecord,
+            next(
+                record
+                for record in caplog.records
+                if record.getMessage()
+                == "The Kid LAROI - A COLD PLAY: Video unavailable"
+            ),
         )
         assert failed_record.status == "failed"
         assert failed_record.track_title == "A COLD PLAY"
