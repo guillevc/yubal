@@ -380,6 +380,42 @@ class TestBuildTrackPath:
         )
         assert result == Path("/music/Björk/1997 - Homogenic/02 - Jóga")
 
+    def test_limits_composed_path_components(self) -> None:
+        """Should cap final path components after adding prefixes."""
+        result = build_track_path(
+            base=Path("/music"),
+            artist="A" * 300,
+            year="2024",
+            album="B" * 300,
+            track_number=1,
+            title="C" * 300,
+        )
+
+        artist, album, track = result.parts[-3:]
+        assert len(artist.encode("utf-8")) <= 240
+        assert len(album.encode("utf-8")) <= 240
+        assert len(track.encode("utf-8")) <= 240
+        assert len(f"{track}.opus".encode()) <= 255
+
+    def test_limits_multibyte_path_components(self) -> None:
+        """Should cap path components by bytes without splitting unicode."""
+        result = build_track_path(
+            base=Path("/music"),
+            artist="歌" * 300,
+            year="2024",
+            album="曲" * 300,
+            track_number=1,
+            title="音" * 300,
+        )
+
+        artist, album, track = result.parts[-3:]
+        assert len(artist.encode("utf-8")) <= 240
+        assert len(album.encode("utf-8")) <= 240
+        assert len(track.encode("utf-8")) <= 240
+        assert artist
+        assert album
+        assert track
+
     # === Optional Parameters (None values) ===
 
     def test_build_path_without_track_number(self) -> None:
@@ -732,6 +768,20 @@ class TestBuildUnmatchedTrackPath:
         )
         assert result == Path("/music/_Unmatched/Björk - Jóga [xyz789]")
 
+    def test_limits_filename_and_preserves_video_id_suffix(self) -> None:
+        """Should cap flat filenames while keeping the video ID."""
+        result = build_unmatched_track_path(
+            base=Path("/music"),
+            artist="A" * 300,
+            title="B" * 300,
+            video_id="abc123",
+        )
+
+        filename = result.name
+        assert len(filename.encode("utf-8")) <= 240
+        assert filename.endswith(" [abc123]")
+        assert len(f"{filename}.opus".encode()) <= 255
+
     # === Sanitization of Components ===
 
     @pytest.mark.parametrize(
@@ -898,6 +948,20 @@ class TestBuildUnofficialTrackPath:
         )
         assert result == Path("/music/_Unofficial/Bjork - Joga [abc123]")
 
+    def test_limits_filename_and_preserves_video_id_suffix(self) -> None:
+        """Should cap unofficial filenames while keeping the video ID."""
+        result = build_unofficial_track_path(
+            base=Path("/music"),
+            artist="A" * 300,
+            title="B" * 300,
+            video_id="xyz789",
+        )
+
+        filename = result.name
+        assert len(filename.encode("utf-8")) <= 240
+        assert filename.endswith(" [xyz789]")
+        assert len(f"{filename}.opus".encode()) <= 255
+
     def test_empty_component_fallbacks(self) -> None:
         """Should use fallback values for empty strings."""
         result = build_unofficial_track_path(
@@ -946,6 +1010,14 @@ class TestFormatPlaylistFilename:
         assert "[12345678]" in result
         assert "/" not in result
         assert ":" not in result
+
+    def test_limits_playlist_filename_and_preserves_id_suffix(self) -> None:
+        """Should cap playlist filenames while keeping the ID suffix."""
+        result = format_playlist_filename("A" * 300, "abc12345678")
+
+        assert len(result.encode()) <= 240
+        assert result.endswith(" [12345678]")
+        assert len(f"{result}.m3u".encode()) <= 255
 
     def test_empty_name_uses_fallback(self) -> None:
         """Should use fallback name for empty playlist name."""
