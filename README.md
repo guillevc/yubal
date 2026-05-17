@@ -112,7 +112,7 @@ services:
 ```
 
 > [!TIP]
-> **Volume permissions:** Set `PUID`/`PGID` to match your host user (run `id` to check). This also ensures compatibility with podman rootless.
+> **Volume permissions:** Set `PUID`/`PGID` to match your host user (run `id` to check). This also ensures compatibility with podman rootless. If `/app/data` is an NFS/Unraid mount that does not allow `chown`, make sure it is already writable by the configured `PUID`/`PGID`.
 
 ```bash
 docker compose up -d
