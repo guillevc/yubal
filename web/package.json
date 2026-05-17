@@ -19,7 +19,7 @@
   "dependencies": {
     "@formkit/tempo": "^1.1.0",
     "@heroui/react": "^2.8.10",
-    "@tanstack/react-router": "^1.170.0",
+    "@tanstack/react-router": "^1.170.4",
     "cron-parser": "^5.5.0",
     "lucide-react": "^0.577.0",
     "motion": "^12.38.0",
