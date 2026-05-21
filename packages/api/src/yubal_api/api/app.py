@@ -32,6 +32,7 @@ from yubal_api.api.container import Services
 from yubal_api.api.exceptions import register_exception_handlers
 from yubal_api.api.routes import (
     cookies,
+    download,
     health,
     info,
     jobs,
@@ -203,6 +204,7 @@ def create_api_router() -> APIRouter:
     api_router = APIRouter(prefix=f"{base_path}/api")
     api_router.include_router(health.router)
     api_router.include_router(info.router)
+    api_router.include_router(download.router)
     api_router.include_router(jobs.router)
     api_router.include_router(logs.router)
     api_router.include_router(cookies.router)
