@@ -57,9 +57,35 @@ class TestGenerateM3U:
         track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
         m3u_path = tmp_path / "_Playlists" / "My Playlist.m3u"
 
-        content = generate_m3u([(sample_track, track_path)], m3u_path)
+        content = generate_m3u([(sample_track, track_path)], m3u_path, "My Playlist")
 
         assert content.startswith("#EXTM3U\n")
+
+    def test_emits_playlist_directive(
+        self, sample_track: TrackMetadata, tmp_path: Path
+    ) -> None:
+        """Should emit #PLAYLIST: directive as the second line."""
+        track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
+        m3u_path = tmp_path / "_Playlists" / "Liked Songs.m3u"
+
+        content = generate_m3u([(sample_track, track_path)], m3u_path, "Liked Songs")
+
+        lines = content.splitlines()
+        assert lines[0] == "#EXTM3U"
+        assert lines[1] == "#PLAYLIST:Liked Songs"
+
+    def test_playlist_directive_preserves_unicode(
+        self, sample_track: TrackMetadata, tmp_path: Path
+    ) -> None:
+        """Should preserve unicode in #PLAYLIST: directive without sanitization."""
+        track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
+        m3u_path = tmp_path / "_Playlists" / "Musique.m3u"
+
+        content = generate_m3u(
+            [(sample_track, track_path)], m3u_path, "Musique Française"
+        )
+
+        assert "#PLAYLIST:Musique Française" in content
 
     def test_generates_extinf_lines(
         self, sample_track: TrackMetadata, tmp_path: Path
@@ -68,7 +94,7 @@ class TestGenerateM3U:
         track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
         m3u_path = tmp_path / "_Playlists" / "My Playlist.m3u"
 
-        content = generate_m3u([(sample_track, track_path)], m3u_path)
+        content = generate_m3u([(sample_track, track_path)], m3u_path, "My Playlist")
 
         assert "#EXTINF:-1,Radiohead - Airbag" in content
 
@@ -79,7 +105,7 @@ class TestGenerateM3U:
         track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
         m3u_path = tmp_path / "_Playlists" / "My Playlist.m3u"
 
-        content = generate_m3u([(sample_track, track_path)], m3u_path)
+        content = generate_m3u([(sample_track, track_path)], m3u_path, "My Playlist")
 
         # Path should be relative and go up from _Playlists to find Radiohead
         assert "../Radiohead/1997 - OK Computer/01 - Airbag.opus" in content
@@ -99,18 +125,19 @@ class TestGenerateM3U:
             (sample_track, track1_path),
             (sample_track_multiple_artists, track2_path),
         ]
-        content = generate_m3u(tracks, m3u_path)
+        content = generate_m3u(tracks, m3u_path, "My Playlist")
 
         lines = content.strip().split("\n")
-        # Header + 2 tracks * 2 lines each (EXTINF + path)
-        assert len(lines) == 5
+        # Header + #PLAYLIST: + 2 tracks * 2 lines each (EXTINF + path)
+        assert len(lines) == 6
 
         # Verify order
         assert lines[0] == "#EXTM3U"
-        assert lines[1] == "#EXTINF:-1,Radiohead - Airbag"
-        assert "../Radiohead/" in lines[2]
-        assert lines[3] == "#EXTINF:-1,Coldplay / Guest Artist - Sparks"
-        assert "../Coldplay/" in lines[4]
+        assert lines[1] == "#PLAYLIST:My Playlist"
+        assert lines[2] == "#EXTINF:-1,Radiohead - Airbag"
+        assert "../Radiohead/" in lines[3]
+        assert lines[4] == "#EXTINF:-1,Coldplay / Guest Artist - Sparks"
+        assert "../Coldplay/" in lines[5]
 
     def test_multiple_artists_joined_with_slash(
         self, sample_track_multiple_artists: TrackMetadata, tmp_path: Path
@@ -119,17 +146,19 @@ class TestGenerateM3U:
         track_path = tmp_path / "Coldplay" / "2000 - Parachutes" / "03 - Sparks.opus"
         m3u_path = tmp_path / "_Playlists" / "My Playlist.m3u"
 
-        content = generate_m3u([(sample_track_multiple_artists, track_path)], m3u_path)
+        content = generate_m3u(
+            [(sample_track_multiple_artists, track_path)], m3u_path, "My Playlist"
+        )
 
         assert "#EXTINF:-1,Coldplay / Guest Artist - Sparks" in content
 
     def test_empty_tracks_list(self, tmp_path: Path) -> None:
-        """Should generate valid M3U with only header for empty track list."""
+        """Should generate valid M3U with header and #PLAYLIST: for empty tracks."""
         m3u_path = tmp_path / "_Playlists" / "Empty.m3u"
 
-        content = generate_m3u([], m3u_path)
+        content = generate_m3u([], m3u_path, "Empty")
 
-        assert content == "#EXTM3U\n"
+        assert content == "#EXTM3U\n#PLAYLIST:Empty\n"
 
     def test_content_ends_with_newline(
         self, sample_track: TrackMetadata, tmp_path: Path
@@ -138,7 +167,7 @@ class TestGenerateM3U:
         track_path = tmp_path / "Radiohead" / "1997 - OK Computer" / "01 - Airbag.opus"
         m3u_path = tmp_path / "_Playlists" / "My Playlist.m3u"
 
-        content = generate_m3u([(sample_track, track_path)], m3u_path)
+        content = generate_m3u([(sample_track, track_path)], m3u_path, "My Playlist")
 
         assert content.endswith("\n")
 

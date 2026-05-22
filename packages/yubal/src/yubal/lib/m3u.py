@@ -14,14 +14,22 @@ from yubal.utils.filename import format_playlist_filename
 logger = logging.getLogger(__name__)
 
 
-def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> str:
+def generate_m3u(
+    tracks: list[tuple[TrackMetadata, Path]],
+    m3u_path: Path,
+    playlist_name: str,
+) -> str:
     """Generate M3U playlist content with paths relative to the M3U file location.
 
     Creates an extended M3U format file with track duration and title information.
+    Emits a ``#PLAYLIST:`` directive so players (Navidrome, VLC, Plex, MPD, etc.)
+    display the playlist by its name rather than by the on-disk filename, which
+    includes a collision-avoiding ID suffix.
 
     Args:
         tracks: List of tuples containing (TrackMetadata, file_path) for each track.
         m3u_path: Path where the M3U file will be written (used for relative paths).
+        playlist_name: Human-readable playlist name (used for ``#PLAYLIST:``).
 
     Returns:
         M3U file content as a string.
@@ -30,13 +38,14 @@ def generate_m3u(tracks: list[tuple[TrackMetadata, Path]], m3u_path: Path) -> st
         >>> from pathlib import Path
         >>> tracks = [(track_meta, Path("/music/Artist/2024 - Album/01 - Song.opus"))]
         >>> m3u_path = Path("/music/Playlists/My Playlist.m3u")
-        >>> content = generate_m3u(tracks, m3u_path)
+        >>> content = generate_m3u(tracks, m3u_path, "My Playlist")
         >>> print(content)
         #EXTM3U
+        #PLAYLIST:My Playlist
         #EXTINF:-1,Artist One; Artist Two - Song Title
         ../Artist/2024 - Album/01 - Song.opus
     """
-    lines = ["#EXTM3U"]
+    lines = ["#EXTM3U", f"#PLAYLIST:{playlist_name}"]
 
     for track, file_path in tracks:
         # Get duration from track metadata, use -1 if unknown
@@ -104,7 +113,7 @@ def write_m3u(
     m3u_path = playlists_dir / f"{filename}.m3u"
 
     # Generate and write content
-    content = generate_m3u(tracks, m3u_path)
+    content = generate_m3u(tracks, m3u_path, playlist_name)
     m3u_path.write_text(content, encoding="utf-8")
 
     return m3u_path
