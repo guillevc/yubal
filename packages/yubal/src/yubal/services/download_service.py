@@ -12,6 +12,7 @@ from typing import Any, Protocol
 import yt_dlp
 from yt_dlp.utils import DownloadCancelled
 
+from yubal.client import YTMusicProtocol
 from yubal.config import DownloadConfig
 from yubal.exceptions import CancellationError, DownloadError
 from yubal.models.cancel import CancelToken
@@ -19,7 +20,13 @@ from yubal.models.enums import DownloadStatus, MatchResult, SkipReason
 from yubal.models.progress import DownloadProgress
 from yubal.models.results import DownloadResult
 from yubal.models.track import TrackMetadata
-from yubal.services.lyrics import LyricsService, LyricsServiceProtocol
+from yubal.services.lyrics import (
+    LrclibFetcher,
+    LyricsFetcher,
+    LyricsService,
+    LyricsServiceProtocol,
+    YouTubeMusicLyricsFetcher,
+)
 from yubal.services.tagging_service import AudioFileTaggingService
 from yubal.utils.cover import fetch_cover
 from yubal.utils.filename import (
@@ -363,6 +370,7 @@ class DownloadService:
         downloader: DownloaderProtocol | None = None,
         cookies_path: Path | None = None,
         lyrics_service: LyricsServiceProtocol | None = None,
+        ytmusic_client: YTMusicProtocol | None = None,
     ) -> None:
         """Initialize the service.
 
@@ -374,6 +382,11 @@ class DownloadService:
                          Required for age-restricted or premium content.
             lyrics_service: Optional lyrics service implementation.
                            Uses LyricsService if fetch_lyrics is enabled.
+            ytmusic_client: Optional YTMusic client used to enable the
+                           YouTube Music lyrics fallback chain. When provided
+                           and `config.ytmusic_lyrics_fallback` is True, the
+                           composite tries lrclib first and falls back to
+                           YouTube Music's lyrics.
         """
         self._config = config
         self._downloader = downloader or YTDLPDownloader(config, cookies_path)
@@ -381,8 +394,27 @@ class DownloadService:
         self._lyrics_service: LyricsServiceProtocol | None = (
             lyrics_service
             if lyrics_service is not None
-            else (LyricsService() if config.fetch_lyrics else None)
+            else self._build_lyrics_service(config, ytmusic_client)
         )
+
+    @staticmethod
+    def _build_lyrics_service(
+        config: DownloadConfig,
+        ytmusic_client: YTMusicProtocol | None,
+    ) -> LyricsServiceProtocol | None:
+        """Construct the default composite lyrics service.
+
+        Returns None when lyrics fetching is disabled. Always includes the
+        lrclib fetcher; appends the YouTube Music fetcher when a client is
+        available and `ytmusic_lyrics_fallback` is enabled.
+        """
+        if not config.fetch_lyrics:
+            return None
+
+        fetchers: list[LyricsFetcher] = [LrclibFetcher()]
+        if config.ytmusic_lyrics_fallback and ytmusic_client is not None:
+            fetchers.append(YouTubeMusicLyricsFetcher(ytmusic_client))
+        return LyricsService(fetchers=fetchers)
 
     # ============================================================================
     # PUBLIC API - Main entry points for downloading tracks
@@ -652,11 +684,13 @@ class DownloadService:
             logger.debug("Lyrics already exist: %s", lrc_path)
             return
 
-        # Use primary artist for lrclib.net lookup (joined artists reduce match rate)
+        # Use primary artist for lrclib.net lookup (joined artists reduce match rate).
+        # video_id enables the YouTube Music fallback when lrclib has no match.
         lyrics = self._lyrics_service.fetch_lyrics(
             title=track.title,
             artist=track.artists[0],
             duration_seconds=track.duration_seconds,
+            video_id=track.video_id,
         )
 
         if lyrics:

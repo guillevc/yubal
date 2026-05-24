@@ -78,6 +78,10 @@ class Settings(BaseSettings):
 
     # Lyrics settings
     fetch_lyrics: bool = Field(default=True, description="Fetch lyrics from lrclib.net")
+    ytmusic_lyrics_fallback: bool = Field(
+        default=True,
+        description="Fall back to YouTube Music lyrics when lrclib.net has no match",
+    )
 
     # Filename settings
     ascii_filenames: bool = Field(

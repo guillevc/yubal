@@ -108,7 +108,9 @@ class PlaylistDownloadService:
             client, download_ugc=config.download.download_ugc
         )
         self._downloader = downloader or DownloadService(
-            config.download, cookies_path=cookies_path
+            config.download,
+            cookies_path=cookies_path,
+            ytmusic_client=client,
         )
         self._composer = composer or PlaylistArtifactsService(
             ascii_filenames=config.download.ascii_filenames,

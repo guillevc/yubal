@@ -241,3 +241,21 @@ class TestAudioQuality:
         """Should accept custom audio quality values."""
         settings = _create_settings(audio_quality="5")
         assert settings.audio_quality == "5"
+
+
+class TestLyricsSettings:
+    """Tests for lyrics-related settings."""
+
+    def test_fetch_lyrics_default_true(self) -> None:
+        assert _create_settings().fetch_lyrics is True
+
+    def test_ytmusic_lyrics_fallback_default_true(self) -> None:
+        assert _create_settings().ytmusic_lyrics_fallback is True
+
+    def test_ytmusic_lyrics_fallback_env_override(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("YUBAL_ROOT", str(TEST_ROOT))
+        monkeypatch.setenv("YUBAL_YTMUSIC_LYRICS_FALLBACK", "false")
+        settings = Settings()
+        assert settings.ytmusic_lyrics_fallback is False

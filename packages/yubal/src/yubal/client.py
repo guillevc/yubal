@@ -2,6 +2,7 @@
 
 import logging
 from collections import OrderedDict
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Protocol, cast
 
@@ -48,6 +49,14 @@ class YTMusicProtocol(Protocol):
 
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Fetch a single track by video ID."""
+        ...
+
+    def get_lyrics_browse_id(self, video_id: str) -> str | None:
+        """Return the lyrics browseId (MPLYt...) for a video, or None."""
+        ...
+
+    def get_lyrics(self, browse_id: str) -> Mapping[str, Any] | None:
+        """Fetch lyrics payload by browseId (timestamps when available)."""
         ...
 
 
@@ -323,6 +332,57 @@ class YTMusicClient:
 
         track_data = self._normalize_watch_track(tracks[0])
         return PlaylistTrack.model_validate(track_data)
+
+    def get_lyrics_browse_id(self, video_id: str) -> str | None:
+        """Return the lyrics browseId (`MPLYt...`) for a video, or None.
+
+        Calls `get_watch_playlist` and extracts the `lyrics` field, which
+        holds the browseId required by `get_lyrics`. Best-effort: all
+        upstream errors are swallowed (logged at DEBUG) and return None.
+
+        Args:
+            video_id: YouTube video ID.
+
+        Returns:
+            The lyrics browseId if available, None otherwise.
+        """
+        if not video_id or not video_id.strip():
+            return None
+
+        try:
+            data = self._ytm.get_watch_playlist(video_id)
+        except (YTMusicError, KeyError, TypeError) as e:
+            logger.debug("YT Music watch_playlist failed for %s: %s", video_id, e)
+            return None
+
+        browse_id = data.get("lyrics") if isinstance(data, dict) else None
+        return browse_id if isinstance(browse_id, str) and browse_id else None
+
+    def get_lyrics(self, browse_id: str) -> Mapping[str, Any] | None:
+        """Fetch a lyrics payload by browseId.
+
+        Wraps `ytmusicapi.YTMusic.get_lyrics(browse_id, timestamps=True)`.
+        Returns the raw dict (with keys `lyrics`, `source`, `hasTimestamps`).
+        Best-effort: all upstream errors are swallowed at DEBUG, returns None.
+
+        Args:
+            browse_id: Lyrics browseId from `get_lyrics_browse_id`.
+
+        Returns:
+            Raw lyrics payload dict, or None on error / no data.
+        """
+        if not browse_id or not browse_id.strip():
+            return None
+
+        try:
+            payload = self._ytm.get_lyrics(browse_id, timestamps=True)
+        except (YTMusicError, KeyError, TypeError) as e:
+            logger.debug("YT Music get_lyrics failed for %s: %s", browse_id, e)
+            return None
+
+        if not isinstance(payload, Mapping):
+            return None
+        return payload
 
     def _normalize_watch_track(self, track: dict) -> dict:
         """Normalize get_watch_playlist track to PlaylistTrack format.
