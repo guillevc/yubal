@@ -140,7 +140,14 @@ def create_downloader(
         downloader = create_downloader(config, cookies_path=Path("cookies.txt"))
         ```
     """
-    return _DownloadService(config, cookies_path=cookies_path)
+    ytmusic_client = (
+        _YTMusicClient(cookies_path=cookies_path)
+        if config.fetch_lyrics and config.ytmusic_lyrics_fallback
+        else None
+    )
+    return _DownloadService(
+        config, cookies_path=cookies_path, ytmusic_client=ytmusic_client
+    )
 
 
 def create_playlist_downloader(

@@ -49,6 +49,7 @@ class JobExecutor:
         audio_quality: int = 0,
         cookies_path: Path | None = None,
         fetch_lyrics: bool = True,
+        ytmusic_lyrics_fallback: bool = True,
         apply_replaygain: bool = False,
         ascii_filenames: bool = False,
         download_ugc: bool = False,
@@ -65,6 +66,8 @@ class JobExecutor:
             audio_quality: Audio quality (0 = best, 10 = worst).
             cookies_path: Optional path to cookies.txt for authenticated requests.
             fetch_lyrics: Whether to fetch lyrics from lrclib.net.
+            ytmusic_lyrics_fallback: Whether to fall back to YouTube Music lyrics
+                when lrclib.net has no match.
             apply_replaygain: Whether to apply ReplayGain tags using rsgain.
             ascii_filenames: Whether to transliterate unicode to ASCII in filenames.
             download_ugc: Whether to download UGC tracks to _Unofficial folder.
@@ -78,6 +81,7 @@ class JobExecutor:
         self._audio_quality = audio_quality
         self._cookies_path = cookies_path
         self._fetch_lyrics = fetch_lyrics
+        self._ytmusic_lyrics_fallback = ytmusic_lyrics_fallback
         self._apply_replaygain = apply_replaygain
         self._ascii_filenames = ascii_filenames
         self._download_ugc = download_ugc
@@ -232,6 +236,7 @@ class JobExecutor:
                     self._audio_format,
                     self._cookies_path,
                     self._fetch_lyrics,
+                    self._ytmusic_lyrics_fallback,
                     self._apply_replaygain,
                     self._ascii_filenames,
                     self._download_ugc,

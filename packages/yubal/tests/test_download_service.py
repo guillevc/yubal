@@ -431,6 +431,63 @@ class TestDownloadService:
         assert call_args[2] == b"cover data"  # cover bytes
 
 
+class TestLyricsFallback:
+    """Tests for the lrclib + YouTube Music lyrics fallback chain."""
+
+    def test_ytmusic_fallback_writes_lrc_when_lrclib_misses(
+        self,
+        sample_track: TrackMetadata,
+        download_config: DownloadConfig,
+    ) -> None:
+        track = sample_track.model_copy(update={"duration_seconds": 200})
+        ytmusic_client = MagicMock()
+        ytmusic_client.get_lyrics_browse_id.return_value = "MPLYt_abc"
+        ytmusic_client.get_lyrics.return_value = {
+            "lyrics": "verse one\nverse two",
+            "hasTimestamps": False,
+            "source": "Source: LyricFind",
+        }
+
+        mock_downloader = MockDownloader()
+        service = DownloadService(
+            download_config,
+            mock_downloader,
+            ytmusic_client=ytmusic_client,
+        )
+
+        result = service.download_track(track)
+
+        assert result.status == DownloadStatus.SUCCESS
+        assert result.output_path is not None
+        lrc_path = result.output_path.with_suffix(".lrc")
+        assert lrc_path.exists()
+        assert lrc_path.read_text() == "verse one\nverse two"
+        ytmusic_client.get_lyrics_browse_id.assert_called_once_with(track.video_id)
+
+    def test_ytmusic_not_called_when_fallback_disabled(
+        self,
+        sample_track: TrackMetadata,
+        tmp_path: Path,
+    ) -> None:
+        track = sample_track.model_copy(update={"duration_seconds": 200})
+        config = DownloadConfig(
+            base_path=tmp_path,
+            codec=AudioCodec.OPUS,
+            quality=0,
+            quiet=True,
+            ytmusic_lyrics_fallback=False,
+        )
+        ytmusic_client = MagicMock()
+        mock_downloader = MockDownloader()
+        service = DownloadService(
+            config, mock_downloader, ytmusic_client=ytmusic_client
+        )
+
+        service.download_track(track)
+
+        ytmusic_client.get_lyrics_browse_id.assert_not_called()
+
+
 class TestDownloadResult:
     """Tests for DownloadResult model."""
 

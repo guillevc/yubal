@@ -6,7 +6,7 @@ This module provides shared fixtures for the yubal test suite, organized into:
 - Factory fixtures: Builders for creating customized test data
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from unittest.mock import MagicMock
 
 import pytest
@@ -289,6 +289,14 @@ class MockYTMusicClient:
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Mock get_track - not implemented for playlist tests."""
         raise NotImplementedError("MockYTMusicClient doesn't support get_track")
+
+    def get_lyrics_browse_id(self, video_id: str) -> str | None:
+        """Mock get_lyrics_browse_id - returns None (no lyrics)."""
+        return None
+
+    def get_lyrics(self, browse_id: str) -> Mapping[str, object] | None:
+        """Mock get_lyrics - returns None (no lyrics)."""
+        return None
 
 
 @pytest.fixture
