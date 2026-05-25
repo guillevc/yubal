@@ -199,6 +199,13 @@ class TestParsePlaylistId:
         with pytest.raises(PlaylistParseError, match="Could not extract"):
             parse_playlist_id(url)
 
+    def test_extracts_liked_music_id(self) -> None:
+        """The 'Liked Music' pseudo-playlist URL must parse to 'LM' so that
+        subscriptions and downloads can route to it."""
+        url = "https://music.youtube.com/playlist?list=LM"
+        assert parse_playlist_id(url) == "LM"
+        assert is_supported_url(url) is True
+
 
 class TestIsSupportedUrl:
     """Tests for is_supported_url function."""
