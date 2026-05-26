@@ -3,9 +3,14 @@
 from unittest.mock import MagicMock
 
 import pytest
+from ytmusicapi.auth.types import AuthType
 from ytmusicapi.exceptions import YTMusicServerError
 from yubal.client import YTMusicClient
-from yubal.exceptions import TrackNotFoundError, UpstreamAPIError
+from yubal.exceptions import (
+    AuthenticationRequiredError,
+    TrackNotFoundError,
+    UpstreamAPIError,
+)
 
 # ============================================================================
 # Fixtures
@@ -257,6 +262,66 @@ class TestGetPlaylist:
 
         assert len(playlist.tracks) == 1
         assert playlist.tracks[0].artists == []
+
+
+class TestLikedMusic:
+    """Tests for the Liked Music (LM) pseudo-playlist."""
+
+    def test_unauthenticated_client_raises_auth_required(self) -> None:
+        """Without auth, fetching LM should fail fast with a clear message."""
+        mock_ytm = MagicMock()
+        mock_ytm.auth_type = AuthType.UNAUTHORIZED
+        client = YTMusicClient(ytmusic=mock_ytm)
+
+        with pytest.raises(AuthenticationRequiredError, match="Liked Music"):
+            client.get_playlist("LM")
+
+        # The network call must not be attempted when auth is missing.
+        mock_ytm.get_playlist.assert_not_called()
+
+    def test_authenticated_client_fetches_liked_music(self) -> None:
+        """With auth, LM is fetched via get_playlist (matching ytmusicapi's
+        own get_liked_songs implementation)."""
+        mock_ytm = MagicMock()
+        mock_ytm.auth_type = AuthType.BROWSER
+        mock_ytm.get_playlist.return_value = {
+            "title": "Your Likes",
+            "tracks": [
+                {
+                    "videoId": "abc123",
+                    "videoType": "MUSIC_VIDEO_TYPE_ATV",
+                    "title": "A Liked Song",
+                    "artists": [{"name": "Some Artist", "id": "UC1"}],
+                    "thumbnails": [
+                        {
+                            "url": "https://example.com/t.jpg",
+                            "width": 120,
+                            "height": 120,
+                        }
+                    ],
+                    "duration_seconds": 200,
+                }
+            ],
+        }
+        client = YTMusicClient(ytmusic=mock_ytm)
+
+        playlist = client.get_playlist("LM")
+
+        mock_ytm.get_playlist.assert_called_once_with("LM", limit=None)
+        assert playlist.title == "Your Likes"
+        assert len(playlist.tracks) == 1
+        assert playlist.tracks[0].video_id == "abc123"
+
+    def test_defaults_title_when_missing(self) -> None:
+        """If the LM response has no title, default to 'Liked Music'."""
+        mock_ytm = MagicMock()
+        mock_ytm.auth_type = AuthType.BROWSER
+        mock_ytm.get_playlist.return_value = {"title": None, "tracks": []}
+        client = YTMusicClient(ytmusic=mock_ytm)
+
+        playlist = client.get_playlist("LM")
+
+        assert playlist.title == "Liked Music"
 
 
 class TestGetLyricsBrowseId:

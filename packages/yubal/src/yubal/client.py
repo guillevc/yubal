@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any, Protocol, cast
 
 from ytmusicapi import YTMusic
+from ytmusicapi.auth.types import AuthType
 from ytmusicapi.exceptions import YTMusicError, YTMusicServerError, YTMusicUserError
 
 from yubal.config import APIConfig
@@ -26,6 +27,12 @@ logger = logging.getLogger(__name__)
 
 # Maximum number of albums to cache per client instance
 _ALBUM_CACHE_SIZE = 128
+
+# Special playlist ID for the user's "Liked Music" pseudo-playlist on
+# YouTube Music. Requires authentication and has no real title in the API
+# response, so we substitute a sensible default.
+_LIKED_MUSIC_ID = "LM"
+_LIKED_MUSIC_TITLE = "Liked Music"
 
 
 class YTMusicProtocol(Protocol):
@@ -131,6 +138,17 @@ class YTMusicClient:
         # Check for unsupported playlist prefixes before making API call
         self._check_playlist_type(playlist_id)
 
+        # The "Liked Music" pseudo-playlist is only accessible to the
+        # authenticated user. Fail fast with a clear message instead of
+        # letting ytmusicapi return a "Sign in" page that surfaces as a
+        # confusing KeyError further down.
+        if playlist_id == _LIKED_MUSIC_ID and not self._is_authenticated():
+            raise AuthenticationRequiredError(
+                "The Liked Music playlist (list=LM) requires authentication. "
+                "Please upload your YouTube Music cookies via the web UI "
+                "(Settings → upload cookies.txt) to access your liked songs."
+            )
+
         logger.debug("Fetching playlist: %s", playlist_id)
         try:
             data = self._ytm.get_playlist(playlist_id, limit=None)
@@ -166,6 +184,11 @@ class YTMusicClient:
 
         if not data:
             raise PlaylistNotFoundError(f"Playlist not found: {playlist_id}")
+
+        # The Liked Music response often has no title; provide a default
+        # so downstream filenames and UI labels are sensible.
+        if playlist_id == _LIKED_MUSIC_ID and not data.get("title"):
+            data["title"] = _LIKED_MUSIC_TITLE
 
         # Categorize tracks: available vs unavailable with reasons
         raw_tracks = data.get("tracks") or []
@@ -437,6 +460,22 @@ class YTMusicClient:
             Number of album IDs currently cached.
         """
         return len(self._album_cache)
+
+    def _is_authenticated(self) -> bool:
+        """Whether the underlying YTMusic client has auth credentials.
+
+        Mirrors ytmusicapi's own auth check (``YTMusic._check_auth``) so we
+        can fail fast on endpoints that require login, like Liked Music.
+        Test code may inject a mock client; mocks won't expose an AuthType
+        and are treated as authenticated.
+        """
+        auth_type = getattr(self._ytm, "auth_type", None)
+        if auth_type is None:
+            return True
+        try:
+            return auth_type != AuthType.UNAUTHORIZED
+        except TypeError:
+            return True
 
     def _check_playlist_type(self, playlist_id: str) -> None:
         """Check if playlist type is supported before fetching.

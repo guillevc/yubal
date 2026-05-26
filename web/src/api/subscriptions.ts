@@ -1,4 +1,5 @@
 import { api } from "./client";
+import { errorMessage } from "./errors";
 import type { components } from "./schema";
 
 export type Subscription = components["schemas"]["SubscriptionResponse"];
@@ -32,16 +33,10 @@ export async function addSubscription(
     if (response.status === 409) {
       return { success: false, error: "Subscription already exists" };
     }
-    if (response.status === 422) {
-      const validation = error as unknown as {
-        detail?: { msg: string }[];
-      };
-      return {
-        success: false,
-        error: validation.detail?.[0]?.msg ?? "Invalid input",
-      };
-    }
-    return { success: false, error: "Failed to add subscription" };
+    return {
+      success: false,
+      error: errorMessage(error, "Failed to add subscription"),
+    };
   }
 
   return { success: true, id: data.id };
@@ -83,7 +78,10 @@ export async function syncSubscription(id: string): Promise<SyncResult> {
     if (response.status === 409) {
       return { success: false, error: "Job queue is full" };
     }
-    return { success: false, error: "Failed to create sync job" };
+    return {
+      success: false,
+      error: errorMessage(error, "Failed to create sync job"),
+    };
   }
 
   return { success: true, jobIds: data.job_ids };
@@ -93,7 +91,10 @@ export async function syncAll(): Promise<SyncResult> {
   const { data, error } = await api.POST("/subscriptions/sync");
 
   if (error) {
-    return { success: false, error: "Failed to create sync jobs" };
+    return {
+      success: false,
+      error: errorMessage(error, "Failed to create sync jobs"),
+    };
   }
 
   return { success: true, jobIds: data.job_ids };
