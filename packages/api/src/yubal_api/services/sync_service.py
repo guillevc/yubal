@@ -271,6 +271,7 @@ class SyncService:
     audio_format: str = "opus"
     cookies_path: Path | None = None
     fetch_lyrics: bool = True
+    ytmusic_lyrics_fallback: bool = True
     apply_replaygain: bool = False
     ascii_filenames: bool = False
     download_ugc: bool = False
@@ -314,6 +315,7 @@ class SyncService:
             audio_format=self.audio_format,
             cookies_path=self.cookies_path,
             fetch_lyrics=self.fetch_lyrics,
+            ytmusic_lyrics_fallback=self.ytmusic_lyrics_fallback,
             apply_replaygain=self.apply_replaygain,
             ascii_filenames=self.ascii_filenames,
             download_ugc=self.download_ugc,
@@ -345,6 +347,7 @@ class _SyncWorkflow:
     audio_format: str
     cookies_path: Path | None
     fetch_lyrics: bool
+    ytmusic_lyrics_fallback: bool
     apply_replaygain: bool
     ascii_filenames: bool
     download_ugc: bool
@@ -397,6 +400,7 @@ class _SyncWorkflow:
                 quality=self.audio_quality,
                 quiet=True,
                 fetch_lyrics=self.fetch_lyrics,
+                ytmusic_lyrics_fallback=self.ytmusic_lyrics_fallback,
                 ascii_filenames=self.ascii_filenames,
                 download_ugc=self.download_ugc,
             ),

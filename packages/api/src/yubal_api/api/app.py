@@ -168,6 +168,7 @@ def create_services(repository: SubscriptionRepository) -> Services:
         audio_quality=int(settings.audio_quality),
         cookies_path=settings.cookies_file,
         fetch_lyrics=settings.fetch_lyrics,
+        ytmusic_lyrics_fallback=settings.ytmusic_lyrics_fallback,
         apply_replaygain=settings.replaygain,
         ascii_filenames=settings.ascii_filenames,
         download_ugc=settings.download_ugc,

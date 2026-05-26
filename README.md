@@ -123,20 +123,21 @@ docker compose up -d
 
 ## ⚙️ Configuration
 
-| Variable                    | Description                                       | Default (Docker) |
-| --------------------------- | ------------------------------------------------- | ---------------- |
-| `PUID`                      | User ID for file ownership                        | `1000`           |
-| `PGID`                      | Group ID for file ownership                       | `1000`           |
-| `YUBAL_AUDIO_FORMAT`        | `opus`, `mp3`, or `m4a`                           | `opus`           |
-| `YUBAL_AUDIO_QUALITY`       | Transcode quality (0=best, 10=worst)              | `0`              |
-| `YUBAL_SCHEDULER_ENABLED`   | Enable automatic scheduled sync                   | `true`           |
-| `YUBAL_SCHEDULER_CRON`      | Cron schedule for auto-sync                       | `0 0 * * *`      |
-| `YUBAL_FETCH_LYRICS`        | Fetch lyrics from lrclib.net                      | `true`           |
-| `YUBAL_DOWNLOAD_UGC`        | Download user-generated content to `_Unofficial/` | `false`          |
-| `YUBAL_REPLAYGAIN`          | Apply track gain; album gain for complete albums  | `true`           |
-| `YUBAL_JOB_TIMEOUT_SECONDS` | Job execution timeout in seconds                  | `1800`           |
-| `YUBAL_BASE_PATH`           | URL base path for reverse proxy subfolder         | —                |
-| `YUBAL_TZ`                  | Timezone (IANA format)                            | `UTC`            |
+| Variable                        | Description                                       | Default (Docker) |
+| ------------------------------- | ------------------------------------------------- | ---------------- |
+| `PUID`                          | User ID for file ownership                        | `1000`           |
+| `PGID`                          | Group ID for file ownership                       | `1000`           |
+| `YUBAL_AUDIO_FORMAT`            | `opus`, `mp3`, or `m4a`                           | `opus`           |
+| `YUBAL_AUDIO_QUALITY`           | Transcode quality (0=best, 10=worst)              | `0`              |
+| `YUBAL_SCHEDULER_ENABLED`       | Enable automatic scheduled sync                   | `true`           |
+| `YUBAL_SCHEDULER_CRON`          | Cron schedule for auto-sync                       | `0 0 * * *`      |
+| `YUBAL_FETCH_LYRICS`            | Fetch lyrics from lrclib.net                      | `true`           |
+| `YUBAL_YTMUSIC_LYRICS_FALLBACK` | Fall back to YouTube Music lyrics on lrclib miss  | `true`           |
+| `YUBAL_DOWNLOAD_UGC`            | Download user-generated content to `_Unofficial/` | `false`          |
+| `YUBAL_REPLAYGAIN`              | Apply track gain; album gain for complete albums  | `true`           |
+| `YUBAL_JOB_TIMEOUT_SECONDS`     | Job execution timeout in seconds                  | `1800`           |
+| `YUBAL_BASE_PATH`               | URL base path for reverse proxy subfolder         | —                |
+| `YUBAL_TZ`                      | Timezone (IANA format)                            | `UTC`            |
 
 <details>
 <summary>All options</summary>

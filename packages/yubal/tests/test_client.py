@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from ytmusicapi.auth.types import AuthType
+from ytmusicapi.exceptions import YTMusicServerError
 from yubal.client import YTMusicClient
 from yubal.exceptions import (
     AuthenticationRequiredError,
@@ -321,3 +322,67 @@ class TestLikedMusic:
         playlist = client.get_playlist("LM")
 
         assert playlist.title == "Liked Music"
+
+
+class TestGetLyricsBrowseId:
+    def test_returns_browse_id_when_present(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_watch_playlist.return_value = {"lyrics": "MPLYt_browse_id"}
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics_browse_id("V9PVRfjEBTI") == "MPLYt_browse_id"
+
+    def test_returns_none_when_lyrics_key_missing(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_watch_playlist.return_value = {"tracks": []}
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics_browse_id("V9PVRfjEBTI") is None
+
+    def test_returns_none_when_lyrics_key_is_none(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_watch_playlist.return_value = {"lyrics": None}
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics_browse_id("V9PVRfjEBTI") is None
+
+    def test_swallows_api_error(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_watch_playlist.side_effect = YTMusicServerError("boom")
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics_browse_id("V9PVRfjEBTI") is None
+
+    def test_empty_video_id_returns_none_without_call(self) -> None:
+        mock_ytm = MagicMock()
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics_browse_id("") is None
+        mock_ytm.get_watch_playlist.assert_not_called()
+
+
+class TestGetLyrics:
+    def test_returns_payload_dict(self) -> None:
+        mock_ytm = MagicMock()
+        payload = {
+            "lyrics": "line one\nline two",
+            "source": "Source: LyricFind",
+            "hasTimestamps": False,
+        }
+        mock_ytm.get_lyrics.return_value = payload
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics("MPLYt_abc") == payload
+        mock_ytm.get_lyrics.assert_called_once_with("MPLYt_abc", timestamps=True)
+
+    def test_swallows_api_error(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_lyrics.side_effect = YTMusicServerError("nope")
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics("MPLYt_abc") is None
+
+    def test_returns_none_for_non_dict(self) -> None:
+        mock_ytm = MagicMock()
+        mock_ytm.get_lyrics.return_value = None
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics("MPLYt_abc") is None
+
+    def test_empty_browse_id_returns_none_without_call(self) -> None:
+        mock_ytm = MagicMock()
+        client = YTMusicClient(ytmusic=mock_ytm)
+        assert client.get_lyrics("") is None
+        mock_ytm.get_lyrics.assert_not_called()
