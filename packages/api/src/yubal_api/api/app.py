@@ -6,7 +6,7 @@ import mimetypes
 import re
 import shutil
 import uuid
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import datetime
 from importlib.metadata import version
@@ -325,6 +325,13 @@ def custom_openapi(app: FastAPI) -> dict[str, Any]:
     return schema
 
 
+class YubalFastAPI(FastAPI):
+    """FastAPI app with custom OpenAPI schema including SSE event types."""
+
+    def openapi(self) -> dict[str, Any]:
+        return custom_openapi(self)
+
+
 class SPAStaticFiles(StaticFiles):
     """SPA static files with base path injection into index.html."""
 
@@ -367,7 +374,7 @@ def create_app() -> FastAPI:
     settings = get_settings()
     base_path = settings.base_path
 
-    app = FastAPI(
+    app = YubalFastAPI(
         title="yubal",
         description="YouTube Music Downloader API",
         version=version("yubal_api"),
@@ -377,9 +384,6 @@ def create_app() -> FastAPI:
         redoc_url=f"{base_path}/redoc",
         openapi_url=f"{base_path}/openapi.json",
     )
-
-    # Custom OpenAPI schema to include SSE event types
-    app.openapi: Callable[[], dict[str, Any]] = lambda: custom_openapi(app)
 
     # Register exception handlers
     register_exception_handlers(app)

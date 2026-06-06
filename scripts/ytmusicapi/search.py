@@ -3,8 +3,10 @@
 
 import json
 import sys
+from typing import cast
 
 from ytmusicapi import YTMusic
+from ytmusicapi.mixins.search import _SearchFilterType
 
 
 def main() -> None:
@@ -17,7 +19,7 @@ def main() -> None:
         sys.exit(1)
 
     query = sys.argv[1]
-    filter_type = sys.argv[2] if len(sys.argv) > 2 else None
+    filter_type = cast(_SearchFilterType, sys.argv[2]) if len(sys.argv) > 2 else None
 
     print(f"Searching: {query}", file=sys.stderr)
     if filter_type:
