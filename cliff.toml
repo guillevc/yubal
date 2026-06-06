@@ -3,11 +3,6 @@
 
 [changelog]
 body = """
-{% if version %}\
-    ## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
-{% else %}\
-    ## [unreleased]
-{% endif %}\
 {% for group, commits in commits | group_by(attribute="group") %}
     ### {{ group | striptags | trim | upper_first }}
     {% for commit in commits %}
@@ -15,7 +10,7 @@ body = """
             {% if commit.breaking %}[**breaking**] {% endif %}\
             {{ commit.message | upper_first }}\
             {% for footer in commit.footers -%}
-                {% if footer.token is matching("Refs|Fixes|Closes|Resolves") %} (#{{ footer.value }}){% endif %}\
+                {% if footer.token is matching("Refs|Fixes|Closes|Resolves") %} (#{{ footer.value | split(pat="\n") | first | trim }}){% endif %}\
             {% endfor %}\
     {% endfor %}
 {% endfor %}
