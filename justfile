@@ -3,6 +3,8 @@ set dotenv-load
 # Project root directory (can be overridden via .env or env var)
 export YUBAL_ROOT := justfile_directory()
 
+export GITHUB_TOKEN := env("GITHUB_TOKEN", `gh auth token 2>/dev/null || true`)
+
 default:
     @just --list
 
@@ -21,8 +23,8 @@ alias doc := docs-serve
 mod ext 'extension'
 
 # Install (frozen lockfiles for CI)
-[group('setup')]
 [doc("Install all dependencies (frozen)")]
+[group('setup')]
 install: install-py install-web
 
 [group('setup')]
@@ -37,8 +39,8 @@ install-web:
     bun install --frozen-lockfile
 
 # Sync (for development)
-[group('setup')]
 [doc("Sync dependencies (updates lockfile)")]
+[group('setup')]
 sync: sync-py sync-web
 
 [group('setup')]
@@ -53,8 +55,8 @@ sync-web:
     bun install
 
 # Upgrade
-[group('setup')]
 [doc("Upgrade all dependencies")]
+[group('setup')]
 upgrade: upgrade-py upgrade-web
 
 [group('setup')]
@@ -68,8 +70,8 @@ upgrade-py:
 upgrade-web:
     bun update
 
-[group('setup')]
 [doc("Upgrade all deps to latest")]
+[group('setup')]
 upgrade-yolo: upgrade-yolo-py upgrade-yolo-web
 
 [group('setup')]
@@ -89,8 +91,8 @@ upgrade-yolo-py:
     @uv pip list --outdated || true
 
 # Dev
-[group('dev')]
 [doc("Run API + Web dev servers")]
+[group('dev')]
 [script('bash')]
 dev:
     trap 'kill 0' EXIT
@@ -108,15 +110,15 @@ dev-web:
     bun --bun run dev
 
 # Build
-[group('build')]
 [doc("Build web frontend")]
+[group('build')]
 [working-directory('web')]
 build:
     bun --bun run build
 
 # Production
-[group('prod')]
 [doc("Build and serve production server")]
+[group('prod')]
 prod: build serve
 
 [group('prod')]
@@ -125,8 +127,8 @@ serve:
     YUBAL_HOST=0.0.0.0 uv run python -m yubal_api
 
 # Lint
-[group('lint')]
 [doc("Lint Python + Web")]
+[group('lint')]
 lint: lint-py lint-web
 
 [group('lint')]
@@ -141,8 +143,8 @@ lint-web:
     bun --bun run lint
 
 # Lint fix
-[group('lint')]
 [doc("Lint and fix Python + Web")]
+[group('lint')]
 lint-fix: lint-fix-py lint-fix-web
 
 [group('lint')]
@@ -157,8 +159,8 @@ lint-fix-web:
     bun --bun run lint --fix
 
 # Format
-[group('format')]
 [doc("Format Python + Web + Root files")]
+[group('format')]
 format: format-py format-web format-root
 
 [group('format')]
@@ -178,8 +180,8 @@ format-root:
     bunx --bun prettier --write "*.md" "*.yaml" --ignore-unknown
 
 # Format check
-[group('format')]
 [doc("Check formatting Python + Web + Root files")]
+[group('format')]
 format-check: format-check-py format-check-web format-check-root
 
 [group('format')]
@@ -199,8 +201,8 @@ format-check-root:
     bunx --bun prettier --check "*.md" "*.yaml" --ignore-unknown
 
 # Typecheck
-[group('typecheck')]
 [doc("Typecheck Python + Web")]
+[group('typecheck')]
 typecheck: typecheck-py typecheck-web
 
 [group('typecheck')]
@@ -215,13 +217,13 @@ typecheck-web:
     bun --bun run typecheck
 
 # Tests
-[group('test')]
 [doc("Run all tests")]
+[group('test')]
 test: test-py test-web
 
 [group('test')]
-[private]
 [no-exit-message]
+[private]
 test-py:
     uv run pytest packages scripts
 
@@ -232,20 +234,20 @@ test-web:
     bun --bun run test
 
 # E2E
-[group('test')]
 [doc("Run Playwright e2e tests")]
+[group('test')]
 [working-directory('e2e')]
 test-e2e: build
     bun install && bun run install-browsers && bun run test
 
 # Coverage
-[group('test')]
 [doc("Run all tests with coverage")]
+[group('test')]
 test-cov: test-cov-py test-cov-web
 
 [group('test')]
-[private]
 [no-exit-message]
+[private]
 test-cov-py:
     mkdir -p coverage
     uv run pytest packages scripts --cov --cov-report=lcov:coverage/py.lcov
@@ -257,53 +259,53 @@ test-cov-web:
     bun test --coverage --coverage-reporter=lcov
 
 # Utils
-[group('utils')]
 [doc("Generate OpenAPI schema and TypeScript types")]
+[group('utils')]
 gen-api:
     @python scripts/generate_openapi.py
 
-[group('utils')]
-[doc("Bump version across all packages")]
 [confirm]
+[doc("Bump version across all packages")]
+[group('utils')]
 [script('bash')]
 version VERSION:
     set -euo pipefail
 
     # Update Python packages
-    uv version --frozen --package yubal {{VERSION}}
-    uv version --frozen --package yubal-api {{VERSION}}
-    uv version --frozen {{VERSION}}
+    uv version --frozen --package yubal {{ VERSION }}
+    uv version --frozen --package yubal-api {{ VERSION }}
+    uv version --frozen {{ VERSION }}
 
     # Update web package
-    (cd web && npm pkg set version={{VERSION}})
+    (cd web && npm pkg set version={{ VERSION }})
 
     # Sync lockfiles
     just sync
 
     # Commit and tag
     git add pyproject.toml packages/*/pyproject.toml uv.lock web/package.json web/bun.lock
-    git diff --cached --quiet || git commit -m "chore: bump version to {{VERSION}}"
-    git tag v{{VERSION}}
+    git diff --cached --quiet || git commit -m "chore: bump version to {{ VERSION }}"
+    git tag v{{ VERSION }}
 
+[doc("Preview changelog from a ref to HEAD or another ref")]
 [group('utils')]
-[doc("Preview changelog (from tag to HEAD, or between two tags)")]
 changelog from to="HEAD":
-    git cliff v{{from}}..{{to}}
+    git cliff {{ from }}..{{ to }}
 
-[group('utils')]
 [doc("Write full changelog to CHANGELOG.md")]
+[group('utils')]
 changelog-md:
     git cliff --output CHANGELOG.md
 
 # CI
-[group('ci')]
 [doc("Run all checks (CI)")]
+[group('ci')]
 check test_recipe="test": format-check lint typecheck
     just {{ test_recipe }}
     just smoke
 
-[group('ci')]
 [doc("Run smoke tests")]
+[group('ci')]
 smoke: smoke-py smoke-web
 
 [group('ci')]
@@ -318,57 +320,57 @@ smoke-py:
 smoke-web: build
     @test -d web/dist && echo "OK"
 
-[group('ci')]
 [confirm("Delete all caches?")]
+[group('ci')]
 clean:
     rm -rf .pytest_cache .ruff_cache packages/*/.pytest_cache web/dist web/node_modules/.vite dist
 
 # Docker
-[group('docker')]
 [doc("Build local Docker image")]
+[group('docker')]
 docker-build:
     docker build -t yubal:local .
 
-[group('docker')]
 [doc("Build image, show size, then remove")]
+[group('docker')]
 docker-size:
     docker build -t yubal:docker-size .
-    @docker images yubal:docker-size --format '{{"{{"}}.Size{{"}}"}}'
+    @docker images yubal:docker-size --format '{{ "{{" }}.Size{{ "}}" }}'
     @docker rmi yubal:docker-size
 
-[group('docker')]
 [doc("Run docker compose up")]
+[group('docker')]
 compose *args:
     docker compose up --build {{ args }}
 
-[group('lint')]
 [doc("Lint Dockerfile")]
+[group('lint')]
 docker-lint:
     @docker run --rm -i hadolint/hadolint < Dockerfile
 
-[group('lint')]
 [doc("Detect dead code")]
+[group('lint')]
 dead-code: dead-code-py dead-code-web
 
-[group('lint')]
 [doc("Detect dead Python code")]
+[group('lint')]
 dead-code-py:
     uv run --with vulture vulture packages/yubal/src packages/api/src scripts --min-confidence 60
 
-[group('lint')]
 [doc("Detect dead web code")]
+[group('lint')]
 [working-directory('web')]
 dead-code-web:
     bunx --bun knip
 
 # Documentation
-[group('docs')]
 [doc("Generate API documentation")]
+[group('docs')]
 docs:
     uv run --with pdoc pdoc yubal --output-dir docs/pdoc/yubal --docformat google
 
-[group('docs')]
 [doc("Serve API documentation locally")]
+[group('docs')]
 docs-serve:
     uv run --with pdoc pdoc yubal --docformat google
 
@@ -379,30 +381,30 @@ cli *args:
     uv run yubal "$@"
 
 # Database migrations
-[group('db')]
 [doc("Generate a new migration")]
+[group('db')]
 [working-directory('packages/api/src/yubal_api')]
 db-generate message:
-    uv run alembic revision --autogenerate -m "{{message}}"
+    uv run alembic revision --autogenerate -m "{{ message }}"
 
-[group('db')]
 [doc("Run pending migrations")]
+[group('db')]
 [working-directory('packages/api/src/yubal_api')]
 db-migrate:
     uv run alembic upgrade head
 
-[group('db')]
-[doc("Reset database (delete and recreate)")]
-[working-directory('packages/api/src/yubal_api')]
 [confirm("Delete database and run all migrations?")]
+[doc("Reset database (delete and recreate)")]
+[group('db')]
+[working-directory('packages/api/src/yubal_api')]
 db-reset:
     rm -f "${YUBAL_CONFIG:-config}/yubal/yubal.db"
     uv run alembic upgrade head
 
-[group('db')]
-[doc("Consolidate all migrations into a single initial migration")]
-[working-directory('packages/api/src/yubal_api')]
 [confirm("Delete all migrations and regenerate from current schema?")]
+[doc("Consolidate all migrations into a single initial migration")]
+[group('db')]
+[working-directory('packages/api/src/yubal_api')]
 db-consolidate:
     rm -f "${YUBAL_CONFIG:-config}/yubal/yubal.db"
     rm -f migrations/versions/*.py

@@ -12,10 +12,15 @@ body = """
             {% for footer in commit.footers -%}
                 {% if footer.token is matching("Refs|Fixes|Closes|Resolves") %} (#{{ footer.value | split(pat="\n") | first | trim }}){% endif %}\
             {% endfor %}\
+            {% if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}\
     {% endfor %}
 {% endfor %}
 """
 trim = true
+
+[remote.github]
+owner = "guillevc"
+repo = "yubal"
 
 [git]
 conventional_commits = true
