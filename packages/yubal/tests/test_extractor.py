@@ -224,6 +224,42 @@ class TestMetadataExtractorService:
         assert tracks[0].title == "Unknown Song"
         assert tracks[0].album == "Unknown Song"  # Uses title as album for singles
         assert tracks[0].track_number is None
+        assert tracks[0].year is None  # No upload year configured
+
+    def test_extract_fallback_uses_upload_year(
+        self,
+    ) -> None:
+        """Should fall back to the YouTube upload year when no album is found."""
+        playlist = Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "v1",
+                        "videoType": "MUSIC_VIDEO_TYPE_OMV",
+                        "title": "Unknown Song",
+                        "artists": [{"name": "Unknown Artist"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    }
+                ]
+            }
+        )
+
+        mock = MockYTMusicClient(
+            playlist=playlist,
+            album=None,
+            search_results=[],
+            upload_year="2021",
+        )
+
+        service = MetadataExtractorService(mock)
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
+
+        assert len(tracks) == 1
+        assert tracks[0].year == "2021"
+        assert mock.get_upload_year_calls == ["v1"]
 
     def test_extract_continues_on_track_error(
         self,

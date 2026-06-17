@@ -259,13 +259,16 @@ class MockYTMusicClient:
         playlist: Playlist | None = None,
         album: Album | None = None,
         search_results: list[SearchResult] | None = None,
+        upload_year: str | None = None,
     ) -> None:
         self._playlist = playlist
         self._album = album
         self._search_results = search_results or []
+        self._upload_year = upload_year
         self.get_playlist_calls: list[str] = []
         self.get_album_calls: list[str] = []
         self.search_songs_calls: list[str] = []
+        self.get_upload_year_calls: list[str] = []
 
     def get_playlist(self, playlist_id: str) -> Playlist:
         """Mock get_playlist."""
@@ -289,6 +292,11 @@ class MockYTMusicClient:
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Mock get_track - not implemented for playlist tests."""
         raise NotImplementedError("MockYTMusicClient doesn't support get_track")
+
+    def get_upload_year(self, video_id: str) -> str | None:
+        """Mock get_upload_year - returns the configured upload year."""
+        self.get_upload_year_calls.append(video_id)
+        return self._upload_year
 
     def get_lyrics_browse_id(self, video_id: str) -> str | None:
         """Mock get_lyrics_browse_id - returns None (no lyrics)."""

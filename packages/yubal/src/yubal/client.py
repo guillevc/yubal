@@ -58,6 +58,10 @@ class YTMusicProtocol(Protocol):
         """Fetch a single track by video ID."""
         ...
 
+    def get_upload_year(self, video_id: str) -> str | None:
+        """Return the YouTube upload year (YYYY) for a video, or None."""
+        ...
+
     def get_lyrics_browse_id(self, video_id: str) -> str | None:
         """Return the lyrics browseId (MPLYt...) for a video, or None."""
         ...
@@ -355,6 +359,48 @@ class YTMusicClient:
 
         track_data = self._normalize_watch_track(tracks[0])
         return PlaylistTrack.model_validate(track_data)
+
+    def get_upload_year(self, video_id: str) -> str | None:
+        """Return the YouTube upload year (e.g. "2021") for a video, or None.
+
+        Used as a release-year fallback for tracks with no album match, where
+        YouTube Music provides no album-level release year. Reads ``uploadDate``
+        (falling back to ``publishDate``) from ``get_song()``'s microformat and
+        keeps the leading four-digit year.
+
+        Best-effort: all upstream errors are swallowed at DEBUG and return None.
+
+        Args:
+            video_id: YouTube video ID.
+
+        Returns:
+            Four-digit upload year string, or None if unavailable.
+        """
+        if not video_id or not video_id.strip():
+            return None
+
+        try:
+            data = self._ytm.get_song(video_id)
+        except (YTMusicError, KeyError, TypeError) as e:
+            logger.debug("YT Music get_song failed for %s: %s", video_id, e)
+            return None
+
+        if not isinstance(data, Mapping):
+            return None
+        microformat = data.get("microformat")
+        renderer = (
+            microformat.get("microformatDataRenderer")
+            if isinstance(microformat, Mapping)
+            else None
+        )
+        if not isinstance(renderer, Mapping):
+            return None
+
+        upload_date = renderer.get("uploadDate") or renderer.get("publishDate")
+        if not isinstance(upload_date, str) or len(upload_date) < 4:
+            return None
+        year = upload_date[:4]
+        return year if year.isdigit() else None
 
     def get_lyrics_browse_id(self, video_id: str) -> str | None:
         """Return the lyrics browseId (`MPLYt...`) for a video, or None.

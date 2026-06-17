@@ -965,7 +965,7 @@ class MetadataExtractorService:
         Fallback limitations (missing data):
         - No track numbers
         - No total tracks
-        - No release year
+        - No album-level release year (falls back to the YouTube upload year)
         - No album artists (uses track artists instead)
         - Lower quality album art
 
@@ -1009,7 +1009,7 @@ class MetadataExtractorService:
             album_artists=[a.name for a in track.artists],
             track_number=None,
             total_tracks=None,
-            year=None,
+            year=self._client.get_upload_year(track.video_id),
             cover_url=_get_square_thumbnail(track.thumbnails),
             video_type=video_type,
             duration_seconds=track.duration_seconds,

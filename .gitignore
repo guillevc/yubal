@@ -22,3 +22,4 @@ __pycache__/
 /skills-lock.json
 /.agents/
 /.claude/
+/.codegraph/
