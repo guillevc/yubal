@@ -40,7 +40,7 @@ jobs:
       attestations: write
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # Fetch all history for git describe
       - name: Check if stable release
