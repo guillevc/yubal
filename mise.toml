@@ -1,9 +1,9 @@
 [tools]
-just = "1.51.0"
+just = "latest"
 uv = "0.11.13"
 git-cliff = "latest"
 "github:complexlogic/rsgain" = "3.7"
 
 [settings]
-idiomatic_version_file_enable_tools = ["python", "bun"]
+idiomatic_version_file_enable_tools = ["bun"]
 python.uv_venv_auto = "source"
