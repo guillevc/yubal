@@ -1,6 +1,6 @@
 # yubal browser extension
 
-Browser extension for Chrome and Firefox. Download tracks and subscribe to playlists directly from YouTube and YouTube Music — no need to copy-paste URLs.
+Browser extension for Chrome and Firefox. Download tracks and subscribe to playlists from YouTube and YouTube Music without copy-pasting URLs.
 
 Works with any [yubal](https://github.com/guillevc/yubal) instance.
 
@@ -14,7 +14,7 @@ Works with any [yubal](https://github.com/guillevc/yubal) instance.
 
 - One-click downloads from YouTube and YouTube Music pages
 - Subscribe to playlists for automatic syncing
-- Works with any yubal instance (just set the URL)
+- Works with any yubal instance (set the URL)
 - Only activates on YouTube pages
 
 ## Install

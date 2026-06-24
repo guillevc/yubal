@@ -24,7 +24,7 @@ To uninstall:
 uv tool uninstall yubal
 ```
 
-For development, you can also run it via:
+For development, run it via:
 
 ```sh
 uv run yubal        # from the repo root

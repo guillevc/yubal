@@ -50,7 +50,7 @@ data/
     └── My Favorites [n2g-XhDv].jpg
 ```
 
-When downloading a playlist, each track goes to its album folder—the M3U file just references them:
+When downloading a playlist, each track lives in its album folder; the M3U file references it:
 
 ```m3u
 #EXTM3U
