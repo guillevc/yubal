@@ -562,6 +562,16 @@ class MetadataExtractorService:
                 if metadata is not None:
                     return metadata, None
 
+            # Tracks whose videoType field is absent from the API response
+            # are still valid and downloadable. Treat them like UGC so they
+            # flow through when YUBAL_DOWNLOAD_UGC is enabled.
+            if not track.video_type:
+                metadata = self._create_fallback_metadata(
+                    track, VideoType.UGC, match_result=MatchResult.UNOFFICIAL
+                )
+                if metadata is not None:
+                    return metadata, None
+
             return None, SkipReason.UGC if is_ugc else SkipReason.UNSUPPORTED_VIDEO_TYPE
 
         album_id = track.album.id if track.album else None
