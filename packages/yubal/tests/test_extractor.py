@@ -1782,6 +1782,56 @@ class TestUGCDownload:
         assert tracks[0].video_id == "ugc123"
         assert tracks[0].album == "User Upload"  # Uses title as album for singles
 
+    def _make_untyped_playlist(self) -> Playlist:
+        """Create a playlist whose track has no videoType field."""
+        return Playlist.model_validate(
+            {
+                "tracks": [
+                    {
+                        "videoId": "untyped123",
+                        # No videoType field — omitted by the API
+                        "title": "Untagged Upload",
+                        "artists": [{"name": "Some User"}],
+                        "thumbnails": [
+                            {"url": "https://t.jpg", "width": 120, "height": 90}
+                        ],
+                        "duration_seconds": 180,
+                    }
+                ]
+            }
+        )
+
+    def test_missing_video_type_skipped_when_download_ugc_disabled(self) -> None:
+        """Should skip untyped tracks when download_ugc is False.
+
+        The API omitted videoType, so nothing proves the track is UGC. It
+        reports SkipReason.UNSUPPORTED_VIDEO_TYPE instead.
+        """
+        playlist = self._make_untyped_playlist()
+        mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
+        service = MetadataExtractorService(mock, download_ugc=False)
+
+        metadata, skip_reason = service._extract_single_track(playlist.tracks[0])
+        assert metadata is None
+        assert skip_reason is SkipReason.UNSUPPORTED_VIDEO_TYPE
+
+    def test_missing_video_type_extracted_when_download_ugc_enabled(self) -> None:
+        """Should extract untyped tracks as unofficial when download_ugc is True."""
+        playlist = self._make_untyped_playlist()
+        mock = MockYTMusicClient(playlist=playlist, album=None, search_results=[])
+        service = MetadataExtractorService(mock, download_ugc=True)
+
+        tracks = extract_all(service, "https://music.youtube.com/playlist?list=PLtest")
+
+        assert len(tracks) == 1
+        assert tracks[0].match_result == MatchResult.UNOFFICIAL
+        assert tracks[0].title == "Untagged Upload"
+        assert tracks[0].source_video_id == "untyped123"
+        assert tracks[0].video_type == VideoType.UGC
+        assert tracks[0].omv_video_id is None
+        assert tracks[0].atv_video_id is None
+        assert tracks[0].video_id == "untyped123"
+
     def test_ugc_mixed_with_supported_types(self) -> None:
         """Should extract both supported and UGC tracks when enabled."""
         playlist = Playlist.model_validate(

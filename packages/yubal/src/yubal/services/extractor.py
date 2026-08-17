@@ -93,7 +93,9 @@ class MetadataExtractorService:
 
         Args:
             client: YouTube Music API client for fetching playlist/album data.
-            download_ugc: If True, extract UGC tracks as unofficial instead of skipping.
+            download_ugc: If True, extract UGC tracks as unofficial instead of
+                skipping them. Also covers tracks whose video type is missing
+                from the API.
         """
         self._client = client
         self._download_ugc = download_ugc
@@ -520,7 +522,8 @@ class MetadataExtractorService:
         """Extract and enrich metadata for a single track.
 
         This is the core per-track processing pipeline:
-        1. Validate video type (skip unsupported types like UGC videos)
+        1. Validate video type (skip unsupported types; extract UGC and untyped
+           tracks as unofficial when download_ugc is enabled)
         2. Find album info (from track data or search)
         3. Fetch full album details from YouTube Music
         4. Build enriched metadata with album info, or fallback to basic data
@@ -555,17 +558,11 @@ class MetadataExtractorService:
                 except ValueError:
                     pass
 
-            if is_ugc and self._download_ugc:
-                metadata = self._create_fallback_metadata(
-                    track, VideoType.UGC, match_result=MatchResult.UNOFFICIAL
-                )
-                if metadata is not None:
-                    return metadata, None
-
-            # Tracks whose videoType field is absent from the API response
-            # are still valid and downloadable. Treat them like UGC so they
-            # flow through when YUBAL_DOWNLOAD_UGC is enabled.
-            if not track.video_type:
+            # The API omits videoType for some tracks that still have a valid
+            # videoId and play fine. Most are user uploads with no tagging, so
+            # treat them like explicit UGC: extract when UGC downloads are on,
+            # skip otherwise.
+            if (is_ugc or not track.video_type) and self._download_ugc:
                 metadata = self._create_fallback_metadata(
                     track, VideoType.UGC, match_result=MatchResult.UNOFFICIAL
                 )
