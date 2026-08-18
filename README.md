@@ -236,7 +236,7 @@ A ⭐ also helps others find the project!
 
 ## 📈 Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=guillevc/yubal&type=Date)](https://star-history.com/#guillevc/yubal&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=guillevc/yubal&type=Date)](https://star-history.dera.page/#guillevc/yubal&Date)
 
 ## 🙏 Acknowledgments
 
