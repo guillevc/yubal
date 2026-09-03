@@ -5,7 +5,7 @@ description = "Self-hosted YouTube Music downloader and library manager"
 dependencies = [
   "ytmusicapi>=1.12.2",
   "pydantic>=2.0.0",
-  "yt-dlp==2026.8.18.122307.dev0",
+  "yt-dlp==2026.8.30.232658.dev0",
   "pathvalidate>=3.2.0",
   "rapidfuzz>=3.0.0",
   "mediafile>=0.12.0",
