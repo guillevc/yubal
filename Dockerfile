@@ -28,7 +28,7 @@ COPY packages/ ./packages/
 RUN uv sync --package yubal-api --no-dev --frozen --no-cache --no-editable
 
 # Final runtime image
-FROM python:3.12-slim-bookworm
+FROM python:3.12-slim-trixie
 
 ARG TARGETARCH
 ARG RSGAIN_VERSION=3.6
@@ -55,12 +55,7 @@ RUN set -eux \
     && rm /tmp/ffmpeg.tar.xz \
     #
     # --- rsgain (amd64 only) ---
-    && if [ "$TARGETARCH" = "amd64" ]; then \
-         curl -fsSL --retry 3 --retry-delay 5 -o /tmp/rsgain.deb \
-           "https://github.com/complexlogic/rsgain/releases/download/v${RSGAIN_VERSION}/rsgain_${RSGAIN_VERSION}_amd64.deb" \
-         && (dpkg -i /tmp/rsgain.deb || apt-get install -y -f --no-install-recommends) \
-         && rm /tmp/rsgain.deb; \
-       fi \
+    && apt install -y rsgain \
     #
     # --- gosu (for entrypoint privilege drop) ---
     && gosu nobody true \
