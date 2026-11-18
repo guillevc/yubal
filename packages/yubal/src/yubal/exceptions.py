@@ -39,6 +39,14 @@ class TrackNotFoundError(YubalError):
     """
 
 
+class ArtistNotFoundError(YubalError):
+    """Artist not found.
+
+    Raised when an artist search has no results or the artist page
+    doesn't exist.
+    """
+
+
 class AuthenticationRequiredError(YubalError):
     """Authentication required to access this playlist.
 

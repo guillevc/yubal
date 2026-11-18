@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends
+from yubal import ArtistDiscographyService, create_artist_service
 
 from yubal_api.api.container import Services, get_services
 from yubal_api.services.job_event_bus import JobEventBus
@@ -92,3 +93,13 @@ def _get_playlist_info_service() -> PlaylistInfoService:
 PlaylistInfoServiceDep = Annotated[
     PlaylistInfoService, Depends(_get_playlist_info_service)
 ]
+
+
+def _get_artist_service() -> ArtistDiscographyService:
+    """Get artist service for searching artists and listing releases."""
+    settings = get_settings()
+    cookies_path = settings.cookies_file if settings.cookies_file.exists() else None
+    return create_artist_service(cookies_path=cookies_path)
+
+
+ArtistServiceDep = Annotated[ArtistDiscographyService, Depends(_get_artist_service)]

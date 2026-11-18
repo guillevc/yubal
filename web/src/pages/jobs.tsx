@@ -1,9 +1,10 @@
 import { UrlInput } from "@/components/common/url-input";
+import { ArtistSearch } from "@/features/artists/artist-search";
 import { LogsPanel } from "@/features/logs/logs-panel";
 import { JobsPanel } from "@/features/jobs/jobs-panel";
 import { useJobs } from "@/features/jobs/jobs-context";
 import { isValidUrl } from "@/lib/url";
-import { Button, InputGroup, NumberField } from "@heroui/react";
+import { Button, InputGroup, NumberField, Tabs } from "@heroui/react";
 import { DownloadIcon, HashIcon } from "lucide-react";
 import { memo, useState } from "react";
 
@@ -78,8 +79,27 @@ export function JobsPage() {
       {/* Page Title */}
       <h1 className="text-foreground mb-6 text-2xl font-bold">Downloads</h1>
 
-      {/* URL Input Section */}
-      <DownloadForm onDownload={startJob} />
+      {/* Download by URL or by artist */}
+      <Tabs defaultSelectedKey="url">
+        <Tabs.ListContainer className="mb-4">
+          <Tabs.List aria-label="Download source">
+            <Tabs.Tab id="url">
+              URL
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="artist">
+              Artist
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.ListContainer>
+        <Tabs.Panel id="url">
+          <DownloadForm onDownload={startJob} />
+        </Tabs.Panel>
+        <Tabs.Panel id="artist">
+          <ArtistSearch />
+        </Tabs.Panel>
+      </Tabs>
 
       {/* Downloads Panels */}
       <section className="flex flex-col gap-6">

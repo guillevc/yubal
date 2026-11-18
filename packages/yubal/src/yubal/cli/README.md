@@ -82,6 +82,25 @@ ReplayGain applies track gain to downloaded files. Album gain is only calculated
 for complete album downloads; playlists and partial album downloads use track
 gain only.
 
+#### `artist` - Download an artist's discography
+
+Search YouTube Music for an artist and download all of their albums and singles. The top matches are listed and the first is used unless you pass `--pick`. You're asked to confirm before anything downloads.
+
+```sh
+yubal artist "Daft Punk" ~/Music
+yubal artist "Daft Punk" ~/Music --no-singles --yes
+yubal artist "Nirvana" ~/Music --pick 2
+```
+
+| Option | Description |
+| --- | --- |
+| `--pick N` | Use the Nth search match (default: 1) |
+| `-y`, `--yes` | Skip the confirmation prompt |
+| `--no-albums` | Skip albums |
+| `--no-singles` | Skip singles and EPs |
+
+Also accepts all `download` options (`--codec`, `--quality`, `--max-items` per release, `--cookies`, `--no-m3u`, `--no-cover`, `--no-replaygain`, `--ascii-filenames`).
+
 #### `tags` - Inspect audio file tags
 
 Display metadata tags from audio files, with ReplayGain/R128 highlighting.

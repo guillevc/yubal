@@ -34,6 +34,7 @@ from pathlib import Path
 from yubal.client import YTMusicClient as _YTMusicClient
 from yubal.config import APIConfig, AudioCodec, DownloadConfig, PlaylistDownloadConfig
 from yubal.exceptions import (
+    ArtistNotFoundError,
     AuthenticationRequiredError,
     CancellationError,
     DownloadError,
@@ -60,7 +61,12 @@ from yubal.models.results import (
     PlaylistDownloadResult,
 )
 from yubal.models.track import PlaylistInfo, TrackMetadata
-from yubal.services import MetadataExtractorService, PlaylistDownloadService
+from yubal.models.ytmusic import ArtistDiscography, ArtistRelease, ArtistSearchResult
+from yubal.services import (
+    ArtistDiscographyService,
+    MetadataExtractorService,
+    PlaylistDownloadService,
+)
 from yubal.services.download_service import DownloadService as _DownloadService
 from yubal.utils import cleanup_part_files, clear_cover_cache, fetch_cover
 from yubal.utils.url import is_single_track_url, is_supported_url, parse_playlist_id
@@ -193,8 +199,39 @@ def create_playlist_downloader(
     return PlaylistDownloadService(config, cookies_path=cookies_path)
 
 
+def create_artist_service(
+    config: APIConfig | None = None,
+    cookies_path: Path | None = None,
+) -> ArtistDiscographyService:
+    """Create a configured artist discography service.
+
+    Args:
+        config: Optional API configuration. Uses defaults if not provided.
+        cookies_path: Optional path to cookies.txt for YouTube Music authentication.
+
+    Returns:
+        A configured ArtistDiscographyService instance.
+
+    Examples:
+        ```python
+        artists = create_artist_service()
+        artist = artists.search("Daft Punk")[0]
+        discography = artists.get_discography(artist.browse_id)
+        for url in artists.release_urls(discography):
+            downloader.download_playlist_all(url)
+        ```
+    """
+    client = _YTMusicClient(config=config, cookies_path=cookies_path)
+    return ArtistDiscographyService(client)
+
+
 __all__ = [
     "APIConfig",
+    "ArtistDiscography",
+    "ArtistDiscographyService",
+    "ArtistNotFoundError",
+    "ArtistRelease",
+    "ArtistSearchResult",
     "AudioCodec",
     "AuthenticationRequiredError",
     "CancelToken",
@@ -226,6 +263,7 @@ __all__ = [
     "YubalError",
     "cleanup_part_files",
     "clear_cover_cache",
+    "create_artist_service",
     "create_downloader",
     "create_extractor",
     "create_playlist_downloader",

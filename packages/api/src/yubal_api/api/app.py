@@ -31,6 +31,7 @@ from yubal import cleanup_part_files
 from yubal_api.api.container import Services
 from yubal_api.api.exceptions import register_exception_handlers
 from yubal_api.api.routes import (
+    artists,
     cookies,
     health,
     info,
@@ -205,6 +206,7 @@ def create_api_router() -> APIRouter:
     api_router.include_router(health.router)
     api_router.include_router(info.router)
     api_router.include_router(jobs.router)
+    api_router.include_router(artists.router)
     api_router.include_router(logs.router)
     api_router.include_router(cookies.router)
     api_router.include_router(subscriptions.router)

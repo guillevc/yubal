@@ -6,13 +6,16 @@ the YouTube Music API. They may change if the API changes.
 
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 __all__ = [
     "Album",
     "AlbumRef",
     "AlbumTrack",
     "Artist",
+    "ArtistDiscography",
+    "ArtistRelease",
+    "ArtistSearchResult",
     "Playlist",
     "PlaylistTrack",
     "SearchResult",
@@ -96,6 +99,7 @@ class Album(YTMusicModel):
     year: str | None = None
     thumbnails: list[Thumbnail]
     tracks: list[AlbumTrack]
+    audio_playlist_id: str | None = Field(default=None, alias="audioPlaylistId")
 
 
 class SearchResult(YTMusicModel):
@@ -106,3 +110,47 @@ class SearchResult(YTMusicModel):
     title: str
     artists: list[Artist] = Field(default_factory=list)
     album: AlbumRef | None = None
+
+
+class ArtistSearchResult(YTMusicModel):
+    """Artist result from search(filter="artists")."""
+
+    browse_id: str = Field(alias="browseId")  # Artist channel ID (UC...)
+    artist: str
+    thumbnails: list[Thumbnail] = Field(default_factory=list)
+
+
+class ArtistRelease(YTMusicModel):
+    """Album or single listed on an artist page.
+
+    get_artist() returns ``audioPlaylistId`` for albums (not singles), while
+    get_artist_albums() returns ``playlistId``. Both are the OLAK5uy_ album
+    playlist ID, so either is accepted.
+    """
+
+    title: str
+    type: str | None = None
+    year: str | None = None
+    browse_id: str = Field(alias="browseId")  # Album browse ID (MPREb_...)
+    audio_playlist_id: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("audioPlaylistId", "playlistId"),
+    )
+    thumbnails: list[Thumbnail] = Field(default_factory=list)
+
+    @property
+    def url(self) -> str | None:
+        """YouTube Music playlist URL for this release, if resolvable."""
+        if not self.audio_playlist_id:
+            return None
+        return f"https://music.youtube.com/playlist?list={self.audio_playlist_id}"
+
+
+class ArtistDiscography(YTMusicModel):
+    """An artist's albums and singles, with playlist IDs resolved."""
+
+    name: str
+    channel_id: str
+    thumbnails: list[Thumbnail] = Field(default_factory=list)
+    albums: list[ArtistRelease] = Field(default_factory=list)
+    singles: list[ArtistRelease] = Field(default_factory=list)

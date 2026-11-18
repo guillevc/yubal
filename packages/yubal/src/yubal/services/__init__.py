@@ -3,6 +3,7 @@
 Public API:
     MetadataExtractorService - Extract metadata from YouTube Music playlists
     PlaylistDownloadService - Full pipeline: extract + download + compose
+    ArtistDiscographyService - Search artists and list their releases
 
 Protocols (for dependency injection):
     ReplayGainProtocol - ReplayGain tagging abstraction
@@ -18,10 +19,12 @@ Internal (not exported):
     AudioFileTaggingService, tag_track - Audio file tagging
 """
 
+from yubal.services.artist_service import ArtistDiscographyService
 from yubal.services.extractor import MetadataExtractorService
 from yubal.services.playlist_download_service import PlaylistDownloadService
 
 __all__ = [
+    "ArtistDiscographyService",
     "MetadataExtractorService",
     "PlaylistDownloadService",
 ]

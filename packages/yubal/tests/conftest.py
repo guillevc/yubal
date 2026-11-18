@@ -15,6 +15,8 @@ from yubal.models.ytmusic import (
     AlbumRef,
     AlbumTrack,
     Artist,
+    ArtistDiscography,
+    ArtistSearchResult,
     Playlist,
     PlaylistTrack,
     SearchResult,
@@ -260,8 +262,14 @@ class MockYTMusicClient:
         album: Album | None = None,
         search_results: list[SearchResult] | None = None,
         upload_year: str | None = None,
+        artist_results: list[ArtistSearchResult] | None = None,
+        discography: ArtistDiscography | None = None,
     ) -> None:
         self._playlist = playlist
+        self._artist_results = artist_results or []
+        self._discography = discography
+        self.search_artists_calls: list[str] = []
+        self.get_artist_calls: list[str] = []
         self._album = album
         self._search_results = search_results or []
         self._upload_year = upload_year
@@ -288,6 +296,18 @@ class MockYTMusicClient:
         """Mock search_songs."""
         self.search_songs_calls.append(query)
         return self._search_results
+
+    def search_artists(self, query: str, limit: int = 5) -> list[ArtistSearchResult]:
+        """Mock search_artists."""
+        self.search_artists_calls.append(query)
+        return self._artist_results[:limit]
+
+    def get_artist(self, channel_id: str) -> ArtistDiscography:
+        """Mock get_artist."""
+        self.get_artist_calls.append(channel_id)
+        if self._discography is None:
+            raise ValueError("No discography configured")
+        return self._discography
 
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Mock get_track - not implemented for playlist tests."""

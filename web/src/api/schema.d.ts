@@ -21,6 +21,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/info": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Content Info
+         * @description Get metadata for a YouTube Music URL.
+         *
+         *     Returns title, artist, kind, track count, year, and thumbnail
+         *     from a single API call without running the full extraction pipeline.
+         */
+        get: operations["get_content_info_api_info_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/jobs": {
         parameters: {
             query?: never;
@@ -109,6 +132,70 @@ export interface paths {
         get: operations["stream_jobs_api_jobs_sse_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search Artists
+         * @description Search YouTube Music for artists by name (best match first).
+         */
+        get: operations["search_artists_api_artists_search_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/{channel_id}/releases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Artist Releases
+         * @description List all albums and singles of an artist, with downloadable URLs.
+         */
+        get: operations["get_artist_releases_api_artists__channel_id__releases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/artists/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue Artist Releases
+         * @description Queue one download job per release.
+         *
+         *     Jobs run sequentially through the regular job queue. If the queue fills
+         *     up partway through, the remaining releases are reported as skipped.
+         *     Returns 409 only if no job could be created.
+         */
+        post: operations["queue_artist_releases_api_artists_jobs_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -314,6 +401,67 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ArtistRelease
+         * @description Album or single by an artist.
+         */
+        ArtistRelease: {
+            /** Title */
+            title: string;
+            /**
+             * Type
+             * @description Album, Single, EP, ...
+             */
+            type?: string | null;
+            /** Year */
+            year?: string | null;
+            /**
+             * Url
+             * @description YouTube Music playlist URL for the release
+             */
+            url: string;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+        };
+        /**
+         * ArtistReleasesResponse
+         * @description An artist's albums and singles.
+         */
+        ArtistReleasesResponse: {
+            /** Channel Id */
+            channel_id: string;
+            /** Name */
+            name: string;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+            /** Albums */
+            albums: components["schemas"]["ArtistRelease"][];
+            /** Singles */
+            singles: components["schemas"]["ArtistRelease"][];
+        };
+        /**
+         * ArtistSearchResponse
+         * @description Response for artist search.
+         */
+        ArtistSearchResponse: {
+            /** Artists */
+            artists: components["schemas"]["ArtistSummary"][];
+        };
+        /**
+         * ArtistSummary
+         * @description Artist search match.
+         */
+        ArtistSummary: {
+            /**
+             * Channel Id
+             * @description YouTube Music artist channel ID
+             */
+            channel_id: string;
+            /** Name */
+            name: string;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
+        };
         /**
          * AudioCodec
          * @description Supported audio output codecs.
@@ -779,6 +927,34 @@ export interface components {
             };
         };
         /**
+         * QueueArtistReleasesRequest
+         * @description Request to queue download jobs for artist releases.
+         */
+        QueueArtistReleasesRequest: {
+            /**
+             * Urls
+             * @description Release URLs (from GET /artists/{channel_id}/releases)
+             */
+            urls: string[];
+        };
+        /**
+         * QueueArtistReleasesResponse
+         * @description Result of queueing artist releases.
+         */
+        QueueArtistReleasesResponse: {
+            /**
+             * Job Ids
+             * @description IDs of the created jobs, in order
+             */
+            job_ids: string[];
+            /**
+             * Skipped
+             * @description Releases not queued because the queue was full
+             * @default 0
+             */
+            skipped: number;
+        };
+        /**
          * SchedulerStatus
          * @description Scheduler status response.
          */
@@ -1003,6 +1179,38 @@ export interface operations {
             };
         };
     };
+    get_content_info_api_info_get: {
+        parameters: {
+            query: {
+                /** @description YouTube Music URL (playlist, album, or track) */
+                url: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ContentInfo"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_jobs_api_jobs_get: {
         parameters: {
             query?: never;
@@ -1197,6 +1405,129 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": components["schemas"]["SnapshotEvent"] | components["schemas"]["CreatedEvent"] | components["schemas"]["UpdatedEvent"] | components["schemas"]["DeletedEvent"] | components["schemas"]["ClearedEvent"];
+                };
+            };
+        };
+    };
+    search_artists_api_artists_search_get: {
+        parameters: {
+            query: {
+                /** @description Artist name */
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistSearchResponse"];
+                };
+            };
+            /** @description No artists found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_artist_releases_api_artists__channel_id__releases_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                channel_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ArtistReleasesResponse"];
+                };
+            };
+            /** @description Artist not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    queue_artist_releases_api_artists_jobs_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["QueueArtistReleasesRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueueArtistReleasesResponse"];
+                };
+            };
+            /** @description Queue is full */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

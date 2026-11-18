@@ -12,6 +12,7 @@ from ytmusicapi.exceptions import YTMusicError, YTMusicServerError, YTMusicUserE
 
 from yubal.config import APIConfig
 from yubal.exceptions import (
+    ArtistNotFoundError,
     AuthenticationRequiredError,
     PlaylistNotFoundError,
     TrackNotFoundError,
@@ -20,7 +21,16 @@ from yubal.exceptions import (
     YubalError,
 )
 from yubal.models.enums import SkipReason
-from yubal.models.ytmusic import Album, Playlist, PlaylistTrack, SearchResult
+from yubal.models.ytmusic import (
+    Album,
+    ArtistDiscography,
+    ArtistRelease,
+    ArtistSearchResult,
+    Playlist,
+    PlaylistTrack,
+    SearchResult,
+    Thumbnail,
+)
 from yubal.utils.cookies import cookies_to_ytmusic_auth
 
 logger = logging.getLogger(__name__)
@@ -56,6 +66,14 @@ class YTMusicProtocol(Protocol):
 
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Fetch a single track by video ID."""
+        ...
+
+    def search_artists(self, query: str, limit: int = 5) -> list[ArtistSearchResult]:
+        """Search for artists."""
+        ...
+
+    def get_artist(self, channel_id: str) -> ArtistDiscography:
+        """Fetch an artist's albums and singles."""
         ...
 
     def get_upload_year(self, video_id: str) -> str | None:
@@ -325,6 +343,158 @@ class YTMusicClient:
             raise UpstreamAPIError(f"Search failed: {e}") from e
 
         return [SearchResult.model_validate(r) for r in data]
+
+    def search_artists(self, query: str, limit: int = 5) -> list[ArtistSearchResult]:
+        """Search for artists.
+
+        Args:
+            query: Artist name to search for.
+            limit: Maximum number of results to return.
+
+        Returns:
+            Matching artists, best match first.
+
+        Raises:
+            ValueError: If query is empty.
+            UpstreamAPIError: If API request fails.
+        """
+        if not query or not query.strip():
+            raise ValueError("query cannot be empty")
+
+        logger.debug("Searching artists: %s", query)
+        try:
+            data = self._ytm.search(query.strip(), filter="artists", limit=limit)
+        except YTMusicError as e:
+            logger.warning("YTMusic error for artist search '%s': %s", query, e)
+            raise UpstreamAPIError(f"Artist search failed: {e}") from e
+
+        results: list[ArtistSearchResult] = []
+        for item in data:
+            if item.get("resultType", "artist") != "artist":
+                continue
+            if not item.get("browseId") or not item.get("artist"):
+                continue
+            results.append(ArtistSearchResult.model_validate(item))
+        return results[:limit]
+
+    def get_artist(self, channel_id: str) -> ArtistDiscography:
+        """Fetch an artist's full list of albums and singles.
+
+        Uses get_artist() for the artist page. When a section has more
+        releases than shown on the page (it carries a browseId/params pair),
+        get_artist_albums() is called to fetch the complete list. Releases
+        without an album playlist ID (e.g. singles) are resolved via
+        get_album(). Releases that still can't be resolved are dropped.
+
+        Args:
+            channel_id: Artist channel ID (UC...).
+
+        Returns:
+            ArtistDiscography with albums and singles, deduplicated.
+
+        Raises:
+            ValueError: If channel_id is empty.
+            ArtistNotFoundError: If the artist doesn't exist.
+            UpstreamAPIError: If API request fails.
+        """
+        if not channel_id or not channel_id.strip():
+            raise ValueError("channel_id cannot be empty")
+
+        logger.debug("Fetching artist: %s", channel_id)
+        try:
+            data = self._ytm.get_artist(channel_id)
+        except YTMusicError as e:
+            logger.warning("YTMusic error for artist %s: %s", channel_id, e)
+            raise UpstreamAPIError(f"Failed to fetch artist: {e}") from e
+        except (KeyError, TypeError, IndexError) as e:
+            # ytmusicapi's KeyError message embeds the full raw response; keep
+            # it out of normal logs (the caller gets ArtistNotFoundError).
+            logger.debug("Malformed artist response %s: %s", channel_id, e)
+            raise ArtistNotFoundError(f"Artist not found: {channel_id}") from e
+
+        if not data or not data.get("name"):
+            raise ArtistNotFoundError(f"Artist not found: {channel_id}")
+
+        seen: set[str] = set()
+        albums = self._get_artist_section(data, "albums", seen)
+        singles = self._get_artist_section(data, "singles", seen)
+
+        logger.debug(
+            "Artist %s: %d albums, %d singles",
+            data["name"],
+            len(albums),
+            len(singles),
+        )
+        return ArtistDiscography(
+            name=data["name"],
+            channel_id=channel_id,
+            thumbnails=[
+                Thumbnail.model_validate(t) for t in data.get("thumbnails") or []
+            ],
+            albums=albums,
+            singles=singles,
+        )
+
+    def _get_artist_section(
+        self, data: Mapping[str, Any], key: str, seen: set[str]
+    ) -> list[ArtistRelease]:
+        """Parse one release section (albums/singles) of an artist page.
+
+        Args:
+            data: Raw get_artist() response.
+            key: Section key ("albums" or "singles").
+            seen: Playlist IDs already collected; updated in place for dedup.
+        """
+        section = data.get(key)
+        if not isinstance(section, Mapping):
+            return []
+
+        raw: list[dict[str, Any]] = list(section.get("results") or [])
+        browse_id = section.get("browseId")
+        params = section.get("params")
+        if browse_id and params:
+            try:
+                raw = self._ytm.get_artist_albums(browse_id, params, limit=None)
+            except (YTMusicError, KeyError, TypeError, IndexError) as e:
+                # Fall back to the partial list shown on the artist page
+                logger.warning(
+                    "Failed to fetch full %s list, using artist page: %s", key, e
+                )
+
+        releases: list[ArtistRelease] = []
+        for item in raw:
+            if not item or not item.get("browseId") or not item.get("title"):
+                continue
+            try:
+                release = ArtistRelease.model_validate(item)
+            except ValueError as e:  # pydantic ValidationError
+                logger.debug("Skipping malformed %s entry: %s", key, e)
+                continue
+            if not release.audio_playlist_id:
+                resolved = self._resolve_release_playlist_id(release)
+                if resolved is None:
+                    continue
+                release = resolved
+            playlist_id = release.audio_playlist_id
+            if not playlist_id or playlist_id in seen:
+                continue
+            seen.add(playlist_id)
+            releases.append(release)
+        return releases
+
+    def _resolve_release_playlist_id(
+        self, release: ArtistRelease
+    ) -> ArtistRelease | None:
+        """Look up a release's album playlist ID via get_album()."""
+        try:
+            album = self.get_album(release.browse_id)
+        except (YubalError, KeyError, TypeError, ValueError) as e:
+            logger.warning("Could not resolve release '%s': %s", release.title, e)
+            return None
+        if not album.audio_playlist_id:
+            logger.warning("Release '%s' has no playlist ID, skipping", release.title)
+            return None
+        return release.model_copy(update={"audio_playlist_id": album.audio_playlist_id})
 
     def get_track(self, video_id: str) -> PlaylistTrack:
         """Fetch a single track by video ID using get_watch_playlist().
